@@ -1,0 +1,6 @@
+{
+  "name": "HARBAN — Groom Better. Everyday. | Precision Trimmers",
+  "description": "HARBAN — precision trimmers and grooming essentials for modern men. Free shipping, 1-year warranty, easy returns.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
