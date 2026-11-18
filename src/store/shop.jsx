@@ -15,6 +15,40 @@ import {
 } from 'firebase/auth'
 import { auth, googleAuthProvider, phoneOtpAuth } from '../lib/firebase'
 import {
+  getBrowserSupabase,
+  sbCancelOrder,
+  sbChangePassword,
+  sbCreateAdminOrder,
+  sbCreateCustomer,
+  sbDeleteAddress,
+  sbDeleteCategory,
+  sbDeleteDiscount,
+  sbDeleteProduct,
+  sbGetAccount,
+  sbGetAdminOverview,
+  sbGetStorefront,
+  sbLogCartEvent,
+  sbLogViewEvent,
+  sbLoginWithEmail,
+  sbLoginWithGoogle,
+  sbLogout,
+  sbPlaceOrder,
+  sbRegisterWithEmail,
+  sbSaveAddress,
+  sbSaveCategory,
+  sbSaveDiscount,
+  sbSaveProduct,
+  sbSendContactMessage,
+  sbSetDefaultAddress,
+  sbSubscribeNewsletter,
+  sbTrackOrderByCode,
+  sbUpdateAdminOrder,
+  sbUpdateProductQuick,
+  sbUpdateProfile,
+  sbUpdateStock,
+  sbUploadImage,
+} from '../lib/supabaseBrowser'
+import {
   categories as initialCategories,
   faqs as initialFaqs,
   marqueeStats as initialMarqueeStats,
@@ -72,7 +106,48 @@ export const NAV_ITEMS = [
   { id: 'support', label: 'Support' },
 ]
 
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+
+class BackendUnavailableError extends Error {
+  constructor() {
+    super('API backend unavailable; using Supabase direct mode.')
+    this.name = 'BackendUnavailableError'
+  }
+}
+
+let detectedMode = API_BASE ? 'api' : null
+let modeProbePromise = null
+
+async function probeBackendMode() {
+  if (detectedMode) return detectedMode
+  if (modeProbePromise) return modeProbePromise
+
+  modeProbePromise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/storefront`, {
+        credentials: 'include',
+        cache: 'no-store',
+      })
+      const ct = (res.headers.get('content-type') || '').toLowerCase()
+      if (ct.includes('application/json') && res.status !== 404 && res.status !== 405) {
+        detectedMode = 'api'
+        return 'api'
+      }
+    } catch {
+      /* fallback to supabase direct mode */
+    }
+    detectedMode = 'supabase'
+    return 'supabase'
+  })()
+
+  return modeProbePromise
+}
+
 async function apiFetch(url, options = {}) {
+  if (detectedMode === 'supabase') {
+    throw new BackendUnavailableError()
+  }
+
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
@@ -87,16 +162,52 @@ async function apiFetch(url, options = {}) {
     }
   }
 
-  const res = await fetch(url, {
-    credentials: 'include',
-    ...options,
-    headers,
-  })
-  const data = await res.json().catch(() => ({}))
+  const targetUrl = url.startsWith('http') ? url : `${API_BASE}${url}`
+  let res
+  try {
+    res = await fetch(targetUrl, {
+      credentials: 'include',
+      ...options,
+      headers,
+    })
+  } catch {
+    if (!API_BASE) {
+      detectedMode = 'supabase'
+      throw new BackendUnavailableError()
+    }
+    throw new Error('Network error. Please check your connection.')
+  }
+
+  const contentType = (res.headers.get('content-type') || '').toLowerCase()
+  const isJson = contentType.includes('application/json')
+  if (!isJson || res.status === 404 || res.status === 405) {
+    if (!API_BASE && !contentType.includes('application/json')) {
+      detectedMode = 'supabase'
+      throw new BackendUnavailableError()
+    }
+    if (res.status === 404 && !isJson) {
+      detectedMode = 'supabase'
+      throw new BackendUnavailableError()
+    }
+  }
+
+  const data = isJson ? await res.json().catch(() => ({})) : {}
   if (!res.ok) {
     throw new Error(data.error || 'Request failed. Please try again.')
   }
+  detectedMode = 'api'
   return data
+}
+
+async function withSupabaseFallback(apiFn, supabaseFn) {
+  try {
+    return await apiFn()
+  } catch (err) {
+    if (err instanceof BackendUnavailableError) {
+      return supabaseFn()
+    }
+    throw err
+  }
 }
 
 /* -------------------------------------------------------------- provider */
@@ -133,7 +244,10 @@ export function ShopProvider({ children }) {
 
   const refreshStorefront = useCallback(async () => {
     try {
-      const data = await apiFetch('/api/storefront', { cache: 'no-store' })
+      const data = await withSupabaseFallback(
+        () => apiFetch('/api/storefront', { cache: 'no-store' }),
+        () => sbGetStorefront(false),
+      )
       if (Array.isArray(data.products)) {
         setProducts(data.products)
       }
@@ -176,29 +290,39 @@ export function ShopProvider({ children }) {
 
   const sendCartTelemetry = useCallback(
     (payload) => {
-      void apiFetch('/api/events/cart', {
-        method: 'POST',
-        body: JSON.stringify({
-          sessionId,
-          customerEmail: user?.email || null,
-          customerName: user?.name || null,
-          ...payload,
-        }),
-      }).catch(() => {})
+      const fullPayload = {
+        sessionId,
+        customerEmail: user?.email || null,
+        customerName: user?.name || null,
+        ...payload,
+      }
+      void withSupabaseFallback(
+        () =>
+          apiFetch('/api/events/cart', {
+            method: 'POST',
+            body: JSON.stringify(fullPayload),
+          }),
+        () => sbLogCartEvent(fullPayload),
+      ).catch(() => {})
     },
     [sessionId, user],
   )
 
   const sendViewTelemetry = useCallback(
     (payload) => {
-      void apiFetch('/api/events/view', {
-        method: 'POST',
-        body: JSON.stringify({
-          sessionId,
-          customerEmail: user?.email || null,
-          ...payload,
-        }),
-      }).catch(() => {})
+      const fullPayload = {
+        sessionId,
+        customerEmail: user?.email || null,
+        ...payload,
+      }
+      void withSupabaseFallback(
+        () =>
+          apiFetch('/api/events/view', {
+            method: 'POST',
+            body: JSON.stringify(fullPayload),
+          }),
+        () => sbLogViewEvent(fullPayload),
+      ).catch(() => {})
     },
     [sessionId, user],
   )
@@ -221,7 +345,10 @@ export function ShopProvider({ children }) {
   /* Sync authenticated customer account & order history */
   const refreshAccount = useCallback(async () => {
     try {
-      const data = await apiFetch('/api/auth/me')
+      const data = await withSupabaseFallback(
+        () => apiFetch('/api/auth/me'),
+        () => sbGetAccount(),
+      )
       setUser(data.user ?? null)
       const list = Array.isArray(data.orders) ? data.orders : []
       setOrders(list)
@@ -234,22 +361,55 @@ export function ShopProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, () => {
+    const unsubFirebase = onAuthStateChanged(auth, () => {
       refreshAccount()
     })
-    return () => unsub()
+    const sb = getBrowserSupabase()
+    const {
+      data: { subscription: sbSub },
+    } = sb.auth.onAuthStateChange((_event, session) => {
+      if (session || detectedMode === 'supabase') {
+        refreshAccount()
+      }
+    })
+    return () => {
+      unsubFirebase()
+      sbSub.unsubscribe()
+    }
   }, [refreshAccount])
 
   const loginWithGoogle = useCallback(async () => {
     try {
+      const mode = await probeBackendMode()
+      if (mode === 'supabase') {
+        await sbLoginWithGoogle()
+        return { ok: true }
+      }
       await signInWithPopup(auth, googleAuthProvider)
-      const data = await apiFetch('/api/auth/google', { method: 'POST' })
+      const data = await withSupabaseFallback(
+        () => apiFetch('/api/auth/google', { method: 'POST' }),
+        () => sbGetAccount(),
+      )
       setUser(data.user ?? null)
       setOrders(Array.isArray(data.orders) ? data.orders : [])
       pushToast(`Welcome, ${data.user?.name?.split(' ')[0] || 'Customer'}!`)
       return { ok: true }
     } catch (error) {
       const code = error?.code || ''
+      if (code === 'auth/unauthorized-domain' && detectedMode === 'supabase') {
+        try {
+          await sbLoginWithGoogle()
+          return { ok: true }
+        } catch (sbErr) {
+          return {
+            ok: false,
+            error:
+              sbErr instanceof Error
+                ? sbErr.message
+                : 'Google Sign-In failed.',
+          }
+        }
+      }
       let msg =
         error instanceof Error
           ? error.message
@@ -273,10 +433,14 @@ export function ShopProvider({ children }) {
   const registerWithEmail = useCallback(
     async ({ name, email, phone = '', password }) => {
       try {
-        const data = await apiFetch('/api/auth/register', {
-          method: 'POST',
-          body: JSON.stringify({ name, email, phone, password }),
-        })
+        const data = await withSupabaseFallback(
+          () =>
+            apiFetch('/api/auth/register', {
+              method: 'POST',
+              body: JSON.stringify({ name, email, phone, password }),
+            }),
+          () => sbRegisterWithEmail({ name, email, phone, password }),
+        )
         setUser(data.user ?? null)
         setOrders(Array.isArray(data.orders) ? data.orders : [])
         pushToast(`Welcome to HARBAN, ${data.user?.name?.split(' ')[0] || ''}!`)
@@ -295,10 +459,14 @@ export function ShopProvider({ children }) {
   const loginWithEmail = useCallback(
     async ({ email, password }) => {
       try {
-        const data = await apiFetch('/api/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ email, password }),
-        })
+        const data = await withSupabaseFallback(
+          () =>
+            apiFetch('/api/auth/login', {
+              method: 'POST',
+              body: JSON.stringify({ email, password }),
+            }),
+          () => sbLoginWithEmail({ email, password }),
+        )
         setUser(data.user ?? null)
         setOrders(Array.isArray(data.orders) ? data.orders : [])
         pushToast(`Signed in as ${data.user?.name?.split(' ')[0] || ''}`)
@@ -316,7 +484,11 @@ export function ShopProvider({ children }) {
   const logout = useCallback(async () => {
     try {
       if (auth.currentUser) await signOut(auth)
-      await apiFetch('/api/auth/logout', { method: 'POST' })
+      await withSupabaseFallback(
+        () => apiFetch('/api/auth/logout', { method: 'POST' }),
+        () => sbLogout(),
+      )
+      await sbLogout().catch(() => {})
     } catch {
       /* best-effort logout */
     }
@@ -328,10 +500,14 @@ export function ShopProvider({ children }) {
   const updateProfile = useCallback(
     async ({ name, phone }) => {
       try {
-        const data = await apiFetch('/api/account/profile', {
-          method: 'PATCH',
-          body: JSON.stringify({ name, phone }),
-        })
+        const data = await withSupabaseFallback(
+          () =>
+            apiFetch('/api/account/profile', {
+              method: 'PATCH',
+              body: JSON.stringify({ name, phone }),
+            }),
+          () => sbUpdateProfile({ name, phone }),
+        )
         setUser(data.user)
         pushToast('Profile updated')
         return { ok: true }
@@ -349,10 +525,14 @@ export function ShopProvider({ children }) {
   const changePassword = useCallback(
     async ({ currentPassword, newPassword }) => {
       try {
-        await apiFetch('/api/account/password', {
-          method: 'POST',
-          body: JSON.stringify({ currentPassword, newPassword }),
-        })
+        await withSupabaseFallback(
+          () =>
+            apiFetch('/api/account/password', {
+              method: 'POST',
+              body: JSON.stringify({ currentPassword, newPassword }),
+            }),
+          () => sbChangePassword({ currentPassword, newPassword }),
+        )
         pushToast('Password updated')
         return { ok: true }
       } catch (error) {
@@ -369,10 +549,14 @@ export function ShopProvider({ children }) {
   const saveAddress = useCallback(
     async (addr) => {
       try {
-        const data = await apiFetch('/api/account/addresses', {
-          method: 'POST',
-          body: JSON.stringify(addr),
-        })
+        const data = await withSupabaseFallback(
+          () =>
+            apiFetch('/api/account/addresses', {
+              method: 'POST',
+              body: JSON.stringify(addr),
+            }),
+          () => sbSaveAddress(addr),
+        )
         setUser(data.user)
         pushToast('Address saved')
         return { ok: true }
@@ -389,9 +573,13 @@ export function ShopProvider({ children }) {
   const deleteAddress = useCallback(
     async (addrId) => {
       try {
-        const data = await apiFetch(`/api/account/addresses/${addrId}`, {
-          method: 'DELETE',
-        })
+        const data = await withSupabaseFallback(
+          () =>
+            apiFetch(`/api/account/addresses/${addrId}`, {
+              method: 'DELETE',
+            }),
+          () => sbDeleteAddress(addrId),
+        )
         setUser(data.user)
         pushToast('Address removed')
       } catch (error) {
@@ -406,9 +594,12 @@ export function ShopProvider({ children }) {
   const setDefaultAddress = useCallback(
     async (addrId) => {
       try {
-        const data = await apiFetch(
-          `/api/account/addresses/${addrId}/default`,
-          { method: 'PATCH' },
+        const data = await withSupabaseFallback(
+          () =>
+            apiFetch(`/api/account/addresses/${addrId}/default`, {
+              method: 'PATCH',
+            }),
+          () => sbSetDefaultAddress(addrId),
         )
         setUser(data.user)
         pushToast('Default delivery address updated')
@@ -677,26 +868,31 @@ export function ShopProvider({ children }) {
     async (details = {}) => {
       if (!cart.length) return null
       try {
-        const data = await apiFetch('/api/orders', {
-          method: 'POST',
-          body: JSON.stringify({
-            name: details.name || user?.name || 'Customer',
-            email: details.email || user?.email || '',
-            phone: details.phone || user?.phone || '',
-            otpToken: details.otpToken || '',
-            address: details.address || null,
-            paymentMethod: details.paymentMethod || 'Cash on Delivery',
-            paymentStatus: details.paymentStatus || 'pending',
-            razorpayOrderId: details.razorpayOrderId || null,
-            razorpayPaymentId: details.razorpayPaymentId || null,
-            items: cart.map((i) => ({
-              id: i.id,
-              qty: i.qty,
-              variantLabel: i.variantLabel || null,
-              sku: i.sku || null,
-            })),
-          }),
-        })
+        const payload = {
+          name: details.name || user?.name || 'Customer',
+          email: details.email || user?.email || '',
+          phone: details.phone || user?.phone || '',
+          otpToken: details.otpToken || '',
+          address: details.address || null,
+          paymentMethod: details.paymentMethod || 'Cash on Delivery',
+          paymentStatus: details.paymentStatus || 'pending',
+          razorpayOrderId: details.razorpayOrderId || null,
+          razorpayPaymentId: details.razorpayPaymentId || null,
+          items: cart.map((i) => ({
+            id: i.id,
+            qty: i.qty,
+            variantLabel: i.variantLabel || null,
+            sku: i.sku || null,
+          })),
+        }
+        const data = await withSupabaseFallback(
+          () =>
+            apiFetch('/api/orders', {
+              method: 'POST',
+              body: JSON.stringify(payload),
+            }),
+          () => sbPlaceOrder(payload),
+        )
         const created = data.order
         setLastOrder(created)
         setOrders((prev) => [created, ...prev])
@@ -721,8 +917,9 @@ export function ShopProvider({ children }) {
     const clean = code.trim().toUpperCase()
     if (!clean) return null
     try {
-      const data = await apiFetch(
-        `/api/orders/track/${encodeURIComponent(clean)}`,
+      const data = await withSupabaseFallback(
+        () => apiFetch(`/api/orders/track/${encodeURIComponent(clean)}`),
+        () => sbTrackOrderByCode(clean),
       )
       return data.order ?? null
     } catch {
@@ -733,9 +930,12 @@ export function ShopProvider({ children }) {
   const cancelOrder = useCallback(
     async (orderId) => {
       try {
-        const data = await apiFetch(
-          `/api/orders/${encodeURIComponent(orderId)}/cancel`,
-          { method: 'POST' },
+        const data = await withSupabaseFallback(
+          () =>
+            apiFetch(`/api/orders/${encodeURIComponent(orderId)}/cancel`, {
+              method: 'POST',
+            }),
+          () => sbCancelOrder(orderId),
         )
         const updated = data.order
         setOrders((prev) =>
@@ -765,10 +965,14 @@ export function ShopProvider({ children }) {
 
   const subscribeNewsletter = useCallback(async (email) => {
     try {
-      await apiFetch('/api/newsletter', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      })
+      await withSupabaseFallback(
+        () =>
+          apiFetch('/api/newsletter', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+          }),
+        () => sbSubscribeNewsletter(email),
+      )
       return { ok: true }
     } catch (error) {
       return {
@@ -780,10 +984,14 @@ export function ShopProvider({ children }) {
 
   const sendContactMessage = useCallback(async ({ name, email, message }) => {
     try {
-      await apiFetch('/api/contact', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, message }),
-      })
+      await withSupabaseFallback(
+        () =>
+          apiFetch('/api/contact', {
+            method: 'POST',
+            body: JSON.stringify({ name, email, message }),
+          }),
+        () => sbSendContactMessage({ name, email, message }),
+      )
       return { ok: true }
     } catch (error) {
       return {
@@ -796,19 +1004,29 @@ export function ShopProvider({ children }) {
 
   /* ---------------------------------------------- Admin Studio Operations */
   const loadAdminOverview = useCallback(async () => {
-    return apiFetch('/api/admin/overview')
+    return withSupabaseFallback(
+      () => apiFetch('/api/admin/overview'),
+      () => sbGetAdminOverview(),
+    )
   }, [])
 
   const syncAdminSupabase = useCallback(async () => {
-    return apiFetch('/api/admin/supabase/sync', { method: 'POST' })
+    return withSupabaseFallback(
+      () => apiFetch('/api/admin/supabase/sync', { method: 'POST' }),
+      async () => ({ ok: true, supabase: (await sbGetAdminOverview()).integrations.supabase }),
+    )
   }, [])
 
   const saveAdminProduct = useCallback(
     async (payload) => {
-      const data = await apiFetch('/api/admin/products', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
+      const data = await withSupabaseFallback(
+        () =>
+          apiFetch('/api/admin/products', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          }),
+        () => sbSaveProduct(payload),
+      )
       await refreshStorefront()
       pushToast(`Saved ${data.product?.name || 'product'}`)
       return data.product
@@ -818,12 +1036,13 @@ export function ShopProvider({ children }) {
 
   const updateAdminProductQuick = useCallback(
     async (productId, patch) => {
-      const data = await apiFetch(
-        `/api/admin/products/${encodeURIComponent(productId)}/quick`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify(patch),
-        },
+      const data = await withSupabaseFallback(
+        () =>
+          apiFetch(`/api/admin/products/${encodeURIComponent(productId)}/quick`, {
+            method: 'PATCH',
+            body: JSON.stringify(patch),
+          }),
+        () => sbUpdateProductQuick(productId, patch),
       )
       await refreshStorefront()
       pushToast(`Updated ${data.product?.name || 'product'}`)
@@ -834,12 +1053,13 @@ export function ShopProvider({ children }) {
 
   const updateAdminStock = useCallback(
     async (productId, stock) => {
-      const data = await apiFetch(
-        `/api/admin/products/${encodeURIComponent(productId)}/stock`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({ stock }),
-        },
+      const data = await withSupabaseFallback(
+        () =>
+          apiFetch(`/api/admin/products/${encodeURIComponent(productId)}/stock`, {
+            method: 'PATCH',
+            body: JSON.stringify({ stock }),
+          }),
+        () => sbUpdateStock(productId, stock),
       )
       await refreshStorefront()
       pushToast(`Stock updated (${data.product?.stock ?? stock})`)
@@ -850,9 +1070,13 @@ export function ShopProvider({ children }) {
 
   const deleteAdminProduct = useCallback(
     async (productId) => {
-      await apiFetch(`/api/admin/products/${encodeURIComponent(productId)}`, {
-        method: 'DELETE',
-      })
+      await withSupabaseFallback(
+        () =>
+          apiFetch(`/api/admin/products/${encodeURIComponent(productId)}`, {
+            method: 'DELETE',
+          }),
+        () => sbDeleteProduct(productId),
+      )
       await refreshStorefront()
       pushToast('Product removed')
     },
@@ -861,10 +1085,14 @@ export function ShopProvider({ children }) {
 
   const saveAdminCategory = useCallback(
     async (payload) => {
-      const data = await apiFetch('/api/admin/categories', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
+      const data = await withSupabaseFallback(
+        () =>
+          apiFetch('/api/admin/categories', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          }),
+        () => sbSaveCategory(payload),
+      )
       await refreshStorefront()
       pushToast(`Saved category ${data.category?.label || ''}`)
       return data.category
@@ -874,9 +1102,13 @@ export function ShopProvider({ children }) {
 
   const deleteAdminCategory = useCallback(
     async (categoryId) => {
-      await apiFetch(`/api/admin/categories/${encodeURIComponent(categoryId)}`, {
-        method: 'DELETE',
-      })
+      await withSupabaseFallback(
+        () =>
+          apiFetch(`/api/admin/categories/${encodeURIComponent(categoryId)}`, {
+            method: 'DELETE',
+          }),
+        () => sbDeleteCategory(categoryId),
+      )
       await refreshStorefront()
       pushToast('Category removed')
     },
@@ -885,10 +1117,14 @@ export function ShopProvider({ children }) {
 
   const createAdminOrder = useCallback(
     async (payload) => {
-      const data = await apiFetch('/api/admin/orders', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
+      const data = await withSupabaseFallback(
+        () =>
+          apiFetch('/api/admin/orders', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          }),
+        () => sbCreateAdminOrder(payload),
+      )
       await refreshStorefront()
       pushToast(`Order #${data.order?.id || ''} created`)
       return data.order
@@ -898,12 +1134,13 @@ export function ShopProvider({ children }) {
 
   const updateAdminOrder = useCallback(
     async (orderCode, patch) => {
-      const data = await apiFetch(
-        `/api/admin/orders/${encodeURIComponent(orderCode)}`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify(patch),
-        },
+      const data = await withSupabaseFallback(
+        () =>
+          apiFetch(`/api/admin/orders/${encodeURIComponent(orderCode)}`, {
+            method: 'PATCH',
+            body: JSON.stringify(patch),
+          }),
+        () => sbUpdateAdminOrder(orderCode, patch),
       )
       pushToast(`Order ${orderCode} updated`)
       return data.order
@@ -912,19 +1149,27 @@ export function ShopProvider({ children }) {
   )
 
   const uploadAdminImage = useCallback(async ({ filename, mimeType, dataBase64 }) => {
-    const data = await apiFetch('/api/admin/upload', {
-      method: 'POST',
-      body: JSON.stringify({ filename, mimeType, dataBase64 }),
-    })
+    const data = await withSupabaseFallback(
+      () =>
+        apiFetch('/api/admin/upload', {
+          method: 'POST',
+          body: JSON.stringify({ filename, mimeType, dataBase64 }),
+        }),
+      () => sbUploadImage({ filename, mimeType, dataBase64 }),
+    )
     return data.url
   }, [])
 
   const saveAdminDiscount = useCallback(
     async (payload) => {
-      const data = await apiFetch('/api/admin/discounts', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
+      const data = await withSupabaseFallback(
+        () =>
+          apiFetch('/api/admin/discounts', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          }),
+        () => sbSaveDiscount(payload),
+      )
       pushToast(`Discount ${data.discount.code} saved`)
       return data.discount
     },
@@ -933,9 +1178,13 @@ export function ShopProvider({ children }) {
 
   const deleteAdminDiscount = useCallback(
     async (id) => {
-      await apiFetch(`/api/admin/discounts/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      })
+      await withSupabaseFallback(
+        () =>
+          apiFetch(`/api/admin/discounts/${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+          }),
+        () => sbDeleteDiscount(id),
+      )
       pushToast('Discount deleted')
     },
     [pushToast],
@@ -943,10 +1192,14 @@ export function ShopProvider({ children }) {
 
   const createAdminCustomer = useCallback(
     async (payload) => {
-      const data = await apiFetch('/api/admin/customers', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
+      const data = await withSupabaseFallback(
+        () =>
+          apiFetch('/api/admin/customers', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          }),
+        () => sbCreateCustomer(payload),
+      )
       pushToast(`Added customer ${data.customer?.name || ''}`)
       return data.customer
     },
