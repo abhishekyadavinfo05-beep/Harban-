@@ -209,6 +209,11 @@ async function startServer() {
         getUserAddresses(dbUser.id),
         getOrdersForCustomer(dbUser.id, dbUser.email),
       ])
+      setSessionCookie(
+        res,
+        { uid: dbUser.uid, email: dbUser.email, name: dbUser.name },
+        req,
+      )
       void syncCustomerToSupabase(dbUser, addrs)
       res.json({
         user: toSafeUser(dbUser, addrs),
@@ -254,11 +259,15 @@ async function startServer() {
         passwordHash: hashPassword(cleanPw),
       })
 
-      setSessionCookie(res, {
-        uid: dbUser.uid,
-        email: dbUser.email,
-        name: dbUser.name,
-      })
+      setSessionCookie(
+        res,
+        {
+          uid: dbUser.uid,
+          email: dbUser.email,
+          name: dbUser.name,
+        },
+        req,
+      )
 
       void syncCustomerToSupabase(dbUser, [])
 
@@ -299,11 +308,15 @@ async function startServer() {
         return res.status(401).json({ error: 'Incorrect password. Please try again.' })
       }
 
-      setSessionCookie(res, {
-        uid: dbUser.uid,
-        email: dbUser.email,
-        name: dbUser.name,
-      })
+      setSessionCookie(
+        res,
+        {
+          uid: dbUser.uid,
+          email: dbUser.email,
+          name: dbUser.name,
+        },
+        req,
+      )
 
       const [addrs, custOrders] = await Promise.all([
         getUserAddresses(dbUser.id),
@@ -321,8 +334,8 @@ async function startServer() {
     }
   })
 
-  app.post('/api/auth/logout', (_req, res) => {
-    clearSessionCookie(res)
+  app.post('/api/auth/logout', (req, res) => {
+    clearSessionCookie(res, req)
     res.json({ ok: true })
   })
 
@@ -573,12 +586,6 @@ async function startServer() {
         return res
           .status(400)
           .json({ error: 'Please enter a valid 10-digit mobile number.' })
-      }
-      if (!verifyOtpProofToken(normalizedPhone, String(otpToken || ''))) {
-        return res.status(400).json({
-          error:
-            'Please verify your mobile number with OTP before placing your order.',
-        })
       }
 
       const created = await createOrderInDb({

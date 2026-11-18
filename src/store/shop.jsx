@@ -249,12 +249,23 @@ export function ShopProvider({ children }) {
       pushToast(`Welcome, ${data.user?.name?.split(' ')[0] || 'Customer'}!`)
       return { ok: true }
     } catch (error) {
+      const code = error?.code || ''
+      let msg =
+        error instanceof Error
+          ? error.message
+          : 'Google sign-in was cancelled or failed.'
+      if (code === 'auth/unauthorized-domain') {
+        const host =
+          typeof window !== 'undefined' ? window.location.hostname : ''
+        msg = `Google Sign-In is not authorized on "${host}" yet. Add this domain in Firebase Console → Authentication → Settings → Authorized domains, or sign in with Email & Password above.`
+      } else if (code === 'auth/popup-blocked') {
+        msg = 'Google Sign-In popup was blocked by your browser. Please allow popups and try again.'
+      } else if (code === 'auth/popup-closed-by-user') {
+        msg = 'Google Sign-In popup was closed before completing sign-in.'
+      }
       return {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Google sign-in was cancelled or failed.',
+        error: msg,
       }
     }
   }, [pushToast])

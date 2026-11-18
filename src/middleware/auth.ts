@@ -82,24 +82,35 @@ function parseCookie(cookieHeader: string | undefined, name: string): string | n
   return null
 }
 
-export function setSessionCookie(res: Response, user: AuthSessionUser) {
+function isHttpsRequest(req?: Request): boolean {
+  if (process.env.NODE_ENV === 'production') return true
+  if (!req) return false
+  const proto = String(req.headers['x-forwarded-proto'] || '').toLowerCase()
+  return Boolean(req.secure || proto.includes('https'))
+}
+
+export function setSessionCookie(
+  res: Response,
+  user: AuthSessionUser,
+  req?: Request,
+) {
   const token = signSessionToken(user)
-  const isProd = process.env.NODE_ENV === 'production'
+  const useSecure = isHttpsRequest(req)
   res.cookie(SESSION_COOKIE, token, {
     httpOnly: true,
-    sameSite: isProd ? 'none' : 'lax',
-    secure: isProd,
+    sameSite: useSecure ? 'none' : 'lax',
+    secure: useSecure,
     maxAge: 30 * 24 * 3600 * 1000,
     path: '/',
   })
 }
 
-export function clearSessionCookie(res: Response) {
-  const isProd = process.env.NODE_ENV === 'production'
+export function clearSessionCookie(res: Response, req?: Request) {
+  const useSecure = isHttpsRequest(req)
   res.clearCookie(SESSION_COOKIE, {
     httpOnly: true,
-    sameSite: isProd ? 'none' : 'lax',
-    secure: isProd,
+    sameSite: useSecure ? 'none' : 'lax',
+    secure: useSecure,
     path: '/',
   })
 }

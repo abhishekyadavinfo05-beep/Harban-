@@ -290,7 +290,6 @@ export function CartDrawer() {
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim(),
-        otpToken: activeOtpToken,
         address: addressObj,
         paymentMethod,
         paymentStatus,
