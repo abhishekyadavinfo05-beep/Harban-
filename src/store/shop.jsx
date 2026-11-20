@@ -604,7 +604,7 @@ export function ShopProvider({ children }) {
   )
 
   const saveAddress = useCallback(
-    async (addr) => {
+    async (addr, { silent = false } = {}) => {
       try {
         const data = await withSupabaseFallback(
           () =>
@@ -615,12 +615,14 @@ export function ShopProvider({ children }) {
           () => sbSaveAddress(addr),
         )
         setUser(data.user)
-        pushToast('Address saved')
+        if (!silent) pushToast('Address saved')
         return { ok: true }
       } catch (error) {
-        pushToast(
-          error instanceof Error ? error.message : 'Unable to save address.',
-        )
+        if (!silent) {
+          pushToast(
+            error instanceof Error ? error.message : 'Unable to save address.',
+          )
+        }
         return { ok: false }
       }
     },

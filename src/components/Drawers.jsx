@@ -221,7 +221,14 @@ export function CartDrawer() {
         pincode: pincode.trim(),
       }
       if (user && (!user.addresses || user.addresses.length === 0)) {
-        await saveAddress({ ...addressObj, label: 'Home', isDefault: true })
+        try {
+          await saveAddress(
+            { ...addressObj, label: 'Home', isDefault: true },
+            { silent: true },
+          )
+        } catch {
+          // Non-blocking: never prevent order checkout if address auto-save fails
+        }
       }
       let rzpOrderId = null
       let rzpPaymentId = null

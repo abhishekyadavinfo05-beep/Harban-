@@ -287,6 +287,31 @@ async function ensureCustomerProfile(sbUser: User) {
   const provider =
     sbUser.app_metadata?.provider === 'google' ? 'google' : 'email'
 
+  const { data: ensuredProfile, error: ensureRpcErr } = await sb.rpc(
+    'ensure_my_customer_profile',
+    {
+      p_name: metaName,
+      p_phone: metaPhone,
+    },
+  )
+
+  if (!ensureRpcErr && ensuredProfile && typeof ensuredProfile === 'object') {
+    const p: any = ensuredProfile
+    const effectiveRole =
+      p.role === 'admin' || isAllowlistedAdminEmail(email)
+        ? 'admin'
+        : 'customer'
+    return {
+      uid: String(p.uid || sbUser.id),
+      email: String(p.email || email).trim().toLowerCase(),
+      name: String(p.name || metaName),
+      phone: String(p.phone || metaPhone),
+      role: effectiveRole,
+      dbRole: String(p.role || 'customer'),
+      createdAt: Number(p.createdAt || Date.now()),
+    }
+  }
+
   const { data: existingList } = await sb
     .from('customers')
     .select('*')
@@ -639,7 +664,23 @@ export async function sbRegisterWithEmail({
         'An account with this email already exists. Please sign in.',
       )
     }
+    if (/rate limit/i.test(error.message)) {
+      throw new Error(
+        'Email confirmation limit reached in Supabase. Turn OFF "Confirm email" in Supabase Dashboard → Authentication → Providers → Email for instant signup without email limits.',
+      )
+    }
     throw new Error(error.message)
+  }
+
+  // When email confirmation is enabled, Supabase returns empty identities instead of an error for existing accounts
+  if (
+    data.user &&
+    Array.isArray(data.user.identities) &&
+    data.user.identities.length === 0
+  ) {
+    throw new Error(
+      'An account with this email already exists. Please switch to Sign In.',
+    )
   }
 
   if (!data.session) {
@@ -648,7 +689,7 @@ export async function sbRegisterWithEmail({
       orders: [],
       verificationRequired: true,
       message:
-        'Account created! Please check your email inbox and click the confirmation link before signing in.',
+        'Account created! Check your email inbox and click the confirmation link before signing in (or turn OFF "Confirm email" in Supabase for instant login).',
     }
   }
 
@@ -834,15 +875,25 @@ export async function sbPlaceOrder(payload: any) {
     throw new Error(rpcErr.message)
   }
 
-  return sbCreateAdminOrder({
-    customerName: payload.name || 'Customer',
-    customerEmail: payload.email || null,
-    phone: payload.phone || '',
-    shippingAddress: payload.address || null,
-    paymentMethod: payload.paymentMethod || 'Cash on Delivery',
-    paymentStatus: payload.paymentStatus || 'pending',
-    items: payload.items || [],
-  })
+  try {
+    return await sbCreateAdminOrder({
+      customerName: payload.name || 'Customer',
+      customerEmail: payload.email || null,
+      phone: payload.phone || '',
+      shippingAddress: payload.address || null,
+      paymentMethod: payload.paymentMethod || 'Cash on Delivery',
+      paymentStatus: payload.paymentStatus || 'pending',
+      items: payload.items || [],
+    })
+  } catch (fallbackErr: any) {
+    const msg = String(fallbackErr?.message || '')
+    if (/row-level security/i.test(msg)) {
+      throw new Error(
+        'Checkout SQL setup pending in Supabase. Please run the checkout SQL script once in Supabase Dashboard → SQL Editor.',
+      )
+    }
+    throw fallbackErr
+  }
 }
 
 export async function sbTrackOrderByCode(code: string) {
@@ -868,6 +919,19 @@ export async function sbTrackOrderByCode(code: string) {
 
 export async function sbCancelOrder(orderCode: string) {
   const sb = getBrowserSupabase()
+  const { data: rpcData, error: rpcErr } = await sb.rpc('cancel_my_order', {
+    p_order_code: orderCode,
+  })
+  if (!rpcErr && rpcData) {
+    return { order: rpcData }
+  }
+  if (
+    rpcErr &&
+    !/could not find the function|does not exist/i.test(rpcErr.message)
+  ) {
+    throw new Error(rpcErr.message)
+  }
+
   const { data, error } = await sb
     .from('orders')
     .update({
