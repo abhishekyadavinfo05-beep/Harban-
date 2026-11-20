@@ -471,14 +471,60 @@ export async function sbGetAccount() {
   }
 }
 
+export function consumeOAuthCallbackError(): string | null {
+  if (typeof window === 'undefined') return null
+  const searchParams = new URLSearchParams(window.location.search)
+  const hashRaw = window.location.hash.replace(/^#/, '')
+  const hashParams = new URLSearchParams(hashRaw)
+
+  const errDesc =
+    searchParams.get('error_description') ||
+    hashParams.get('error_description') ||
+    searchParams.get('error') ||
+    hashParams.get('error')
+
+  if (!errDesc) return null
+
+  try {
+    const cleanUrl = `${window.location.origin}${window.location.pathname}`
+    window.history.replaceState({}, document.title, cleanUrl)
+  } catch {
+    /* ignore history replace errors */
+  }
+  return decodeURIComponent(errDesc.replace(/\+/g, ' '))
+}
+
 export async function sbLoginWithGoogle() {
   const sb = getBrowserSupabase()
+  const baseUrl = getBrowserSupabaseUrl()
+  const anonKey = getBrowserSupabaseKey()
+
+  // Pre-check auth provider status so users never get redirected to a raw Supabase JSON error page
+  try {
+    const settingsRes = await fetch(`${baseUrl}/auth/v1/settings`, {
+      headers: { apikey: anonKey },
+    })
+    if (settingsRes.ok) {
+      const settings = await settingsRes.json().catch(() => null)
+      if (settings?.external && settings.external.google === false) {
+        throw new Error(
+          'Google Sign-In is currently disabled in Supabase. Turn on Google in Supabase Dashboard → Authentication → Sign In / Providers → Google, or sign in with Email & Password above.',
+        )
+      }
+    }
+  } catch (err) {
+    if (err instanceof Error && /disabled in Supabase/i.test(err.message)) {
+      throw err
+    }
+  }
+
   const redirectTo =
     typeof window !== 'undefined' ? window.location.origin : undefined
-  const { error } = await sb.auth.signInWithOAuth({
+  const { data, error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo,
+      skipBrowserRedirect: true,
       queryParams: {
         prompt: 'select_account',
       },
@@ -488,10 +534,41 @@ export async function sbLoginWithGoogle() {
     const msg = error.message || 'Google Sign-In failed.'
     if (/provider.*not enabled|unsupported provider/i.test(msg)) {
       throw new Error(
-        'Enable Google provider in Supabase Dashboard → Authentication → Providers → Google, or sign in with Email & Password above.',
+        'Google Sign-In is not fully configured in Supabase. Add both Google Client ID and Client Secret in Supabase Dashboard → Authentication → Providers → Google.',
       )
     }
     throw new Error(msg)
+  }
+
+  if (data?.url && typeof window !== 'undefined') {
+    // Verify authorize endpoint before navigating so missing OAuth secret shows a clean form error instead of raw JSON
+    try {
+      const probe = await fetch(data.url, { redirect: 'manual' })
+      if (probe.type !== 'opaqueredirect' && probe.status >= 400) {
+        const body = await probe.json().catch(() => ({}))
+        const rawMsg = String(body?.msg || body?.error_description || body?.error || '')
+        if (/missing oauth secret/i.test(rawMsg)) {
+          throw new Error(
+            'Google Client Secret is missing in Supabase. Open Supabase Dashboard → Authentication → Sign In / Providers → Google, paste your Google Client Secret (GOCSPX-...), and click Save.',
+          )
+        }
+        if (/provider.*not enabled|unsupported provider/i.test(rawMsg)) {
+          throw new Error(
+            'Google Sign-In is not enabled in Supabase. Turn on Google and save both Client ID & Client Secret in Supabase Dashboard.',
+          )
+        }
+        throw new Error(rawMsg || 'Google OAuth configuration error in Supabase.')
+      }
+    } catch (probeErr) {
+      if (
+        probeErr instanceof Error &&
+        /Client Secret|not enabled|OAuth configuration/i.test(probeErr.message)
+      ) {
+        throw probeErr
+      }
+    }
+
+    window.location.assign(data.url)
   }
   return { redirected: true }
 }
@@ -566,9 +643,13 @@ export async function sbRegisterWithEmail({
   }
 
   if (!data.session) {
-    throw new Error(
-      'Account created! Please check your email inbox and click the confirmation link to sign in.',
-    )
+    return {
+      user: null,
+      orders: [],
+      verificationRequired: true,
+      message:
+        'Account created! Please check your email inbox and click the confirmation link before signing in.',
+    }
   }
 
   return sbGetAccount()

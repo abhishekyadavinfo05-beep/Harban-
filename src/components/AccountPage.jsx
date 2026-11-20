@@ -34,8 +34,14 @@ function getInitials(name = 'H') {
 /* ----------------------------------------------------------- Login / Signup */
 
 function AuthView() {
-  const { loginWithEmail, registerWithEmail, loginWithGoogle, setTrackOpen } =
-    useShop()
+  const {
+    loginWithEmail,
+    registerWithEmail,
+    loginWithGoogle,
+    setTrackOpen,
+    authCallbackError,
+    setAuthCallbackError,
+  } = useShop()
   const [mode, setMode] = useState('login')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -44,26 +50,42 @@ function AuthView() {
   const [showPw, setShowPw] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    if (authCallbackError) {
+      setError(authCallbackError)
+      setAuthCallbackError('')
+    }
+  }, [authCallbackError, setAuthCallbackError])
 
   const switchMode = (next) => {
     setMode(next)
     setError('')
+    setNotice('')
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setNotice('')
     setBusy(true)
     const res =
       mode === 'login'
         ? await loginWithEmail({ email, password })
         : await registerWithEmail({ name, email, phone, password })
     setBusy(false)
-    if (!res.ok) setError(res.error)
+    if (!res.ok) {
+      setError(res.error)
+    } else if (res.verificationRequired && res.message) {
+      setNotice(res.message)
+      setMode('login')
+    }
   }
 
   const handleGoogle = async () => {
     setError('')
+    setNotice('')
     setBusy(true)
     const res = await loginWithGoogle()
     setBusy(false)
@@ -133,6 +155,12 @@ function AuthView() {
               Create Account
             </button>
           </div>
+
+          {notice && (
+            <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-[13px] text-emerald-800 font-medium">
+              {notice}
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-[13px] text-red-700 font-medium">

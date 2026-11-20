@@ -15,6 +15,7 @@ import {
 } from 'firebase/auth'
 import { auth, googleAuthProvider, phoneOtpAuth } from '../lib/firebase'
 import {
+  consumeOAuthCallbackError,
   getBrowserSupabase,
   sbCancelOrder,
   sbChangePassword,
@@ -226,6 +227,7 @@ export function ShopProvider({ children }) {
   const [lastOrder, setLastOrder] = useState(null)
   const [user, setUser] = useState(null)
   const [authReady, setAuthReady] = useState(false)
+  const [authCallbackError, setAuthCallbackError] = useState('')
 
   const [cartOpen, setCartOpen] = useState(false)
   const [trackOpen, setTrackOpen] = useState(false)
@@ -345,43 +347,85 @@ export function ShopProvider({ children }) {
   /* Sync authenticated customer account & order history */
   const refreshAccount = useCallback(async () => {
     try {
-      const data = await withSupabaseFallback(
+      let data = await withSupabaseFallback(
         () => apiFetch('/api/auth/me'),
         () => sbGetAccount(),
       )
+      if (!data?.user) {
+        const sbData = await sbGetAccount().catch(() => ({ user: null, orders: [] }))
+        if (sbData?.user) {
+          data = sbData
+        }
+      }
       setUser(data.user ?? null)
       const list = Array.isArray(data.orders) ? data.orders : []
       setOrders(list)
       if (list[0]) setLastOrder((prev) => prev ?? list[0])
+      return data
     } catch {
       setUser(null)
+      return { user: null, orders: [] }
     } finally {
       setAuthReady(true)
     }
   }, [])
 
   useEffect(() => {
+    const cbErr = consumeOAuthCallbackError()
+    if (cbErr) {
+      setAuthCallbackError(cbErr)
+      setRoute('account')
+    }
+
     const unsubFirebase = onAuthStateChanged(auth, () => {
       refreshAccount()
     })
     const sb = getBrowserSupabase()
     const {
       data: { subscription: sbSub },
-    } = sb.auth.onAuthStateChange((_event, session) => {
+    } = sb.auth.onAuthStateChange(async (event, session) => {
       if (session || detectedMode === 'supabase') {
-        refreshAccount()
+        const data = await refreshAccount()
+        if (event === 'SIGNED_IN' && session?.user) {
+          try {
+            const returnRoute = sessionStorage.getItem('harban-oauth-return')
+            if (returnRoute) {
+              sessionStorage.removeItem('harban-oauth-return')
+              setRoute(returnRoute === 'admin' && data?.user?.role === 'admin' ? 'admin' : 'account')
+              pushToast(`Welcome, ${data?.user?.name?.split(' ')[0] || 'Customer'}!`)
+            }
+            if (
+              window.location.search.includes('code=') ||
+              window.location.hash.includes('access_token=')
+            ) {
+              window.history.replaceState(
+                {},
+                document.title,
+                `${window.location.origin}${window.location.pathname}`,
+              )
+            }
+          } catch {
+            /* ignore sessionStorage / history errors */
+          }
+        }
       }
     })
     return () => {
       unsubFirebase()
       sbSub.unsubscribe()
     }
-  }, [refreshAccount])
+  }, [pushToast, refreshAccount])
 
   const loginWithGoogle = useCallback(async () => {
     try {
+      setAuthCallbackError('')
       const mode = await probeBackendMode()
       if (mode === 'supabase') {
+        try {
+          sessionStorage.setItem('harban-oauth-return', route || 'account')
+        } catch {
+          /* ignore */
+        }
         await sbLoginWithGoogle()
         return { ok: true }
       }
@@ -398,6 +442,11 @@ export function ShopProvider({ children }) {
       const code = error?.code || ''
       if (code === 'auth/unauthorized-domain' && detectedMode === 'supabase') {
         try {
+          try {
+            sessionStorage.setItem('harban-oauth-return', route || 'account')
+          } catch {
+            /* ignore */
+          }
           await sbLoginWithGoogle()
           return { ok: true }
         } catch (sbErr) {
@@ -428,7 +477,7 @@ export function ShopProvider({ children }) {
         error: msg,
       }
     }
-  }, [pushToast])
+  }, [pushToast, route])
 
   const registerWithEmail = useCallback(
     async ({ name, email, phone = '', password }) => {
@@ -441,6 +490,14 @@ export function ShopProvider({ children }) {
             }),
           () => sbRegisterWithEmail({ name, email, phone, password }),
         )
+        if (data?.verificationRequired) {
+          pushToast('Confirmation link sent to your email!')
+          return {
+            ok: true,
+            verificationRequired: true,
+            message: data.message,
+          }
+        }
         setUser(data.user ?? null)
         setOrders(Array.isArray(data.orders) ? data.orders : [])
         pushToast(`Welcome to HARBAN, ${data.user?.name?.split(' ')[0] || ''}!`)
@@ -1263,6 +1320,8 @@ export function ShopProvider({ children }) {
       lastOrder,
       user,
       authReady,
+      authCallbackError,
+      setAuthCallbackError,
       loginWithGoogle,
       loginWithEmail,
       registerWithEmail,
@@ -1314,6 +1373,7 @@ export function ShopProvider({ children }) {
     lastOrder,
     user,
     authReady,
+    authCallbackError,
     addToCart,
     setQty,
     removeFromCart,
