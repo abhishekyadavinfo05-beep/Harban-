@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import {
@@ -107,7 +108,102 @@ export const NAV_ITEMS = [
   { id: 'support', label: 'Support' },
 ]
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+const STATIC_ROUTE_PATHS = {
+  home: '/',
+  all: '/shop',
+  trimmers: '/trimmers',
+  accessories: '/accessories',
+  story: '/story',
+  account: '/account',
+  admin: '/admin',
+  support: '/support',
+  contact: '/contact',
+  'order-confirmed': '/order-confirmed',
+}
+
+function routeToPath(nextRoute) {
+  if (!nextRoute || nextRoute === 'home') return '/'
+  if (STATIC_ROUTE_PATHS[nextRoute]) return STATIC_ROUTE_PATHS[nextRoute]
+  if (nextRoute.startsWith('policy:')) {
+    return `/policy/${encodeURIComponent(nextRoute.slice('policy:'.length))}`
+  }
+  if (nextRoute.startsWith('product:')) {
+    return `/product/${encodeURIComponent(nextRoute.slice('product:'.length))}`
+  }
+  return `/category/${encodeURIComponent(nextRoute)}`
+}
+
+function pathToRoute(pathname) {
+  const clean = String(pathname || '/').replace(/\/+$/, '') || '/'
+  if (clean === '/') return 'home'
+  for (const [key, path] of Object.entries(STATIC_ROUTE_PATHS)) {
+    if (path === clean) return key
+  }
+  if (clean.startsWith('/policy/')) {
+    return `policy:${decodeURIComponent(clean.slice('/policy/'.length))}`
+  }
+  if (clean.startsWith('/product/')) {
+    return `product:${decodeURIComponent(clean.slice('/product/'.length))}`
+  }
+  if (clean.startsWith('/category/')) {
+    return decodeURIComponent(clean.slice('/category/'.length))
+  }
+  const bare = clean.slice(1)
+  if (bare && !bare.includes('/')) return decodeURIComponent(bare)
+  return 'home'
+}
+
+function hasOAuthCallbackParams() {
+  if (typeof window === 'undefined') return false
+  const s = window.location.search || ''
+  const h = window.location.hash || ''
+  return (
+    s.includes('code=') ||
+    s.includes('error=') ||
+    h.includes('access_token=') ||
+    h.includes('error=')
+  )
+}
+
+function resolveApiBase() {
+  const raw = String(import.meta.env.VITE_API_BASE_URL || '')
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .replace(/\/+$/, '')
+  if (!raw) return ''
+  // Ignore non-URL strings (e.g. a bare Supabase project ID) or Supabase project URLs
+  if (!/^https?:\/\/[^/\s]+/i.test(raw)) return ''
+  try {
+    const host = new URL(raw).hostname.toLowerCase()
+    if (host.endsWith('.supabase.co') || host.endsWith('.supabase.in')) return ''
+  } catch {
+    return ''
+  }
+  return raw
+}
+
+const API_BASE = resolveApiBase()
+const SESSION_TOKEN_KEY = 'harban-session-token'
+
+function readSessionToken() {
+  try {
+    return localStorage.getItem(SESSION_TOKEN_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+function writeSessionToken(token) {
+  try {
+    if (token) {
+      localStorage.setItem(SESSION_TOKEN_KEY, token)
+    } else {
+      localStorage.removeItem(SESSION_TOKEN_KEY)
+    }
+  } catch {
+    /* ignore storage errors */
+  }
+}
 
 class BackendUnavailableError extends Error {
   constructor() {
@@ -160,6 +256,12 @@ async function apiFetch(url, options = {}) {
       if (token) headers.Authorization = `Bearer ${token}`
     } catch {
       /* ignore token fetch failure; server handles auth */
+    }
+  }
+  if (!headers.Authorization) {
+    const storedToken = readSessionToken()
+    if (storedToken) {
+      headers.Authorization = `Bearer ${storedToken}`
     }
   }
 
@@ -229,12 +331,184 @@ export function ShopProvider({ children }) {
   const [authReady, setAuthReady] = useState(false)
   const [authCallbackError, setAuthCallbackError] = useState('')
 
-  const [cartOpen, setCartOpen] = useState(false)
-  const [trackOpen, setTrackOpen] = useState(false)
+  const [cartOpen, setCartOpenState] = useState(false)
+  const [trackOpen, setTrackOpenState] = useState(false)
   const [search, setSearch] = useState('')
   const [quickView, setQuickViewState] = useState(null)
   const [toasts, setToasts] = useState([])
-  const [route, setRoute] = useState('home')
+  const [route, setRouteState] = useState(() =>
+    typeof window !== 'undefined' ? pathToRoute(window.location.pathname) : 'home',
+  )
+
+  const routeRef = useRef(route)
+  const productsRef = useRef(products)
+  const cartOpenRef = useRef(cartOpen)
+  const trackOpenRef = useRef(trackOpen)
+  const quickViewRef = useRef(quickView)
+  useEffect(() => {
+    routeRef.current = route
+  }, [route])
+  useEffect(() => {
+    productsRef.current = products
+  }, [products])
+  useEffect(() => {
+    cartOpenRef.current = cartOpen
+  }, [cartOpen])
+  useEffect(() => {
+    trackOpenRef.current = trackOpen
+  }, [trackOpen])
+  useEffect(() => {
+    quickViewRef.current = quickView
+  }, [quickView])
+
+  const pushOverlayHistory = useCallback((overlayType, extra = {}) => {
+    if (typeof window === 'undefined') return
+    try {
+      const currentRoute = routeRef.current || 'home'
+      const nextState = {
+        harban: true,
+        route: currentRoute,
+        overlay: overlayType,
+        ...extra,
+      }
+      const targetPath = routeToPath(currentRoute)
+      if (window.history.state?.overlay) {
+        window.history.replaceState(nextState, '', targetPath)
+      } else {
+        window.history.pushState(nextState, '', targetPath)
+      }
+    } catch {
+      /* ignore history API restrictions */
+    }
+  }, [])
+
+  const popOverlayHistoryIfActive = useCallback((overlayType) => {
+    if (typeof window === 'undefined') return
+    queueMicrotask(() => {
+      try {
+        if (window.history.state?.harban && window.history.state?.overlay === overlayType) {
+          window.history.back()
+        }
+      } catch {
+        /* ignore history API restrictions */
+      }
+    })
+  }, [])
+
+  const navigateRoute = useCallback((next, { replace = false } = {}) => {
+    const target = next || 'home'
+    const prev = routeRef.current
+    routeRef.current = target
+    cartOpenRef.current = false
+    trackOpenRef.current = false
+    quickViewRef.current = null
+    setRouteState(target)
+    setCartOpenState(false)
+    setTrackOpenState(false)
+    setQuickViewState(null)
+
+    if (typeof window !== 'undefined') {
+      try {
+        const targetPath = routeToPath(target)
+        const nextState = { harban: true, route: target, overlay: null }
+        const curState = window.history.state
+        if (replace || curState?.overlay) {
+          window.history.replaceState(nextState, '', targetPath)
+        } else if (
+          prev !== target ||
+          window.location.pathname !== targetPath ||
+          curState?.route !== target
+        ) {
+          window.history.pushState(nextState, '', targetPath)
+        }
+      } catch {
+        /* ignore history API restrictions */
+      }
+    }
+  }, [])
+
+  const setCartOpen = useCallback(
+    (next) => {
+      const prev = cartOpenRef.current
+      const resolved = typeof next === 'function' ? Boolean(next(prev)) : Boolean(next)
+      cartOpenRef.current = resolved
+      setCartOpenState(resolved)
+      if (resolved && !prev) {
+        trackOpenRef.current = false
+        quickViewRef.current = null
+        setTrackOpenState(false)
+        setQuickViewState(null)
+        pushOverlayHistory('cart')
+      } else if (!resolved && prev) {
+        popOverlayHistoryIfActive('cart')
+      }
+    },
+    [popOverlayHistoryIfActive, pushOverlayHistory],
+  )
+
+  const setTrackOpen = useCallback(
+    (next) => {
+      const prev = trackOpenRef.current
+      const resolved = typeof next === 'function' ? Boolean(next(prev)) : Boolean(next)
+      trackOpenRef.current = resolved
+      setTrackOpenState(resolved)
+      if (resolved && !prev) {
+        cartOpenRef.current = false
+        quickViewRef.current = null
+        setCartOpenState(false)
+        setQuickViewState(null)
+        pushOverlayHistory('track')
+      } else if (!resolved && prev) {
+        popOverlayHistoryIfActive('track')
+      }
+    },
+    [popOverlayHistoryIfActive, pushOverlayHistory],
+  )
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!hasOAuthCallbackParams()) {
+      try {
+        const initialRoute = routeRef.current || 'home'
+        window.history.replaceState(
+          { harban: true, route: initialRoute, overlay: null },
+          '',
+          routeToPath(initialRoute),
+        )
+      } catch {
+        /* ignore history API restrictions */
+      }
+    }
+
+    const onPopState = (event) => {
+      const st = event.state
+      const nextRoute =
+        st?.harban && st?.route ? st.route : pathToRoute(window.location.pathname)
+      const nextOverlay = st?.harban ? st.overlay || null : null
+      const routeChanged = nextRoute !== routeRef.current
+
+      routeRef.current = nextRoute
+      cartOpenRef.current = nextOverlay === 'cart'
+      trackOpenRef.current = nextOverlay === 'track'
+      const matchedProduct =
+        nextOverlay === 'quickview' && st?.quickViewId
+          ? productsRef.current.find((p) => p.id === st.quickViewId) || null
+          : null
+      quickViewRef.current = matchedProduct
+
+      setRouteState(nextRoute)
+      setCartOpenState(nextOverlay === 'cart')
+      setTrackOpenState(nextOverlay === 'track')
+      setQuickViewState(matchedProduct)
+
+      if (routeChanged) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
 
   useEffect(() => writeLocal('harban-cart', cart), [cart])
 
@@ -331,17 +605,27 @@ export function ShopProvider({ children }) {
 
   const setQuickView = useCallback(
     (product) => {
-      setQuickViewState(product)
-      if (product) {
+      const prev = quickViewRef.current
+      const nextProduct = product || null
+      quickViewRef.current = nextProduct
+      setQuickViewState(nextProduct)
+      if (nextProduct) {
+        cartOpenRef.current = false
+        trackOpenRef.current = false
+        setCartOpenState(false)
+        setTrackOpenState(false)
+        pushOverlayHistory('quickview', { quickViewId: nextProduct.id })
         sendViewTelemetry({
           viewType: 'quick_view',
-          productId: product.id,
-          productName: product.name,
-          category: product.category,
+          productId: nextProduct.id,
+          productName: nextProduct.name,
+          category: nextProduct.category,
         })
+      } else if (prev) {
+        popOverlayHistoryIfActive('quickview')
       }
     },
-    [sendViewTelemetry],
+    [popOverlayHistoryIfActive, pushOverlayHistory, sendViewTelemetry],
   )
 
   /* Sync authenticated customer account & order history */
@@ -374,7 +658,7 @@ export function ShopProvider({ children }) {
     const cbErr = consumeOAuthCallbackError()
     if (cbErr) {
       setAuthCallbackError(cbErr)
-      setRoute('account')
+      navigateRoute('account', { replace: true })
     }
 
     const unsubFirebase = onAuthStateChanged(auth, () => {
@@ -391,17 +675,18 @@ export function ShopProvider({ children }) {
             const returnRoute = sessionStorage.getItem('harban-oauth-return')
             if (returnRoute) {
               sessionStorage.removeItem('harban-oauth-return')
-              setRoute(returnRoute === 'admin' && data?.user?.role === 'admin' ? 'admin' : 'account')
+              const dest =
+                returnRoute === 'admin' && data?.user?.role === 'admin'
+                  ? 'admin'
+                  : 'account'
+              navigateRoute(dest, { replace: true })
               pushToast(`Welcome, ${data?.user?.name?.split(' ')[0] || 'Customer'}!`)
-            }
-            if (
-              window.location.search.includes('code=') ||
-              window.location.hash.includes('access_token=')
-            ) {
+            } else if (hasOAuthCallbackParams()) {
+              const target = routeRef.current || 'home'
               window.history.replaceState(
-                {},
-                document.title,
-                `${window.location.origin}${window.location.pathname}`,
+                { harban: true, route: target, overlay: null },
+                '',
+                routeToPath(target),
               )
             }
           } catch {
@@ -414,7 +699,7 @@ export function ShopProvider({ children }) {
       unsubFirebase()
       sbSub.unsubscribe()
     }
-  }, [pushToast, refreshAccount])
+  }, [navigateRoute, pushToast, refreshAccount])
 
   const loginWithGoogle = useCallback(async () => {
     try {
@@ -434,6 +719,7 @@ export function ShopProvider({ children }) {
         () => apiFetch('/api/auth/google', { method: 'POST' }),
         () => sbGetAccount(),
       )
+      if (data?.sessionToken) writeSessionToken(data.sessionToken)
       setUser(data.user ?? null)
       setOrders(Array.isArray(data.orders) ? data.orders : [])
       pushToast(`Welcome, ${data.user?.name?.split(' ')[0] || 'Customer'}!`)
@@ -498,6 +784,7 @@ export function ShopProvider({ children }) {
             message: data.message,
           }
         }
+        if (data?.sessionToken) writeSessionToken(data.sessionToken)
         setUser(data.user ?? null)
         setOrders(Array.isArray(data.orders) ? data.orders : [])
         pushToast(`Welcome to HARBAN, ${data.user?.name?.split(' ')[0] || ''}!`)
@@ -524,6 +811,7 @@ export function ShopProvider({ children }) {
             }),
           () => sbLoginWithEmail({ email, password }),
         )
+        if (data?.sessionToken) writeSessionToken(data.sessionToken)
         setUser(data.user ?? null)
         setOrders(Array.isArray(data.orders) ? data.orders : [])
         pushToast(`Signed in as ${data.user?.name?.split(' ')[0] || ''}`)
@@ -539,6 +827,7 @@ export function ShopProvider({ children }) {
   )
 
   const logout = useCallback(async () => {
+    writeSessionToken('')
     try {
       if (auth.currentUser) await signOut(auth)
       await withSupabaseFallback(
@@ -956,8 +1245,7 @@ export function ShopProvider({ children }) {
         setLastOrder(created)
         setOrders((prev) => [created, ...prev])
         clearCart()
-        setCartOpen(false)
-        setRoute('order-confirmed')
+        navigateRoute('order-confirmed')
         void refreshStorefront()
         return created
       } catch (error) {
@@ -969,7 +1257,7 @@ export function ShopProvider({ children }) {
         return null
       }
     },
-    [cart, clearCart, pushToast, refreshStorefront, user],
+    [cart, clearCart, navigateRoute, pushToast, refreshStorefront, user],
   )
 
   const trackOrderByCode = useCallback(async (code) => {
@@ -1267,7 +1555,7 @@ export function ShopProvider({ children }) {
 
   const go = useCallback(
     (next) => {
-      setRoute(next)
+      navigateRoute(next)
       if (next !== 'all') setSearch('')
       if (next?.startsWith('product:')) {
         const pid = next.slice('product:'.length)
@@ -1286,7 +1574,7 @@ export function ShopProvider({ children }) {
       }
       window.scrollTo({ top: 0, behavior: 'smooth' })
     },
-    [products, sendViewTelemetry],
+    [navigateRoute, products, sendViewTelemetry],
   )
 
   const value = useMemo(() => {
@@ -1416,7 +1704,9 @@ export function ShopProvider({ children }) {
     updateAdminOrder,
     uploadAdminImage,
     cartOpen,
+    setCartOpen,
     trackOpen,
+    setTrackOpen,
     search,
     quickView,
     setQuickView,

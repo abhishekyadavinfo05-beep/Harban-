@@ -61,6 +61,7 @@ import {
   requireAdmin,
   requireAuth,
   setSessionCookie,
+  signSessionToken,
   verifyFirebasePhoneIdToken,
   verifyOtpChallenge,
   verifyOtpProofToken,
@@ -209,15 +210,17 @@ async function startServer() {
         getUserAddresses(dbUser.id),
         getOrdersForCustomer(dbUser.id, dbUser.email),
       ])
-      setSessionCookie(
-        res,
-        { uid: dbUser.uid, email: dbUser.email, name: dbUser.name },
-        req,
-      )
+      const sessionPayload = {
+        uid: dbUser.uid,
+        email: dbUser.email,
+        name: dbUser.name,
+      }
+      setSessionCookie(res, sessionPayload, req)
       void syncCustomerToSupabase(dbUser, addrs)
       res.json({
         user: toSafeUser(dbUser, addrs),
         orders: custOrders,
+        sessionToken: signSessionToken(sessionPayload),
       })
     } catch (error: any) {
       res.status(500).json({ error: error.message || 'Google sign-in failed.' })
@@ -259,15 +262,12 @@ async function startServer() {
         passwordHash: hashPassword(cleanPw),
       })
 
-      setSessionCookie(
-        res,
-        {
-          uid: dbUser.uid,
-          email: dbUser.email,
-          name: dbUser.name,
-        },
-        req,
-      )
+      const sessionPayload = {
+        uid: dbUser.uid,
+        email: dbUser.email,
+        name: dbUser.name,
+      }
+      setSessionCookie(res, sessionPayload, req)
 
       void syncCustomerToSupabase(dbUser, [])
 
@@ -275,6 +275,7 @@ async function startServer() {
       res.status(201).json({
         user: toSafeUser(dbUser, []),
         orders: custOrders,
+        sessionToken: signSessionToken(sessionPayload),
       })
     } catch (error: any) {
       res.status(500).json({ error: error.message || 'Registration failed.' })
@@ -308,15 +309,12 @@ async function startServer() {
         return res.status(401).json({ error: 'Incorrect password. Please try again.' })
       }
 
-      setSessionCookie(
-        res,
-        {
-          uid: dbUser.uid,
-          email: dbUser.email,
-          name: dbUser.name,
-        },
-        req,
-      )
+      const sessionPayload = {
+        uid: dbUser.uid,
+        email: dbUser.email,
+        name: dbUser.name,
+      }
+      setSessionCookie(res, sessionPayload, req)
 
       const [addrs, custOrders] = await Promise.all([
         getUserAddresses(dbUser.id),
@@ -328,6 +326,7 @@ async function startServer() {
       res.json({
         user: toSafeUser(dbUser, addrs),
         orders: custOrders,
+        sessionToken: signSessionToken(sessionPayload),
       })
     } catch (error: any) {
       res.status(500).json({ error: error.message || 'Sign in failed.' })

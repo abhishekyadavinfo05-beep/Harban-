@@ -118,13 +118,21 @@ export function clearSessionCookie(res: Response, req?: Request) {
 async function resolveAuth(req: AuthRequest): Promise<AuthSessionUser | null> {
   const authHeader = req.headers.authorization
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split('Bearer ')[1]
-    const decoded = await adminAuth.verifyIdToken(token)
-    if (decoded?.uid && decoded?.email) {
-      return {
-        uid: decoded.uid,
-        email: decoded.email.toLowerCase(),
-        name: typeof decoded.name === 'string' ? decoded.name : undefined,
+    const token = authHeader.slice('Bearer '.length).trim()
+    if (token) {
+      // Signed HARBAN session tokens have 2 dot-separated segments (body.sig)
+      if (token.split('.').length === 2) {
+        const sessionUser = verifySessionToken(token)
+        if (sessionUser) return sessionUser
+      }
+      // Firebase ID tokens are standard 3-segment JWTs
+      const decoded = await adminAuth.verifyIdToken(token)
+      if (decoded?.uid && decoded?.email) {
+        return {
+          uid: decoded.uid,
+          email: decoded.email.toLowerCase(),
+          name: typeof decoded.name === 'string' ? decoded.name : undefined,
+        }
       }
     }
   }
