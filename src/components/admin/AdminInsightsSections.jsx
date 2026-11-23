@@ -390,8 +390,8 @@ export function AdminSettingsSection({
   const [storeStatus, setStoreStatus] = useState(true)
 
   const [razorpayEnabled, setRazorpayEnabled] = useState(rzp.enabled !== false)
-  const [razorpayKeyId, setRazorpayKeyId] = useState('rzp_test_ABC123456789')
-  const [testMode, setTestMode] = useState(rzp.mode === 'test' || true)
+  const isLiveMode = rzp.mode === 'live'
+  const isConfigured = Boolean(rzp.configured)
   const [upiEnabled, setUpiEnabled] = useState(true)
   const [codEnabled, setCodEnabled] = useState(true)
 
@@ -672,11 +672,18 @@ export function AdminSettingsSection({
                     Payment Gateways
                   </h2>
                   <p className="text-[12.5px] text-[#6B7280]">
-                    Accept online payments via Razorpay, UPI, Cards and Cash on Delivery.
+                    Accept online payments via Razorpay (UPI, Cards, NetBanking) and Cash on Delivery.
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold bg-[#DCFCE7] text-[#15803D] px-3 py-1 rounded-full">
-                  <CheckCircle2 size={13} /> Connected
+                <span
+                  className={`inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1 rounded-full ${
+                    isConfigured
+                      ? 'bg-[#DCFCE7] text-[#15803D]'
+                      : 'bg-amber-50 text-amber-700'
+                  }`}
+                >
+                  <CheckCircle2 size={13} />{' '}
+                  {isConfigured ? 'Keys Connected' : 'Sandbox Test Mode'}
                 </span>
               </div>
 
@@ -684,8 +691,8 @@ export function AdminSettingsSection({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="font-display font-bold text-[15px] text-[#111827]">Razorpay</span>
-                    <span className="text-[11px] bg-[#6D28D9] text-white px-2 py-0.5 rounded font-mono">
-                      {testMode ? 'Test Mode' : 'Live Mode'}
+                    <span className="text-[11px] bg-[#0C1B2E] text-white px-2 py-0.5 rounded font-mono">
+                      {isLiveMode ? 'Live Mode' : 'Test Mode'}
                     </span>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -695,31 +702,22 @@ export function AdminSettingsSection({
                       onChange={(e) => setRazorpayEnabled(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5B21B6]" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1D5CAD]" />
                   </label>
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                      Razorpay Key ID
-                    </label>
-                    <input
-                      value={razorpayKeyId}
-                      onChange={(e) => setRazorpayKeyId(e.target.value)}
-                      className="w-full bg-white border border-[#E5E7EB] rounded-lg px-3 py-2 text-[12.5px] font-mono outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                      Razorpay Key Secret
-                    </label>
-                    <input
-                      type="password"
-                      defaultValue="••••••••••••••••"
-                      className="w-full bg-white border border-[#E5E7EB] rounded-lg px-3 py-2 text-[12.5px] font-mono outline-none"
-                    />
-                  </div>
+                <div className="rounded-lg bg-white border border-[#E5E7EB] p-3.5 text-[12.5px] text-[#374151] space-y-1.5">
+                  <p className="font-semibold text-[#111827]">
+                    {isConfigured
+                      ? 'Razorpay server credentials are active and verified via HMAC-SHA256.'
+                      : 'Set server-side environment variables to enable live Razorpay Checkout popups:'}
+                  </p>
+                  <p className="font-mono text-[11.5px] text-[#6B7280]">
+                    RAZORPAY_KEY_ID · RAZORPAY_KEY_SECRET · RAZORPAY_MODE={isLiveMode ? 'live' : 'test'}
+                  </p>
+                  <p className="text-[11.5px] text-[#6B7280]">
+                    Credentials are stored securely on the server (AI Studio Secrets / Netlify Environment Variables) and never exposed to browsers.
+                  </p>
                 </div>
               </div>
 

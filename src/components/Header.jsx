@@ -13,7 +13,6 @@ export default function Header() {
   const {
     cartCount,
     setCartOpen,
-    setTrackOpen,
     search,
     setSearch,
     route,
@@ -41,8 +40,8 @@ export default function Header() {
           </p>
           <div className="flex items-center gap-4 shrink-0">
             <button
-              onClick={() => setTrackOpen(true)}
-              className="flex items-center gap-1.5 hover:text-white transition"
+              onClick={() => go('orders')}
+              className="flex items-center gap-1.5 hover:text-white transition cursor-pointer"
             >
               <Package size={13} /> Track Order
             </button>
@@ -225,12 +224,14 @@ export default function Header() {
           </button>
           <button
             onClick={() => {
-              setTrackOpen(true)
+              go('orders')
               setMobileNav(false)
             }}
-            className="block w-full text-left py-3 text-[14.5px] font-semibold text-neutral-800"
+            className={`block w-full text-left py-3 text-[14.5px] font-semibold ${
+              route === 'orders' ? 'text-[#1D5CAD]' : 'text-neutral-800'
+            }`}
           >
-            Track Order
+            My Orders &amp; Track Order
           </button>
         </nav>
       )}

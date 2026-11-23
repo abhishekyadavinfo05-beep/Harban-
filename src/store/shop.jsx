@@ -115,9 +115,11 @@ const STATIC_ROUTE_PATHS = {
   accessories: '/accessories',
   story: '/story',
   account: '/account',
+  orders: '/orders',
   admin: '/admin',
   support: '/support',
   contact: '/contact',
+  checkout: '/checkout',
   'order-confirmed': '/order-confirmed',
 }
 
@@ -136,6 +138,9 @@ function routeToPath(nextRoute) {
 function pathToRoute(pathname) {
   const clean = String(pathname || '/').replace(/\/+$/, '') || '/'
   if (clean === '/') return 'home'
+  if (clean === '/my-orders' || clean === '/track' || clean === '/track-order') {
+    return 'orders'
+  }
   for (const [key, path] of Object.entries(STATIC_ROUTE_PATHS)) {
     if (path === clean) return key
   }
@@ -322,7 +327,11 @@ export function ShopProvider({ children }) {
   const [testimonials, setTestimonials] = useState(initialTestimonials)
   const [faqs, setFaqs] = useState(initialFaqs)
   const [marqueeStats, setMarqueeStats] = useState(initialMarqueeStats)
-  const [payments, setPayments] = useState({ razorpayEnabled: false })
+  const [payments, setPayments] = useState({
+    razorpayEnabled: true,
+    razorpayMode: 'test',
+    razorpayConfigured: false,
+  })
 
   const [cart, setCart] = useState(() => readLocal('harban-cart', []))
   const [orders, setOrders] = useState([])
@@ -521,7 +530,15 @@ export function ShopProvider({ children }) {
   const refreshStorefront = useCallback(async () => {
     try {
       const data = await withSupabaseFallback(
-        () => apiFetch('/api/storefront', { cache: 'no-store' }),
+        async () => {
+          try {
+            return await apiFetch('/api/storefront', { cache: 'no-store' })
+          } catch (firstErr) {
+            if (firstErr instanceof BackendUnavailableError) throw firstErr
+            await new Promise((r) => setTimeout(r, 600))
+            return apiFetch('/api/storefront', { cache: 'no-store' })
+          }
+        },
         () => sbGetStorefront(false),
       )
       if (Array.isArray(data.products)) {
@@ -540,10 +557,55 @@ export function ShopProvider({ children }) {
         setMarqueeStats(data.marqueeStats)
       }
       if (data.payments && typeof data.payments.razorpayEnabled === 'boolean') {
-        setPayments({ razorpayEnabled: data.payments.razorpayEnabled })
+        setPayments({
+          razorpayEnabled: data.payments.razorpayEnabled,
+          razorpayMode: data.payments.razorpayMode || 'test',
+          razorpayConfigured: Boolean(data.payments.razorpayConfigured),
+        })
       }
-    } catch (err) {
-      console.error('Storefront load failed:', err)
+      // On static hosts (Netlify / Firebase Hosting), probe /api/payments/razorpay/config
+      if (detectedMode === 'supabase') {
+        try {
+          const cfgRes = await fetch(`${API_BASE}/api/payments/razorpay/config`, {
+            cache: 'no-store',
+          })
+          const ct = (cfgRes.headers.get('content-type') || '').toLowerCase()
+          if (cfgRes.ok && ct.includes('application/json')) {
+            const cfg = await cfgRes.json()
+            if (typeof cfg.razorpayEnabled === 'boolean') {
+              setPayments({
+                razorpayEnabled: cfg.razorpayEnabled,
+                razorpayMode: cfg.razorpayMode || 'test',
+                razorpayConfigured: Boolean(cfg.razorpayConfigured),
+              })
+            }
+          } else {
+            setPayments({
+              razorpayEnabled: false,
+              razorpayMode: 'test',
+              razorpayConfigured: false,
+            })
+          }
+        } catch {
+          setPayments({
+            razorpayEnabled: false,
+            razorpayMode: 'test',
+            razorpayConfigured: false,
+          })
+        }
+      }
+    } catch {
+      try {
+        const fallbackData = await sbGetStorefront(false)
+        if (Array.isArray(fallbackData.products) && fallbackData.products.length) {
+          setProducts(fallbackData.products)
+        }
+        if (Array.isArray(fallbackData.categories) && fallbackData.categories.length) {
+          setCategories(fallbackData.categories)
+        }
+      } catch {
+        /* keep already-loaded seed/cached storefront state */
+      }
     }
   }, [])
 
@@ -1081,9 +1143,12 @@ export function ShopProvider({ children }) {
   const buyNow = useCallback(
     (product, qty = 1, variant = null) => {
       const added = addToCart(product, qty, 'buy_now', variant)
-      if (added) setCartOpen(true)
+      if (added) {
+        navigateRoute('checkout')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
     },
-    [addToCart],
+    [addToCart, navigateRoute],
   )
 
   const trackCheckoutStarted = useCallback(() => {
@@ -1096,11 +1161,46 @@ export function ShopProvider({ children }) {
     })
   }, [cart, sendCartTelemetry])
 
-  const createRazorpayOrder = useCallback(async (amount) => {
-    return apiFetch('/api/payments/razorpay/create-order', {
+  const createRazorpayOrder = useCallback(async (amount, meta = {}) => {
+    const res = await fetch(`${API_BASE}/api/payments/razorpay/create-order`, {
       method: 'POST',
-      body: JSON.stringify({ amount }),
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount,
+        customerEmail: meta.customerEmail || '',
+        customerPhone: meta.customerPhone || '',
+      }),
     })
+    const ct = (res.headers.get('content-type') || '').toLowerCase()
+    if (!ct.includes('application/json')) {
+      throw new Error(
+        'Razorpay payment endpoint unavailable. Please redeploy or check server configuration.',
+      )
+    }
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(data?.error || 'Unable to initialize Razorpay payment.')
+    }
+    return data
+  }, [])
+
+  const verifyRazorpayPayment = useCallback(async (payload) => {
+    const res = await fetch(`${API_BASE}/api/payments/razorpay/verify`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {}),
+    })
+    const ct = (res.headers.get('content-type') || '').toLowerCase()
+    if (!ct.includes('application/json')) {
+      throw new Error('Unable to verify Razorpay payment signature.')
+    }
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data?.verified) {
+      throw new Error(data?.error || 'Payment signature verification failed.')
+    }
+    return data
   }, [])
 
   const sendPhoneOtp = useCallback(async (phone) => {
@@ -1305,9 +1405,10 @@ export function ShopProvider({ children }) {
         const prod = products.find((p) => p.id === item.id) ?? item
         addToCart(prod, item.qty)
       })
-      setCartOpen(true)
+      navigateRoute('checkout')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     },
-    [addToCart, products],
+    [addToCart, navigateRoute, products],
   )
 
   const subscribeNewsletter = useCallback(async (email) => {
@@ -1599,6 +1700,7 @@ export function ShopProvider({ children }) {
       buyNow,
       trackCheckoutStarted,
       createRazorpayOrder,
+      verifyRazorpayPayment,
       sendPhoneOtp,
       verifyPhoneOtp,
       placeOrder,
@@ -1671,6 +1773,7 @@ export function ShopProvider({ children }) {
     buyNow,
     trackCheckoutStarted,
     createRazorpayOrder,
+    verifyRazorpayPayment,
     sendPhoneOtp,
     verifyPhoneOtp,
     placeOrder,

@@ -15,6 +15,8 @@ import {
 } from './components/Drawers'
 import ProductPage from './components/ProductPage'
 import ProductSlider from './components/ProductSlider'
+import CheckoutPage from './components/CheckoutPage'
+import OrdersPage from './components/OrdersPage'
 import AccountPage from './components/AccountPage'
 import AdminPanel from './components/AdminPanel'
 import { ProductRow } from './components/ProductCard'
@@ -120,7 +122,7 @@ function StoryPage() {
 }
 
 function ContactPage() {
-  const { pushToast, setTrackOpen, sendContactMessage } = useShop()
+  const { pushToast, go, sendContactMessage } = useShop()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
@@ -177,8 +179,8 @@ function ContactPage() {
           <div className="pt-2 border-t border-white/10">
             <button
               type="button"
-              onClick={() => setTrackOpen(true)}
-              className="bg-white/10 hover:bg-[#1D5CAD] text-white text-[13px] font-bold px-4 py-2.5 rounded-full transition"
+              onClick={() => go('orders')}
+              className="bg-white/10 hover:bg-[#1D5CAD] text-white text-[13px] font-bold px-4 py-2.5 rounded-full transition cursor-pointer"
             >
               Track an existing order
             </button>
@@ -366,6 +368,8 @@ export default function App() {
     page = <StoryPage />
   } else if (route === 'account') {
     page = <AccountPage />
+  } else if (route === 'orders') {
+    page = <OrdersPage />
   } else if (route === 'admin') {
     page = <AccountPage initialTab="admin" />
   } else if (route === 'support') {
@@ -374,13 +378,15 @@ export default function App() {
     page = <ContactPage />
   } else if (route?.startsWith('policy:')) {
     page = <PolicyPage kind={route.slice('policy:'.length)} />
+  } else if (route === 'checkout') {
+    page = <CheckoutPage />
   } else if (route === 'order-confirmed') {
     page = <OrderConfirmed />
   } else if (route?.startsWith('product:')) {
     const id = route.slice('product:'.length)
     const product = products.find((p) => p.id === id)
     page = product ? (
-      <ProductPage product={product} />
+      <ProductPage key={product.id} product={product} />
     ) : (
       <PageHeader title="Product not found" />
     )

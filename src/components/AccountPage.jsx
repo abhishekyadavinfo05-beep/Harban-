@@ -38,7 +38,7 @@ function AuthView() {
     loginWithEmail,
     registerWithEmail,
     loginWithGoogle,
-    setTrackOpen,
+    go,
     authCallbackError,
     setAuthCallbackError,
   } = useShop()
@@ -316,7 +316,7 @@ function AuthView() {
           <div className="mt-3 pt-3 border-t border-black/5 text-center">
             <button
               type="button"
-              onClick={() => setTrackOpen(true)}
+              onClick={() => go('orders')}
               className="text-[12px] font-semibold text-neutral-500 hover:text-[#1D5CAD] transition cursor-pointer"
             >
               Only checking a guest Order ID? Track Order →
@@ -385,6 +385,14 @@ export default function AccountPage({ initialTab = 'orders' }) {
       setTab('admin')
     }
   }, [initialTab, user?.role])
+
+  useEffect(() => {
+    const onTabSwitch = (e) => {
+      if (e?.detail) setTab(e.detail)
+    }
+    window.addEventListener('harban:account-tab', onTabSwitch)
+    return () => window.removeEventListener('harban:account-tab', onTabSwitch)
+  }, [])
 
   /* Profile state */
   const [pName, setPName] = useState(user?.name || '')

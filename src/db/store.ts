@@ -20,7 +20,7 @@ import {
   syncOrderToSupabase,
   syncProductToSupabase,
 } from '../lib/supabase.ts'
-import { db } from './index.ts'
+import { db, withDbRetry } from './index.ts'
 import {
   type ProductVariantOption,
   type ShippingAddressSnapshot,
@@ -428,52 +428,157 @@ export async function reconcileSupabaseCatalogToCloudSql(): Promise<void> {
 
 export async function getStorefrontData(includeInactive = false) {
   try {
-    await seedStorefrontIfEmpty()
-    await reconcileSupabaseCatalogToCloudSql()
+    return await withDbRetry(async () => {
+      await seedStorefrontIfEmpty()
+      await reconcileSupabaseCatalogToCloudSql()
 
-    const [catRows, prodRows, revRows, faqRows] = await Promise.all([
-      db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.id)),
-      db.select().from(products).orderBy(asc(products.sortOrder), asc(products.id)),
-      db.select().from(reviews).orderBy(asc(reviews.id)),
-      db.select().from(faqs).orderBy(asc(faqs.sortOrder)),
-    ])
+      const [catRows, prodRows, revRows, faqRows] = await Promise.all([
+        db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.id)),
+        db.select().from(products).orderBy(asc(products.sortOrder), asc(products.id)),
+        db.select().from(reviews).orderBy(asc(reviews.id)),
+        db.select().from(faqs).orderBy(asc(faqs.sortOrder)),
+      ])
 
+      return {
+        categories: catRows
+          .filter((c) => includeInactive || c.isActive !== false)
+          .map((c) => ({
+            id: c.id,
+            label: c.label,
+            blurb: c.blurb,
+            image: c.image,
+            isActive: c.isActive !== false,
+            sortOrder: c.sortOrder,
+          })),
+        products: prodRows
+          .filter((p) => includeInactive || p.isActive)
+          .map(serializeProduct),
+        testimonials: revRows
+          .filter((r) => includeInactive || r.isApproved !== false)
+          .map((r) => ({
+            id: r.id,
+            productId: r.productId ?? null,
+            n: r.authorName,
+            c: r.city,
+            t: r.quote,
+            p: r.productName,
+            rating: r.rating,
+            isApproved: r.isApproved !== false,
+            createdAt: r.createdAt ? r.createdAt.getTime() : Date.now(),
+          })),
+        faqs: faqRows.map((f) => ({
+          q: f.question,
+          a: f.answer,
+        })),
+        marqueeStats,
+      }
+    }, 3)
+  } catch (error) {
+    console.warn('Database getStorefrontData transient failure, using fallback catalog:', error)
+    try {
+      const sbData = await fetchCatalogFromSupabase()
+      if (sbData.ok && sbData.products.length > 0) {
+        return {
+          categories: sbData.categories
+            .filter((c) => includeInactive || c.isActive !== false)
+            .map((c) => ({
+              id: c.id,
+              label: c.label,
+              blurb: c.blurb,
+              image: c.image,
+              isActive: c.isActive !== false,
+              sortOrder: c.sortOrder,
+            })),
+          products: sbData.products
+            .filter((p) => includeInactive || p.isActive)
+            .map((p) => ({
+              id: p.id,
+              sku: p.sku || '',
+              brand: extractBrand(p.specs),
+              name: p.name,
+              tagline: p.tagline,
+              price: p.price,
+              mrp: p.mrp,
+              rating: p.rating,
+              reviews: p.reviewsCount,
+              image: p.image,
+              images: Array.isArray(p.images) && p.images.length > 0 ? p.images : [p.image],
+              category: p.category,
+              badge: p.badge ?? undefined,
+              short: p.shortDesc,
+              description: p.description,
+              features: p.features,
+              specs: Array.isArray(p.specs) ? p.specs : [],
+              variants: Array.isArray(p.variants) ? p.variants : [],
+              stock: p.stock,
+              meeshoUrl: p.meeshoUrl ?? null,
+              isActive: p.isActive,
+              isFeatured: Boolean(p.isFeatured),
+              updatedAt: Date.now(),
+            })),
+          testimonials: seedReviews.map((r, idx) => ({
+            id: idx + 1,
+            productId: null,
+            n: r.n,
+            c: r.c,
+            t: r.t,
+            p: r.p,
+            rating: 5,
+            isApproved: true,
+            createdAt: Date.now(),
+          })),
+          faqs: seedFaqs,
+          marqueeStats,
+        }
+      }
+    } catch {
+      /* fall through to seed catalog */
+    }
     return {
-      categories: catRows
-        .filter((c) => includeInactive || c.isActive !== false)
-        .map((c) => ({
-          id: c.id,
-          label: c.label,
-          blurb: c.blurb,
-          image: c.image,
-          isActive: c.isActive !== false,
-          sortOrder: c.sortOrder,
-        })),
-      products: prodRows
-        .filter((p) => includeInactive || p.isActive)
-        .map(serializeProduct),
-      testimonials: revRows
-        .filter((r) => includeInactive || r.isApproved !== false)
-        .map((r) => ({
-          id: r.id,
-          productId: r.productId ?? null,
-          n: r.authorName,
-          c: r.city,
-          t: r.quote,
-          p: r.productName,
-          rating: r.rating,
-          isApproved: r.isApproved !== false,
-          createdAt: r.createdAt ? r.createdAt.getTime() : Date.now(),
-        })),
-      faqs: faqRows.map((f) => ({
-        q: f.question,
-        a: f.answer,
+      categories: seedCategories.map((c, idx) => ({
+        ...c,
+        isActive: true,
+        sortOrder: idx,
       })),
+      products: seedProducts.map((p) => ({
+        id: p.id,
+        sku: '',
+        brand: extractBrand(p.specs),
+        name: p.name,
+        tagline: p.tagline,
+        price: p.price,
+        mrp: p.mrp,
+        rating: p.rating,
+        reviews: p.reviews,
+        image: p.image,
+        images: Array.isArray(p.images) && p.images.length > 0 ? p.images : [p.image],
+        category: p.category,
+        badge: p.badge,
+        short: p.short,
+        description: p.description,
+        features: p.features || [],
+        specs: Array.isArray(p.specs) ? p.specs : [],
+        variants: [],
+        stock: 50,
+        meeshoUrl: null,
+        isActive: true,
+        isFeatured: false,
+        updatedAt: Date.now(),
+      })),
+      testimonials: seedReviews.map((r, idx) => ({
+        id: idx + 1,
+        productId: null,
+        n: r.n,
+        c: r.c,
+        t: r.t,
+        p: r.p,
+        rating: 5,
+        isApproved: true,
+        createdAt: Date.now(),
+      })),
+      faqs: seedFaqs,
       marqueeStats,
     }
-  } catch (error) {
-    console.error('Database getStorefrontData failed:', error)
-    throw new Error('Unable to load storefront catalog.', { cause: error })
   }
 }
 

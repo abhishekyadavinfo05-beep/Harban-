@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import {
-  ArrowLeft,
   Check,
   Minus,
   Plus,
@@ -23,13 +22,6 @@ import { matchesSearch } from '../lib/search'
 
 /* -------------------------------------------------------- cart drawer */
 
-function normalizeClientPhone(raw) {
-  const digits = String(raw || '').replace(/\D/g, '')
-  if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2)
-  if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1)
-  return digits
-}
-
 export function CartDrawer() {
   const {
     cart,
@@ -37,276 +29,15 @@ export function CartDrawer() {
     setCartOpen,
     setQty,
     removeFromCart,
-    placeOrder,
     trackCheckoutStarted,
-    createRazorpayOrder,
-    sendPhoneOtp,
-    verifyPhoneOtp,
-    saveAddress,
     subtotal,
-    payments,
-    user,
     go,
-    pushToast,
   } = useShop()
-
-  const [step, setStep] = useState('cart')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [line1, setLine1] = useState('')
-  const [city, setCity] = useState('')
-  const [pincode, setPincode] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState('Cash on Delivery')
-  const [submitting, setSubmitting] = useState(false)
-
-  const [otpChallenge, setOtpChallenge] = useState('')
-  const [otpCode, setOtpCode] = useState('')
-  const [otpToken, setOtpToken] = useState('')
-  const [otpVerifiedPhone, setOtpVerifiedPhone] = useState('')
-  const [otpMaskedPhone, setOtpMaskedPhone] = useState('')
-  const [otpSending, setOtpSending] = useState(false)
-  const [otpVerifying, setOtpVerifying] = useState(false)
-  const [otpCooldown, setOtpCooldown] = useState(0)
-  const [otpError, setOtpError] = useState('')
-
-  useEffect(() => {
-    if (!cartOpen) {
-      setStep('cart')
-      setOtpChallenge('')
-      setOtpCode('')
-      setOtpToken('')
-      setOtpVerifiedPhone('')
-      setOtpMaskedPhone('')
-      setOtpError('')
-      setOtpCooldown(0)
-      return
-    }
-    if (user) {
-      const def =
-        user.addresses?.find((a) => a.isDefault) || user.addresses?.[0] || null
-      setName((prev) => prev || def?.fullName || user.name || '')
-      setEmail((prev) => prev || user.email || '')
-      setPhone((prev) => prev || def?.phone || user.phone || '')
-      if (def) {
-        setLine1((prev) => prev || def.line1 || '')
-        setCity((prev) => prev || def.city || '')
-        setPincode((prev) => prev || def.pincode || '')
-      }
-    }
-  }, [cartOpen, user])
-
-  useEffect(() => {
-    if (otpCooldown <= 0) return undefined
-    const timer = setInterval(() => {
-      setOtpCooldown((prev) => (prev > 0 ? prev - 1 : 0))
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [otpCooldown])
 
   if (!cartOpen) return null
 
-  const normalizedPhone = normalizeClientPhone(phone)
-  const isPhoneValid = /^[1-9]\d{9}$/.test(normalizedPhone)
-  const isPhoneVerified = Boolean(
-    otpToken && otpVerifiedPhone && normalizedPhone === otpVerifiedPhone,
-  )
-
-  const handlePhoneChange = (nextVal) => {
-    setPhone(nextVal)
-    const nextNorm = normalizeClientPhone(nextVal)
-    if (nextNorm !== otpVerifiedPhone) {
-      setOtpToken('')
-      setOtpVerifiedPhone('')
-    }
-    if (nextNorm !== normalizeClientPhone(phone)) {
-      setOtpChallenge('')
-      setOtpCode('')
-      setOtpMaskedPhone('')
-      setOtpError('')
-      setOtpCooldown(0)
-    }
-  }
-
-  const handleSendOtp = async (overridePhone) => {
-    const raw = overridePhone ?? phone
-    const norm = normalizeClientPhone(raw)
-    if (!/^[1-9]\d{9}$/.test(norm)) {
-      setOtpError('Please enter a valid 10-digit mobile number.')
-      pushToast('Please enter a valid 10-digit mobile number')
-      return false
-    }
-    setOtpSending(true)
-    setOtpError('')
-    try {
-      const res = await sendPhoneOtp(raw)
-      setOtpChallenge(res.challengeToken || '')
-      setOtpCode('')
-      setOtpToken('')
-      setOtpVerifiedPhone('')
-      setOtpMaskedPhone(res.maskedPhone || `+91 ${norm}`)
-      setOtpCooldown(30)
-      pushToast(`SMS OTP sent to ${res.maskedPhone || norm}`)
-      return true
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unable to send OTP.'
-      setOtpError(msg)
-      pushToast(msg)
-      return false
-    } finally {
-      setOtpSending(false)
-    }
-  }
-
-  const handleVerifyOtp = async () => {
-    const cleanOtp = otpCode.trim()
-    if (!otpChallenge) {
-      setOtpError('Click Send OTP first.')
-      return null
-    }
-    if (!/^\d{6}$/.test(cleanOtp)) {
-      setOtpError('Enter the 6-digit OTP code.')
-      return null
-    }
-    setOtpVerifying(true)
-    setOtpError('')
-    try {
-      const res = await verifyPhoneOtp({
-        phone,
-        otp: cleanOtp,
-        challengeToken: otpChallenge,
-      })
-      const verifiedTok = res.otpToken || ''
-      setOtpToken(verifiedTok)
-      setOtpVerifiedPhone(res.phone || normalizedPhone)
-      pushToast('Mobile number verified')
-      return verifiedTok
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Invalid or expired OTP.'
-      setOtpError(msg)
-      pushToast(msg)
-      return null
-    } finally {
-      setOtpVerifying(false)
-    }
-  }
-
   const freeShipTarget = 1500
   const progress = Math.min(100, (subtotal / freeShipTarget) * 100)
-
-  const handleCheckoutSubmit = async (e) => {
-    e.preventDefault()
-    if (submitting) return
-    if (
-      !name.trim() ||
-      !/^\S+@\S+\.\S+$/.test(email.trim()) ||
-      !isPhoneValid ||
-      !line1.trim() ||
-      !city.trim() ||
-      !pincode.trim()
-    ) {
-      pushToast('Please complete all delivery, email & 10-digit mobile details')
-      return
-    }
-
-
-    setSubmitting(true)
-    try {
-      const addressObj = {
-        label: 'Delivery',
-        fullName: name.trim(),
-        phone: phone.trim(),
-        line1: line1.trim(),
-        city: city.trim(),
-        pincode: pincode.trim(),
-      }
-      if (user && (!user.addresses || user.addresses.length === 0)) {
-        try {
-          await saveAddress(
-            { ...addressObj, label: 'Home', isDefault: true },
-            { silent: true },
-          )
-        } catch {
-          // Non-blocking: never prevent order checkout if address auto-save fails
-        }
-      }
-      let rzpOrderId = null
-      let rzpPaymentId = null
-      let paymentStatus = paymentMethod === 'Cash on Delivery' ? 'pending' : 'initiated'
-
-      if (paymentMethod === 'Razorpay' && payments?.razorpayEnabled) {
-        try {
-          const rzpOrder = await createRazorpayOrder(subtotal)
-          rzpOrderId = rzpOrder?.orderId || null
-          if (rzpOrder?.hasCredentials && rzpOrder?.keyId) {
-            if (typeof window !== 'undefined' && !window.Razorpay) {
-              await new Promise((resolve, reject) => {
-                const s = document.createElement('script')
-                s.src = 'https://checkout.razorpay.com/v1/checkout.js'
-                s.async = true
-                s.onload = resolve
-                s.onerror = () => reject(new Error('Unable to load payment gateway'))
-                document.body.appendChild(s)
-              })
-            }
-            if (window.Razorpay) {
-              const payResult = await new Promise((resolve, reject) => {
-                const rzp = new window.Razorpay({
-                  key: rzpOrder.keyId,
-                  amount: rzpOrder.amount,
-                  currency: rzpOrder.currency,
-                  name: 'HARBAN',
-                  description: 'HARBAN Grooming Order',
-                  order_id: rzpOrder.orderId,
-                  prefill: {
-                    name: name.trim(),
-                    email: email.trim(),
-                    contact: phone.trim(),
-                  },
-                  handler: (resp) => resolve(resp),
-                  modal: {
-                    ondismiss: () => reject(new Error('Payment cancelled')),
-                  },
-                })
-                rzp.open()
-              })
-              rzpOrderId = payResult?.razorpay_order_id || rzpOrderId
-              rzpPaymentId = payResult?.razorpay_payment_id || null
-              const verifyRes = await fetch('/api/payments/razorpay/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payResult),
-              })
-              const verifyData = await verifyRes.json().catch(() => ({}))
-              if (!verifyRes.ok || !verifyData?.verified) {
-                throw new Error(verifyData?.error || 'Payment signature verification failed')
-              }
-              paymentStatus = 'paid'
-            }
-          } else {
-            rzpPaymentId = `pay_test_${Date.now()}`
-            paymentStatus = 'test_authorized'
-          }
-        } catch (err) {
-          pushToast(err instanceof Error ? err.message : 'Payment cancelled')
-          return
-        }
-      }
-
-      await placeOrder({
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        address: addressObj,
-        paymentMethod,
-        paymentStatus,
-        razorpayOrderId: rzpOrderId,
-        razorpayPaymentId: rzpPaymentId,
-      })
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   return (
     <div className="fixed inset-0 z-[60]">
@@ -316,25 +47,15 @@ export function CartDrawer() {
       />
       <aside className="absolute right-0 top-0 bottom-0 w-full max-w-[420px] bg-white flex flex-col shadow-2xl animate-drawer-in">
         <div className="flex items-center justify-between px-5 py-4 border-b border-black/5">
-          {step === 'checkout' && cart.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => setStep('cart')}
-              className="font-display font-extrabold text-[16px] flex items-center gap-2 hover:text-[#1D5CAD] transition cursor-pointer"
-            >
-              <ArrowLeft size={17} /> Checkout Details
-            </button>
-          ) : (
-            <p className="font-display font-extrabold text-lg flex items-center gap-2">
-              <ShoppingCart size={18} /> Your Cart
-              <span className="text-xs font-bold bg-neutral-100 rounded-full px-2 py-0.5">
-                {cart.length}
-              </span>
-            </p>
-          )}
+          <p className="font-display font-extrabold text-lg flex items-center gap-2">
+            <ShoppingCart size={18} /> Your Cart
+            <span className="text-xs font-bold bg-neutral-100 rounded-full px-2 py-0.5 tabular-nums">
+              {cart.length}
+            </span>
+          </p>
           <button
             onClick={() => setCartOpen(false)}
-            className="grid place-items-center w-8 h-8 rounded-full hover:bg-neutral-100 transition"
+            className="grid place-items-center w-8 h-8 rounded-full hover:bg-neutral-100 transition cursor-pointer"
             aria-label="Close cart"
           >
             <X size={18} />
@@ -355,13 +76,13 @@ export function CartDrawer() {
               </p>
               <button
                 onClick={() => setCartOpen(false)}
-                className="mt-4 bg-[#0C1B2E] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-black transition"
+                className="mt-4 bg-[#0C1B2E] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-black transition cursor-pointer"
               >
                 Continue Shopping
               </button>
             </div>
           </div>
-        ) : step === 'cart' ? (
+        ) : (
           <>
             <div className="px-5 pt-3">
               <p className="text-[12px] text-neutral-600">
@@ -372,7 +93,7 @@ export function CartDrawer() {
                 ) : (
                   <>
                     Add{' '}
-                    <span className="font-bold">
+                    <span className="font-bold tabular-nums">
                       {formatINR(freeShipTarget - subtotal)}
                     </span>{' '}
                     more for FREE shipping
@@ -390,45 +111,55 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
               {cart.map((item) => (
                 <div key={item.id} className="flex gap-3 bg-neutral-50 rounded-xl p-3">
-                  <Img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-16 h-16 rounded-lg object-cover shrink-0"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => go(`product:${item.id}`)}
+                    className="shrink-0 cursor-pointer"
+                  >
+                    <Img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-16 h-16 rounded-lg object-cover"
+                    />
+                  </button>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[13.5px] leading-tight truncate">
+                    <button
+                      type="button"
+                      onClick={() => go(`product:${item.id}`)}
+                      className="font-bold text-[13.5px] leading-tight truncate block w-full text-left hover:text-[#1D5CAD] transition cursor-pointer"
+                    >
                       {item.name}
-                    </p>
-                    <p className="text-[12.5px] text-neutral-500 mt-0.5">
+                    </button>
+                    <p className="text-[12.5px] text-neutral-500 mt-0.5 tabular-nums">
                       {formatINR(item.price)}
                     </p>
                     <div className="flex items-center justify-between mt-2">
                       <div className="inline-flex items-center gap-1 bg-white rounded-full border border-black/10 px-1">
                         <button
                           onClick={() => setQty(item.id, item.qty - 1)}
-                          className="grid place-items-center w-6 h-6 rounded-full hover:bg-neutral-100"
+                          className="grid place-items-center w-6 h-6 rounded-full hover:bg-neutral-100 cursor-pointer"
                           aria-label="Decrease quantity"
                         >
                           <Minus size={12} />
                         </button>
-                        <span className="text-[13px] font-bold w-4 text-center">
+                        <span className="text-[13px] font-bold w-4 text-center tabular-nums">
                           {item.qty}
                         </span>
                         <button
                           onClick={() => setQty(item.id, item.qty + 1)}
-                          className="grid place-items-center w-6 h-6 rounded-full hover:bg-neutral-100"
+                          className="grid place-items-center w-6 h-6 rounded-full hover:bg-neutral-100 cursor-pointer"
                           aria-label="Increase quantity"
                         >
                           <Plus size={12} />
                         </button>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-[14px]">
+                        <span className="font-extrabold text-[14px] tabular-nums">
                           {formatINR(item.price * item.qty)}
                         </span>
                         <button
                           onClick={() => removeFromCart(item.id)}
-                          className="text-neutral-400 hover:text-red-500 transition"
+                          className="text-neutral-400 hover:text-red-500 transition cursor-pointer"
                           aria-label={`Remove ${item.name}`}
                         >
                           <X size={14} />
@@ -443,7 +174,7 @@ export function CartDrawer() {
             <div className="border-t border-black/5 px-5 py-4">
               <div className="flex justify-between text-[13.5px]">
                 <span className="text-neutral-600">Subtotal</span>
-                <span className="font-bold">{formatINR(subtotal)}</span>
+                <span className="font-bold tabular-nums">{formatINR(subtotal)}</span>
               </div>
               <div className="flex justify-between text-[13.5px] mt-1">
                 <span className="text-neutral-600">Shipping</span>
@@ -451,12 +182,12 @@ export function CartDrawer() {
               </div>
               <div className="flex justify-between font-display font-black text-lg mt-2 pt-2 border-t border-black/5">
                 <span>Total</span>
-                <span>{formatINR(subtotal)}</span>
+                <span className="tabular-nums">{formatINR(subtotal)}</span>
               </div>
               <button
                 onClick={() => {
                   trackCheckoutStarted()
-                  setStep('checkout')
+                  go('checkout')
                 }}
                 className="mt-3 w-full bg-[#0C1B2E] hover:bg-[#1D5CAD] text-white font-bold text-[14px] py-3 rounded-xl transition cursor-pointer"
               >
@@ -472,196 +203,6 @@ export function CartDrawer() {
               </div>
             </div>
           </>
-        ) : (
-          <form
-            onSubmit={handleCheckoutSubmit}
-            className="flex-1 flex flex-col overflow-hidden"
-          >
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3.5">
-              {!user ? (
-                <div className="bg-[#EDF1F6] rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2">
-                  <span className="text-[12px] text-neutral-700">
-                    Have an account? Sign in for saved addresses.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCartOpen(false)
-                      go('account')
-                    }}
-                    className="shrink-0 text-[12px] font-bold text-[#1D5CAD] hover:underline cursor-pointer"
-                  >
-                    Sign In
-                  </button>
-                </div>
-              ) : (
-                user.addresses?.length > 0 && (
-                  <div>
-                    <p className="text-[11.5px] font-bold text-neutral-600 mb-1.5">
-                      Saved Addresses
-                    </p>
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                      {user.addresses.map((a) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          onClick={() => {
-                            setName(a.fullName || user.name)
-                            handlePhoneChange(a.phone || user.phone || '')
-                            setLine1(a.line1)
-                            setCity(a.city)
-                            setPincode(a.pincode)
-                          }}
-                          className={`shrink-0 text-left rounded-xl border px-3 py-2 text-[11.5px] transition cursor-pointer ${
-                            line1 === a.line1 && pincode === a.pincode
-                              ? 'border-[#1D5CAD] bg-[#1D5CAD]/5'
-                              : 'border-black/10 bg-neutral-50'
-                          }`}
-                        >
-                          <span className="font-bold block">{a.label || 'Home'}</span>
-                          <span className="text-neutral-500">
-                            {a.city} · {a.pincode}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )
-              )}
-
-              <div>
-                <label className="block text-[11.5px] font-bold text-neutral-700 mb-1">
-                  Full Name
-                </label>
-                <input
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Receiver name"
-                  className="w-full bg-neutral-100 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 ring-[#1D5CAD]/40"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11.5px] font-bold text-neutral-700 mb-1">
-                    Email for Order Updates
-                  </label>
-                  <input
-                    required
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full bg-neutral-100 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 ring-[#1D5CAD]/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11.5px] font-bold text-neutral-700 mb-1">
-                    Mobile Number
-                  </label>
-                  <input
-                    required
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => handlePhoneChange(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full bg-neutral-100 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 ring-[#1D5CAD]/40"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11.5px] font-bold text-neutral-700 mb-1">
-                  Delivery Address
-                </label>
-                <input
-                  required
-                  value={line1}
-                  onChange={(e) => setLine1(e.target.value)}
-                  placeholder="House no., Street, Area"
-                  className="w-full bg-neutral-100 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 ring-[#1D5CAD]/40"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11.5px] font-bold text-neutral-700 mb-1">
-                    City
-                  </label>
-                  <input
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Mumbai"
-                    className="w-full bg-neutral-100 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 ring-[#1D5CAD]/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11.5px] font-bold text-neutral-700 mb-1">
-                    PIN Code
-                  </label>
-                  <input
-                    required
-                    value={pincode}
-                    onChange={(e) => setPincode(e.target.value)}
-                    placeholder="400001"
-                    className="w-full bg-neutral-100 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 ring-[#1D5CAD]/40"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <p className="text-[11.5px] font-bold text-neutral-700 mb-1.5">
-                  Payment Method
-                </p>
-                <div
-                  className={`grid gap-2 ${
-                    payments?.razorpayEnabled ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'
-                  }`}
-                >
-                  {[
-                    'Cash on Delivery',
-                    'UPI',
-                    'Card',
-                    ...(payments?.razorpayEnabled ? ['Razorpay'] : []),
-                  ].map((method) => (
-                    <button
-                      key={method}
-                      type="button"
-                      onClick={() => setPaymentMethod(method)}
-                      className={`py-2 px-2 rounded-xl border text-[11.5px] font-bold transition cursor-pointer ${
-                        paymentMethod === method
-                          ? 'bg-[#0C1B2E] text-white border-[#0C1B2E]'
-                          : 'bg-white border-black/10 hover:border-[#1D5CAD]'
-                      }`}
-                    >
-                      {method === 'Cash on Delivery' ? 'COD' : method}
-                    </button>
-                  ))}
-                </div>
-                {paymentMethod === 'Razorpay' && payments?.razorpayEnabled && (
-                  <p className="text-[11px] text-[#1D5CAD] font-semibold mt-1.5">
-                    Pay online via UPI, Cards, NetBanking or Wallets (Razorpay Test Mode).
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="border-t border-black/5 px-5 py-4 bg-white">
-              <div className="flex justify-between font-display font-black text-base mb-3">
-                <span>Payable Total</span>
-                <span>{formatINR(subtotal)}</span>
-              </div>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-[#1D5CAD] hover:bg-[#16467E] disabled:opacity-60 text-white font-bold text-[14px] py-3 rounded-xl transition cursor-pointer"
-              >
-                {submitting ? 'Placing Order...' : `Place Order · ${formatINR(subtotal)}`}
-              </button>
-            </div>
-          </form>
         )}
       </aside>
     </div>
@@ -1011,8 +552,11 @@ export function TrackOrder() {
             <div className="flex items-center justify-between">
               <p className="font-bold text-[14px]">{activeOrder.id}</p>
               <p className="text-[12px] text-neutral-500">
-                {activeOrder.items.reduce((s, i) => s + i.qty, 0)} items ·{' '}
-                {formatINR(activeOrder.total)}
+                {(Array.isArray(activeOrder.items) ? activeOrder.items : []).reduce(
+                  (s, i) => s + (Number(i.qty) || 1),
+                  0,
+                )}{' '}
+                items · {formatINR(activeOrder.total || 0)}
               </p>
             </div>
 
@@ -1045,11 +589,13 @@ export function TrackOrder() {
             <p className="text-[12px] text-neutral-500 mt-4">
               Estimated delivery:{' '}
               <span className="font-semibold text-neutral-700">
-                {new Date(activeOrder.eta).toLocaleDateString('en-IN', {
-                  weekday: 'short',
-                  day: 'numeric',
-                  month: 'short',
-                })}
+                {activeOrder.eta && !Number.isNaN(new Date(activeOrder.eta).getTime())
+                  ? new Date(activeOrder.eta).toLocaleDateString('en-IN', {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                    })
+                  : '3–5 business days'}
               </span>
             </p>
           </div>
@@ -1312,10 +858,19 @@ export function OrderConfirmed() {
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <button
-          onClick={() => go('account')}
+          onClick={() => {
+            if (user) {
+              go('account')
+              window.dispatchEvent(
+                new CustomEvent('harban:account-tab', { detail: 'orders' }),
+              )
+            } else {
+              go('orders')
+            }
+          }}
           className="bg-[#1D5CAD] hover:bg-[#16467E] text-white text-[13.5px] font-bold px-6 py-3 rounded-full transition cursor-pointer"
         >
-          {user ? 'View in My Orders' : 'Sign In to View Orders'}
+          {user ? 'View in My Orders' : 'Track My Order'}
         </button>
         <button
           onClick={() => go('trimmers')}

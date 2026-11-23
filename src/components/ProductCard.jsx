@@ -5,7 +5,7 @@ import { formatINR, useShop } from '../store/shop'
 /* Product card matching the original build: square image well with a
    self-advancing gallery on hover and a full-width add-to-cart action. */
 export default function ProductCard({ product }) {
-  const { addToCart, setQuickView } = useShop()
+  const { addToCart, go } = useShop()
 
   const gallery =
     product.images && product.images.length ? product.images : [product.image]
@@ -27,17 +27,19 @@ export default function ProductCard({ product }) {
     fn()
   }
 
+  const openProduct = () => go(`product:${product.id}`)
+
   return (
     <div className="group w-full h-full bg-white rounded-2xl border border-black/5 overflow-hidden flex flex-col transition hover:shadow-[0_16px_40px_-20px_rgba(12,27,46,0.35)]">
       <button
-        onClick={() => setQuickView(product)}
+        onClick={openProduct}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => {
           setHovering(false)
           setActive(0)
         }}
-        className="relative block bg-[#EDF1F6] aspect-square overflow-hidden text-left w-full"
-        aria-label={`Quick view ${product.name}`}
+        className="relative block bg-[#EDF1F6] aspect-square overflow-hidden text-left w-full cursor-pointer"
+        aria-label={`View ${product.name}`}
       >
         {gallery.map((src, i) => (
           <img
@@ -52,7 +54,7 @@ export default function ProductCard({ product }) {
 
         <span className="absolute inset-x-3 bottom-8 z-10 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all">
           <span className="block text-center text-[12.5px] font-bold bg-[#0C1B2E]/90 backdrop-blur text-white rounded-lg py-2">
-            Quick View
+            View Product
           </span>
         </span>
 
@@ -72,7 +74,7 @@ export default function ProductCard({ product }) {
       </button>
 
       <div className="p-3 sm:p-4 flex flex-col flex-1">
-        <button onClick={() => setQuickView(product)} className="text-left">
+        <button onClick={openProduct} className="text-left cursor-pointer">
           <h3 className="font-display font-extrabold text-[14px] sm:text-[15.5px] leading-tight hover:text-[#174A8B] transition line-clamp-2">
             {product.name}
           </h3>

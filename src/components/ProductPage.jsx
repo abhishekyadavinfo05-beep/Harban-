@@ -1,8 +1,19 @@
-import { useState } from 'react'
-import { Check, Minus, Plus, ShieldCheck, ShoppingCart, Truck, Undo2 } from 'lucide-react'
+import { useRef, useState } from 'react'
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Minus,
+  Plus,
+  ShieldCheck,
+  ShoppingCart,
+  Truck,
+  Undo2,
+} from 'lucide-react'
 import Img from './Img'
 import { Stars } from './ui'
-import { FrequentlyAdded, ProductCard } from './Drawers'
+import { FrequentlyAdded } from './Drawers'
+import ProductSlider from './ProductSlider'
 import { discountOf, formatINR, useShop } from '../store/shop'
 
 export default function ProductPage({ product }) {
@@ -10,6 +21,7 @@ export default function ProductPage({ product }) {
   const [active, setActive] = useState(0)
   const [qty, setQty] = useState(1)
   const [tab, setTab] = useState('features')
+  const touchStartX = useRef(null)
   const variants = Array.isArray(product.variants)
     ? product.variants.filter((v) => v.isActive !== false)
     : []
@@ -26,9 +38,33 @@ export default function ProductPage({ product }) {
   const activeSku = selectedVariant?.sku || product.sku
 
   const off = activeMrp > activePrice ? Math.round(((activeMrp - activePrice) / activeMrp) * 100) : discountOf(product)
-  const related = products
-    .filter((p) => p.id !== product.id && p.category === product.category)
-    .slice(0, 4)
+  const gallery =
+    Array.isArray(product.images) && product.images.length > 0
+      ? product.images
+      : [product.image]
+
+  const related = [
+    ...products.filter((p) => p.id !== product.id && p.category === product.category),
+    ...products.filter((p) => p.id !== product.id && p.category !== product.category),
+  ]
+
+  const stepImage = (dir) => {
+    if (gallery.length < 2) return
+    setActive((i) => (i + dir + gallery.length) % gallery.length)
+  }
+
+  const onGalleryTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const onGalleryTouchEnd = (e) => {
+    if (touchStartX.current == null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(dx) > 40) {
+      stepImage(dx < 0 ? 1 : -1)
+    }
+    touchStartX.current = null
+  }
 
   const perks = [
     { icon: Truck, label: 'Free shipping' },
@@ -40,36 +76,85 @@ export default function ProductPage({ product }) {
     <>
       <section className="max-w-7xl mx-auto px-4 py-6">
         <button
-          onClick={() => go('trimmers')}
-          className="text-[12.5px] font-semibold text-neutral-500 hover:text-[#1D5CAD] transition"
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.history.length > 1) {
+              window.history.back()
+            } else {
+              go('trimmers')
+            }
+          }}
+          className="text-[12.5px] font-semibold text-neutral-500 hover:text-[#1D5CAD] transition cursor-pointer"
         >
-          ← Back to all trimmers
+          ← Back
         </button>
 
-        <div className="grid lg:grid-cols-2 gap-6 mt-4">
-          {/* gallery */}
-          <div>
-            <div className="rounded-2xl overflow-hidden bg-white border border-black/5">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 mt-4 items-start">
+          {/* 1:1 square gallery */}
+          <div className="lg:sticky lg:top-24">
+            <div
+              onTouchStart={onGalleryTouchStart}
+              onTouchEnd={onGalleryTouchEnd}
+              className="relative aspect-square w-full max-w-[540px] mx-auto lg:mx-0 rounded-2xl overflow-hidden bg-[#EDF1F6] border border-black/5 select-none"
+            >
               <Img
-                src={product.images[active] || product.image}
+                src={gallery[active] || product.image}
                 alt={product.name}
-                className="w-full h-[320px] sm:h-[420px] object-cover"
+                className="w-full h-full aspect-square object-cover"
               />
+
+              {gallery.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => stepImage(-1)}
+                    aria-label="Previous image"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 grid place-items-center w-9 h-9 rounded-full bg-white/90 hover:bg-white text-[#0C1B2E] shadow-md transition cursor-pointer"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => stepImage(1)}
+                    aria-label="Next image"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 grid place-items-center w-9 h-9 rounded-full bg-white/90 hover:bg-white text-[#0C1B2E] shadow-md transition cursor-pointer"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                  <div className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+                    {gallery.map((src, i) => (
+                      <button
+                        key={`${src}-dot-${i}`}
+                        type="button"
+                        onClick={() => setActive(i)}
+                        aria-label={`View photo ${i + 1}`}
+                        className={`h-[6px] rounded-full transition-all cursor-pointer ${
+                          active === i
+                            ? 'w-6 bg-[#1D5CAD]'
+                            : 'w-[6px] bg-white/80 shadow'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
-            {product.images.length > 1 && (
-              <div className="flex gap-2.5 mt-3 overflow-x-auto no-scrollbar">
-                {product.images.map((src, i) => (
+
+            {gallery.length > 1 && (
+              <div className="flex gap-2.5 mt-3 max-w-[540px] mx-auto lg:mx-0 overflow-x-auto no-scrollbar pb-1">
+                {gallery.map((src, i) => (
                   <button
                     key={`${src}-${i}`}
+                    type="button"
                     onClick={() => setActive(i)}
-                    className={`shrink-0 rounded-xl overflow-hidden border-2 transition ${
-                      active === i ? 'border-[#1D5CAD]' : 'border-transparent'
+                    className={`shrink-0 aspect-square w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl overflow-hidden border-2 transition cursor-pointer bg-[#EDF1F6] ${
+                      active === i ? 'border-[#1D5CAD]' : 'border-transparent hover:border-black/20'
                     }`}
                   >
                     <Img
                       src={src}
                       alt={`${product.name} view ${i + 1}`}
-                      className="w-[68px] h-[68px] object-cover"
+                      className="w-full h-full aspect-square object-cover"
                     />
                   </button>
                 ))}
@@ -309,16 +394,20 @@ export default function ProductPage({ product }) {
       <FrequentlyAdded current={product} />
 
       {related.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 mt-10">
-          <h2 className="font-display font-extrabold text-[20px] sm:text-[24px] tracking-tight mb-4">
-            You may also like
-          </h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
+        <ProductSlider
+          products={related}
+          title="You may also like"
+          sub="Explore more precision trimmers & essentials."
+          action={
+            <button
+              type="button"
+              onClick={() => go('trimmers')}
+              className="hidden sm:inline-flex items-center gap-1.5 text-[13px] font-bold text-[#1D5CAD] hover:gap-2.5 transition-all cursor-pointer"
+            >
+              View All →
+            </button>
+          }
+        />
       )}
     </>
   )

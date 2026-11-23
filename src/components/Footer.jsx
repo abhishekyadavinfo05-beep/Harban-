@@ -164,7 +164,7 @@ export function Newsletter() {
 /* ---------------------------------------------------------------- footer */
 
 export function Footer() {
-  const { go, setTrackOpen } = useShop()
+  const { go } = useShop()
 
   const columns = [
     {
@@ -180,7 +180,7 @@ export function Footer() {
       title: 'Quick Links',
       links: [
         ['My Account', 'account'],
-        ['My Order', 'track'],
+        ['My Order', 'account-orders'],
         ['Help & Support', 'support'],
         ['Contact Us', 'contact'],
       ],
@@ -219,9 +219,16 @@ export function Footer() {
                 <li key={label}>
                   <button
                     type="button"
-                    onClick={() =>
-                      target === 'track' ? setTrackOpen(true) : go(target)
-                    }
+                    onClick={() => {
+                      if (target === 'account-orders') {
+                        go('account')
+                        window.dispatchEvent(
+                          new CustomEvent('harban:account-tab', { detail: 'orders' }),
+                        )
+                      } else {
+                        go(target)
+                      }
+                    }}
                     className="py-1 text-[12px] sm:text-[11.5px] text-white/65 hover:text-white transition text-left cursor-pointer"
                   >
                     {label}

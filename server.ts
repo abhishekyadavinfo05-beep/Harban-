@@ -42,6 +42,7 @@ import {
   updateUserPassword,
   updateUserProfile,
 } from './src/db/users.ts'
+import { withDbRetry } from './src/db/index.ts'
 import {
   deleteAddressFromSupabase,
   getSupabaseHealth,
@@ -72,10 +73,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 async function resolveDbUser(req: AuthRequest) {
   if (!req.authUser) return null
-  return getOrCreateUser(
-    req.authUser.uid,
-    req.authUser.email,
-    req.authUser.name,
+  return withDbRetry(() =>
+    getOrCreateUser(
+      req.authUser!.uid,
+      req.authUser!.email,
+      req.authUser!.name,
+    ),
   )
 }
 
@@ -126,7 +129,6 @@ function cleanEnvStr(val: string | undefined): string {
 }
 
 function getRazorpayConfig() {
-  const enabled = parseEnvBool(process.env.RAZORPAY_ENABLED, false)
   const keyId = cleanEnvStr(
     process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_TEST_KEY_ID,
   )
@@ -138,9 +140,13 @@ function getRazorpayConfig() {
     Boolean(keySecret) &&
     !keyId.startsWith('MY_') &&
     !keySecret.startsWith('MY_')
+  const enabled = parseEnvBool(process.env.RAZORPAY_ENABLED, true)
   const requestedMode = cleanEnvStr(process.env.RAZORPAY_MODE).toLowerCase()
   const mode =
-    requestedMode === 'live' && keyId.startsWith('rzp_live_') ? 'live' : 'test'
+    (requestedMode === 'live' || (!requestedMode && keyId.startsWith('rzp_live_'))) &&
+    keyId.startsWith('rzp_live_')
+      ? 'live'
+      : 'test'
 
   return {
     enabled,
@@ -650,6 +656,16 @@ async function startServer() {
   )
 
   /* ------------------------------ Razorpay Gateway (Server-side Env Driven) */
+  app.get('/api/payments/razorpay/config', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store')
+    const rzp = getRazorpayConfig()
+    res.json({
+      razorpayEnabled: rzp.enabled,
+      razorpayMode: rzp.mode,
+      razorpayConfigured: rzp.hasCredentials,
+    })
+  })
+
   app.post(
     '/api/payments/razorpay/create-order',
     optionalAuth,
@@ -662,7 +678,10 @@ async function startServer() {
         })
       }
       try {
-        const amount = Math.max(100, Math.round(Number(req.body?.amount) || 0) * 100)
+        const amount = Math.max(
+          100,
+          Math.round((Number(req.body?.amount) || 0) * 100),
+        )
         const receipt = `rcpt_${Date.now()}`
 
         if (rzp.hasCredentials) {
@@ -679,6 +698,15 @@ async function startServer() {
               amount,
               currency: 'INR',
               receipt,
+              notes: {
+                store: 'HARBAN',
+                ...(req.body?.customerEmail
+                  ? { email: String(req.body.customerEmail) }
+                  : {}),
+                ...(req.body?.customerPhone
+                  ? { phone: String(req.body.customerPhone) }
+                  : {}),
+              },
             }),
           })
           const rzpData: any = await rzpRes.json().catch(() => ({}))
@@ -694,7 +722,7 @@ async function startServer() {
             keyId: rzp.keyId,
             orderId: rzpData.id,
             amount: rzpData.amount,
-            currency: rzpData.currency,
+            currency: rzpData.currency || 'INR',
           })
         }
 
@@ -730,11 +758,22 @@ async function startServer() {
     if (!rzp.hasCredentials) {
       return res.json({ verified: true, mode: 'test' })
     }
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({
+        verified: false,
+        error: 'Missing Razorpay payment signature fields.',
+      })
+    }
     const expected = crypto
       .createHmac('sha256', rzp.keySecret)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex')
-    if (expected !== razorpay_signature) {
+    const expectedBuf = Buffer.from(expected, 'utf8')
+    const providedBuf = Buffer.from(String(razorpay_signature), 'utf8')
+    const valid =
+      expectedBuf.length === providedBuf.length &&
+      crypto.timingSafeEqual(expectedBuf, providedBuf)
+    if (!valid) {
       return res.status(400).json({ verified: false, error: 'Invalid signature' })
     }
     res.json({ verified: true, mode: rzp.mode })
