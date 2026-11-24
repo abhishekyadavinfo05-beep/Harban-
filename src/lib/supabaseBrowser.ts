@@ -1630,3 +1630,56 @@ export async function sbCreateCustomer(payload: any) {
     },
   }
 }
+
+/* ------------------------------------------- Razorpay via Supabase Edge Fn */
+
+async function callSupabaseRazorpay(body: Record<string, unknown>) {
+  const baseUrl = getBrowserSupabaseUrl()
+  const apiKey = getBrowserSupabaseKey()
+  const res = await fetch(`${baseUrl}/functions/v1/razorpay`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: apiKey,
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  })
+  const ct = (res.headers.get('content-type') || '').toLowerCase()
+  if (!ct.includes('application/json')) {
+    throw new Error('Supabase Razorpay Edge Function is not deployed yet.')
+  }
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data?.error || 'Razorpay request failed.')
+  }
+  return data
+}
+
+export async function sbGetRazorpayConfig() {
+  return callSupabaseRazorpay({ action: 'config' })
+}
+
+export async function sbCreateRazorpayOrder(
+  amount: number,
+  meta: { customerEmail?: string; customerPhone?: string } = {},
+) {
+  return callSupabaseRazorpay({
+    action: 'create-order',
+    amount,
+    customerEmail: meta.customerEmail || '',
+    customerPhone: meta.customerPhone || '',
+  })
+}
+
+export async function sbVerifyRazorpayPayment(payload: Record<string, unknown>) {
+  const data = await callSupabaseRazorpay({
+    action: 'verify',
+    ...payload,
+  })
+  if (!data?.verified) {
+    throw new Error(data?.error || 'Payment signature verification failed.')
+  }
+  return data
+}
+

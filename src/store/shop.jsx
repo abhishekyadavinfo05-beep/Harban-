@@ -22,12 +22,14 @@ import {
   sbChangePassword,
   sbCreateAdminOrder,
   sbCreateCustomer,
+  sbCreateRazorpayOrder,
   sbDeleteAddress,
   sbDeleteCategory,
   sbDeleteDiscount,
   sbDeleteProduct,
   sbGetAccount,
   sbGetAdminOverview,
+  sbGetRazorpayConfig,
   sbGetStorefront,
   sbLogCartEvent,
   sbLogViewEvent,
@@ -49,6 +51,7 @@ import {
   sbUpdateProfile,
   sbUpdateStock,
   sbUploadImage,
+  sbVerifyRazorpayPayment,
 } from '../lib/supabaseBrowser'
 import {
   categories as initialCategories,
@@ -563,30 +566,44 @@ export function ShopProvider({ children }) {
           razorpayConfigured: Boolean(data.payments.razorpayConfigured),
         })
       }
-      // On static hosts (Netlify / Firebase Hosting), probe /api/payments/razorpay/config
+      // On Firebase Hosting (static mode), check API_BASE (if configured) or Supabase Edge Function for live Razorpay status
       if (detectedMode === 'supabase') {
-        try {
-          const cfgRes = await fetch(`${API_BASE}/api/payments/razorpay/config`, {
-            cache: 'no-store',
-          })
-          const ct = (cfgRes.headers.get('content-type') || '').toLowerCase()
-          if (cfgRes.ok && ct.includes('application/json')) {
-            const cfg = await cfgRes.json()
-            if (typeof cfg.razorpayEnabled === 'boolean') {
-              setPayments({
-                razorpayEnabled: cfg.razorpayEnabled,
-                razorpayMode: cfg.razorpayMode || 'test',
-                razorpayConfigured: Boolean(cfg.razorpayConfigured),
-              })
-            }
-          } else {
-            setPayments({
-              razorpayEnabled: false,
-              razorpayMode: 'test',
-              razorpayConfigured: false,
+        let resolvedCfg = null
+        if (API_BASE) {
+          try {
+            const cfgRes = await fetch(`${API_BASE}/api/payments/razorpay/config`, {
+              cache: 'no-store',
             })
+            const ct = (cfgRes.headers.get('content-type') || '').toLowerCase()
+            if (cfgRes.ok && ct.includes('application/json')) {
+              const cfg = await cfgRes.json()
+              if (typeof cfg.razorpayEnabled === 'boolean') {
+                resolvedCfg = cfg
+              }
+            }
+          } catch {
+            /* try Supabase Edge Function next */
           }
-        } catch {
+        }
+
+        if (!resolvedCfg) {
+          try {
+            const sbCfg = await sbGetRazorpayConfig()
+            if (typeof sbCfg?.razorpayEnabled === 'boolean') {
+              resolvedCfg = sbCfg
+            }
+          } catch {
+            /* Supabase Razorpay Edge Function not deployed yet */
+          }
+        }
+
+        if (resolvedCfg) {
+          setPayments({
+            razorpayEnabled: resolvedCfg.razorpayEnabled,
+            razorpayMode: resolvedCfg.razorpayMode || 'test',
+            razorpayConfigured: Boolean(resolvedCfg.razorpayConfigured),
+          })
+        } else {
           setPayments({
             razorpayEnabled: false,
             razorpayMode: 'test',
@@ -1162,45 +1179,61 @@ export function ShopProvider({ children }) {
   }, [cart, sendCartTelemetry])
 
   const createRazorpayOrder = useCallback(async (amount, meta = {}) => {
-    const res = await fetch(`${API_BASE}/api/payments/razorpay/create-order`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        amount,
-        customerEmail: meta.customerEmail || '',
-        customerPhone: meta.customerPhone || '',
-      }),
-    })
-    const ct = (res.headers.get('content-type') || '').toLowerCase()
-    if (!ct.includes('application/json')) {
-      throw new Error(
-        'Razorpay payment endpoint unavailable. Please redeploy or check server configuration.',
-      )
+    try {
+      const res = await fetch(`${API_BASE}/api/payments/razorpay/create-order`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount,
+          customerEmail: meta.customerEmail || '',
+          customerPhone: meta.customerPhone || '',
+        }),
+      })
+      const ct = (res.headers.get('content-type') || '').toLowerCase()
+      if (ct.includes('application/json')) {
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          throw new Error(data?.error || 'Unable to initialize Razorpay payment.')
+        }
+        return data
+      }
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        !/Failed to fetch|NetworkError|Load failed/i.test(err.message)
+      ) {
+        throw err
+      }
     }
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      throw new Error(data?.error || 'Unable to initialize Razorpay payment.')
-    }
-    return data
+    return sbCreateRazorpayOrder(amount, meta)
   }, [])
 
   const verifyRazorpayPayment = useCallback(async (payload) => {
-    const res = await fetch(`${API_BASE}/api/payments/razorpay/verify`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload || {}),
-    })
-    const ct = (res.headers.get('content-type') || '').toLowerCase()
-    if (!ct.includes('application/json')) {
-      throw new Error('Unable to verify Razorpay payment signature.')
+    try {
+      const res = await fetch(`${API_BASE}/api/payments/razorpay/verify`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload || {}),
+      })
+      const ct = (res.headers.get('content-type') || '').toLowerCase()
+      if (ct.includes('application/json')) {
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !data?.verified) {
+          throw new Error(data?.error || 'Payment signature verification failed.')
+        }
+        return data
+      }
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        !/Failed to fetch|NetworkError|Load failed/i.test(err.message)
+      ) {
+        throw err
+      }
     }
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok || !data?.verified) {
-      throw new Error(data?.error || 'Payment signature verification failed.')
-    }
-    return data
+    return sbVerifyRazorpayPayment(payload || {})
   }, [])
 
   const sendPhoneOtp = useCallback(async (phone) => {

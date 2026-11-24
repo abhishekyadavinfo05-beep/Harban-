@@ -381,7 +381,9 @@ export function AdminSettingsSection({
 
   const [storeName, setStoreName] = useState(s.storeName || 'Harban')
   const [storeEmail, setStoreEmail] = useState(s.supportEmail || 'support@harban.in')
-  const [storeUrl, setStoreUrl] = useState('https://www.harban.in')
+  const [storeUrl, setStoreUrl] = useState(
+    typeof window !== 'undefined' ? window.location.origin : 'https://harban.web.app',
+  )
   const [supportPhone, setSupportPhone] = useState('+91 98765 43210')
   const [whatsapp, setWhatsapp] = useState('+91 98765 43210')
   const [currency, setCurrency] = useState('INR')
@@ -716,7 +718,7 @@ export function AdminSettingsSection({
                     RAZORPAY_KEY_ID · RAZORPAY_KEY_SECRET · RAZORPAY_MODE={isLiveMode ? 'live' : 'test'}
                   </p>
                   <p className="text-[11.5px] text-[#6B7280]">
-                    Credentials are stored securely on the server (AI Studio Secrets / Netlify Environment Variables) and never exposed to browsers.
+                    Credentials are stored securely on the server (AI Studio Secrets / Supabase Edge Function Secrets) and never exposed to browsers.
                   </p>
                 </div>
               </div>
