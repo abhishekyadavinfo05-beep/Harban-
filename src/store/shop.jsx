@@ -605,7 +605,7 @@ export function ShopProvider({ children }) {
           })
         } else {
           setPayments({
-            razorpayEnabled: false,
+            razorpayEnabled: true,
             razorpayMode: 'test',
             razorpayConfigured: false,
           })

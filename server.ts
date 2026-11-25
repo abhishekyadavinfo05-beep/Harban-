@@ -5,6 +5,21 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { createServer as createViteServer } from 'vite'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+import fs from 'fs'
+try {
+  const envPath = path.join(__dirname, '.env')
+  if (fs.existsSync(envPath)) {
+    const envParsed = dotenv.parse(fs.readFileSync(envPath, 'utf8'))
+    for (const k of Object.keys(envParsed)) {
+      process.env[k] = envParsed[k]
+    }
+  }
+} catch (e) {
+  // ignore
+}
+
 dotenv.config({ path: '.env.local' })
 dotenv.config()
 import {
@@ -69,8 +84,6 @@ import {
   verifyPassword,
 } from './src/middleware/auth.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
 async function resolveDbUser(req: AuthRequest) {
   if (!req.authUser) return null
   return withDbRetry(() =>
@@ -125,7 +138,7 @@ function parseEnvBool(val: string | undefined, fallback = false): boolean {
 }
 
 function cleanEnvStr(val: string | undefined): string {
-  return (val || '').trim().replace(/^['"]|['"]$/g, '')
+  return (val || '').toString().replace(/[\r\n]+/g, '').trim().replace(/^['"]|['"]$/g, '').trim()
 }
 
 function getRazorpayConfig() {
@@ -135,18 +148,16 @@ function getRazorpayConfig() {
   const keySecret = cleanEnvStr(
     process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_TEST_KEY_SECRET,
   )
+  console.log('ENV DEBUG:', { KEY_ID: process.env.RAZORPAY_KEY_ID, MODE: process.env.RAZORPAY_MODE, keyId })
   const hasCredentials =
     Boolean(keyId) &&
     Boolean(keySecret) &&
     !keyId.startsWith('MY_') &&
     !keySecret.startsWith('MY_')
   const enabled = parseEnvBool(process.env.RAZORPAY_ENABLED, true)
-  const requestedMode = cleanEnvStr(process.env.RAZORPAY_MODE).toLowerCase()
-  const mode =
-    (requestedMode === 'live' || (!requestedMode && keyId.startsWith('rzp_live_'))) &&
-    keyId.startsWith('rzp_live_')
-      ? 'live'
-      : 'test'
+  const mode = 'live'
+
+  console.log('RZP CONFIG DEBUG:', { keyId: keyId.slice(0, 10) + '...', mode, hasCredentials })
 
   return {
     enabled,

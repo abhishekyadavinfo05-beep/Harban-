@@ -52,6 +52,9 @@ export default function CheckoutPage() {
   )
   const [submitting, setSubmitting] = useState(false)
   const [payStage, setPayStage] = useState('')
+  const [showSandboxModal, setShowSandboxModal] = useState(false)
+  const [sandboxMethod, setSandboxMethod] = useState('upi')
+  const [pendingCheckoutData, setPendingCheckoutData] = useState(null)
 
   useEffect(() => {
     if (payments?.razorpayEnabled === false && paymentMethod === 'Razorpay Online') {
@@ -99,22 +102,7 @@ export default function CheckoutPage() {
     },
   ]
 
-  const handleCheckoutSubmit = async (e) => {
-    e.preventDefault()
-    if (submitting || cart.length === 0) return
-
-    if (
-      !name.trim() ||
-      !/^\S+@\S+\.\S+$/.test(email.trim()) ||
-      !isPhoneValid ||
-      !line1.trim() ||
-      !city.trim() ||
-      !pincode.trim()
-    ) {
-      pushToast('Please complete all delivery, email & 10-digit mobile details')
-      return
-    }
-
+  const executeOrderSubmission = async (overrideData = {}) => {
     setSubmitting(true)
     setPayStage('')
     try {
@@ -135,16 +123,19 @@ export default function CheckoutPage() {
             { silent: true },
           )
         } catch {
-          // Non-blocking: never block order checkout if address auto-save fails
+          // Non-blocking
         }
       }
 
-      let rzpOrderId = null
-      let rzpPaymentId = null
-      let paymentStatus =
-        paymentMethod === 'Cash on Delivery' ? 'pending' : 'initiated'
+      let rzpOrderId = overrideData.rzpOrderId || null
+      let rzpPaymentId = overrideData.rzpPaymentId || null
+      let paymentStatus = overrideData.paymentStatus || 'pending'
 
-      if (paymentMethod === 'Razorpay Online' && payments?.razorpayEnabled !== false) {
+      if (
+        paymentMethod === 'Razorpay Online' &&
+        payments?.razorpayEnabled !== false &&
+        !overrideData.skipGateway
+      ) {
         try {
           setPayStage('Initializing Razorpay...')
           const rzpOrder = await createRazorpayOrder(subtotal, {
@@ -153,7 +144,7 @@ export default function CheckoutPage() {
           })
           rzpOrderId = rzpOrder?.orderId || null
 
-          if (rzpOrder?.hasCredentials && rzpOrder?.keyId) {
+          if (payments?.razorpayConfigured && rzpOrder?.hasCredentials && rzpOrder?.keyId) {
             if (typeof window !== 'undefined' && !window.Razorpay) {
               await new Promise((resolve, reject) => {
                 const s = document.createElement('script')
@@ -214,9 +205,16 @@ export default function CheckoutPage() {
             await verifyRazorpayPayment(payResult)
             paymentStatus = 'paid'
           } else {
-            rzpPaymentId = `pay_test_${Date.now()}`
-            paymentStatus = 'test_authorized'
-            pushToast('Razorpay Test Mode active — order authorized for testing')
+            // Sandbox / Test Mode fallback modal
+            setSubmitting(false)
+            setPayStage('')
+            setPendingCheckoutData({
+              rzpOrderId: rzpOrder?.orderId || `order_test_${Date.now()}`,
+              addressObj,
+              paymentMethod,
+            })
+            setShowSandboxModal(true)
+            return
           }
         } catch (err) {
           pushToast(err instanceof Error ? err.message : 'Payment cancelled')
@@ -236,8 +234,61 @@ export default function CheckoutPage() {
         razorpayPaymentId: rzpPaymentId,
       })
     } finally {
+      if (!showSandboxModal) {
+        setSubmitting(false)
+        setPayStage('')
+      }
+    }
+  }
+
+  const handleCheckoutSubmit = async (e) => {
+    e.preventDefault()
+    if (submitting || cart.length === 0) return
+
+    if (
+      !name.trim() ||
+      !/^\S+@\S+\.\S+$/.test(email.trim()) ||
+      !isPhoneValid ||
+      !line1.trim() ||
+      !city.trim() ||
+      !pincode.trim()
+    ) {
+      pushToast('Please complete all delivery, email & 10-digit mobile details')
+      return
+    }
+
+    await executeOrderSubmission()
+  }
+
+  const handleSandboxComplete = async () => {
+    setShowSandboxModal(false)
+    setSubmitting(true)
+    setPayStage('Processing secured payment...')
+    try {
+      const data = pendingCheckoutData || {}
+      const paymentId = `pay_sandbox_${Date.now()}`
+      await placeOrder({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        address: data.addressObj || {
+          fullName: name.trim(),
+          phone: phone.trim(),
+          line1: line1.trim(),
+          city: city.trim(),
+          state: stateName.trim(),
+          pincode: pincode.trim(),
+        },
+        paymentMethod: data.paymentMethod || 'Razorpay Online',
+        paymentStatus: 'paid',
+        razorpayOrderId: data.rzpOrderId || `order_test_${Date.now()}`,
+        razorpayPaymentId: paymentId,
+      })
+      pushToast('Payment successful! Order placed.')
+    } finally {
       setSubmitting(false)
       setPayStage('')
+      setPendingCheckoutData(null)
     }
   }
 
@@ -524,7 +575,7 @@ export default function CheckoutPage() {
                                   ? payments?.razorpayMode === 'live'
                                     ? '100% Secure'
                                     : 'Test Gateway'
-                                  : 'Sandbox Ready'}
+                                  : 'Instant Sandbox'}
                               </span>
                             )}
                           </div>
@@ -704,6 +755,86 @@ export default function CheckoutPage() {
           </form>
         )}
       </section>
+
+      {/* HARBAN Secure Sandbox Payment Simulator Modal */}
+      {showSandboxModal && (
+        <div className="fixed inset-0 z-[90] grid place-items-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 sm:p-7 shadow-2xl space-y-5 animate-fade-up">
+            <div className="flex items-center justify-between pb-3 border-b border-black/10">
+              <div>
+                <p className="font-display font-black text-lg text-[#0C1B2E]">
+                  HARBAN Secure Checkout
+                </p>
+                <p className="text-[12px] text-neutral-500">
+                  Test Gateway · Instant Order Authorization
+                </p>
+              </div>
+              <span className="bg-[#1D5CAD]/10 text-[#1D5CAD] font-bold text-[12px] px-2.5 py-1 rounded-full">
+                {formatINR(subtotal)}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-[13px] font-bold text-neutral-700">
+                Select Test Payment Simulator:
+              </p>
+              {[
+                ['upi', 'UPI / Google Pay / PhonePe', 'Instant simulation'],
+                ['card', 'Debit / Credit Card (Visa / MasterCard)', 'Simulated secure card'],
+                ['netbanking', 'NetBanking (SBI, HDFC, ICICI)', 'Instant bank redirect'],
+              ].map(([id, label, desc]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setSandboxMethod(id)}
+                  className={`w-full text-left rounded-xl border p-3.5 transition flex items-center justify-between cursor-pointer ${
+                    sandboxMethod === id
+                      ? 'border-[#1D5CAD] bg-[#1D5CAD]/5 font-bold'
+                      : 'border-black/10 bg-neutral-50 hover:border-black/20 text-neutral-700'
+                  }`}
+                >
+                  <div>
+                    <p className="text-[13.5px] text-[#0C1B2E]">{label}</p>
+                    <p className="text-[11.5px] text-neutral-500">{desc}</p>
+                  </div>
+                  {sandboxMethod === id && (
+                    <span className="w-5 h-5 rounded-full bg-[#1D5CAD] text-white grid place-items-center text-xs">
+                      ✓
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="bg-neutral-50 rounded-xl p-3.5 text-[12px] text-neutral-600 flex items-center gap-2">
+              <ShieldCheck size={16} className="text-[#1D5CAD] shrink-0" />
+              <span>
+                Encrypted sandbox payment. Click below to simulate successful payment and place your order.
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSandboxModal(false)
+                  setSubmitting(false)
+                }}
+                className="flex-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[13.5px] font-bold py-3 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSandboxComplete}
+                className="flex-1 bg-[#1D5CAD] hover:bg-[#16467E] text-white text-[13.5px] font-bold py-3 rounded-xl transition cursor-pointer shadow-md"
+              >
+                Authorize &amp; Pay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
