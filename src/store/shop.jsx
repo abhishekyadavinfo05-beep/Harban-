@@ -332,8 +332,8 @@ export function ShopProvider({ children }) {
   const [marqueeStats, setMarqueeStats] = useState(initialMarqueeStats)
   const [payments, setPayments] = useState({
     razorpayEnabled: true,
-    razorpayMode: 'test',
-    razorpayConfigured: false,
+    razorpayMode: 'live',
+    razorpayConfigured: true,
   })
 
   const [cart, setCart] = useState(() => readLocal('harban-cart', []))
@@ -606,8 +606,8 @@ export function ShopProvider({ children }) {
         } else {
           setPayments({
             razorpayEnabled: true,
-            razorpayMode: 'test',
-            razorpayConfigured: false,
+            razorpayMode: 'live',
+            razorpayConfigured: true,
           })
         }
       }

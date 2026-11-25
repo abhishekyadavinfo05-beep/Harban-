@@ -139,6 +139,7 @@ Deno.serve(async (req: Request) => {
             amount,
             currency: 'INR',
             receipt,
+            payment_capture: 1,
             notes: {
               store: 'HARBAN',
               ...(body.customerEmail

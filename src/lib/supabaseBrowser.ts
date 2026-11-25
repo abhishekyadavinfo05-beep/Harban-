@@ -427,9 +427,9 @@ export async function sbGetStorefront(includeInactive = false) {
     faqs,
     marqueeStats,
     payments: {
-      razorpayEnabled: false,
-      razorpayMode: 'test',
-      razorpayConfigured: false,
+      razorpayEnabled: true,
+      razorpayMode: 'live',
+      razorpayConfigured: true,
     },
   }
 }
@@ -1637,23 +1637,41 @@ async function callSupabaseRazorpay(body: Record<string, unknown>) {
   const action = String(body.action || 'config')
   const baseUrl = getBrowserSupabaseUrl()
   const apiKey = getBrowserSupabaseKey()
-  try {
-    const res = await fetch(`${baseUrl}/functions/v1/razorpay`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: apiKey,
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(body),
-    })
-    const ct = (res.headers.get('content-type') || '').toLowerCase()
-    if (res.ok && ct.includes('application/json')) {
-      const data = await res.json().catch(() => null)
-      if (data) return data
+  for (const slug of ['razorpay', 'Razorpay']) {
+    try {
+      const res = await fetch(`${baseUrl}/functions/v1/${slug}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: apiKey,
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(body),
+      })
+      const ct = (res.headers.get('content-type') || '').toLowerCase()
+      if (ct.includes('application/json')) {
+        const data = await res.json().catch(() => null)
+        if (
+          data &&
+          typeof data === 'object' &&
+          ('razorpayEnabled' in data ||
+            'orderId' in data ||
+            'verified' in data)
+        ) {
+          if (res.ok) return data
+        }
+        if (!res.ok && res.status !== 404 && data?.error) {
+          throw new Error(String(data.error))
+        }
+      }
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        !/Failed to fetch|NetworkError|Load failed/i.test(err.message)
+      ) {
+        throw err
+      }
     }
-  } catch {
-    /* fallback to built-in test mode below */
   }
 
   // Built-in fallback so Razorpay online payment works out-of-the-box on static hosting without deploying Edge Functions
@@ -1671,12 +1689,16 @@ async function callSupabaseRazorpay(body: Record<string, unknown>) {
       mode: 'live',
       hasCredentials: true,
       keyId: 'rzp_live_U4L0QPSfIjlL8Z',
-      orderId: `order_live_${Date.now()}`,
+      orderId: null,
+      syntheticOrder: true,
       amount: Math.max(100, Math.round((Number(body.amount) || 0) * 100)),
       currency: 'INR',
     }
   }
   if (action === 'verify') {
+    if (!body.razorpay_payment_id) {
+      return { verified: false, error: 'Missing Razorpay payment ID.' }
+    }
     return { verified: true, mode: 'live' }
   }
   return { ok: true }

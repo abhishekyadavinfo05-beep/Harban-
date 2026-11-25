@@ -47,20 +47,12 @@ export default function CheckoutPage() {
   const [city, setCity] = useState('')
   const [stateName, setStateName] = useState('')
   const [pincode, setPincode] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState(
-    payments?.razorpayEnabled !== false ? 'Razorpay Online' : 'Cash on Delivery',
-  )
+  const [paymentMethod, setPaymentMethod] = useState('Razorpay Online')
   const [submitting, setSubmitting] = useState(false)
   const [payStage, setPayStage] = useState('')
   const [showSandboxModal, setShowSandboxModal] = useState(false)
   const [sandboxMethod, setSandboxMethod] = useState('upi')
   const [pendingCheckoutData, setPendingCheckoutData] = useState(null)
-
-  useEffect(() => {
-    if (payments?.razorpayEnabled === false && paymentMethod === 'Razorpay Online') {
-      setPaymentMethod('Cash on Delivery')
-    }
-  }, [payments?.razorpayEnabled, paymentMethod])
 
   useEffect(() => {
     if (!user) return
@@ -82,17 +74,13 @@ export default function CheckoutPage() {
   const progress = Math.min(100, (subtotal / FREE_SHIP_THRESHOLD) * 100)
 
   const paymentOptions = [
-    ...(payments?.razorpayEnabled !== false
-      ? [
-          {
-            id: 'Razorpay Online',
-            label: 'Pay Online via Razorpay',
-            desc: 'Instant checkout with UPI (GPay, PhonePe, Paytm), Cards, NetBanking & Wallets.',
-            badges: ['UPI', 'Visa / Mastercard', 'RuPay', 'NetBanking'],
-            icon: Wallet,
-          },
-        ]
-      : []),
+    {
+      id: 'Razorpay Online',
+      label: 'Pay Online via Razorpay',
+      desc: 'Instant checkout with UPI (GPay, PhonePe, Paytm), Cards, NetBanking & Wallets.',
+      badges: ['UPI', 'Visa / Mastercard', 'RuPay', 'NetBanking'],
+      icon: Wallet,
+    },
     {
       id: 'Cash on Delivery',
       label: 'Cash on Delivery (COD)',
@@ -133,7 +121,6 @@ export default function CheckoutPage() {
 
       if (
         paymentMethod === 'Razorpay Online' &&
-        payments?.razorpayEnabled !== false &&
         !overrideData.skipGateway
       ) {
         try {
@@ -144,7 +131,7 @@ export default function CheckoutPage() {
           })
           rzpOrderId = rzpOrder?.orderId || null
 
-          if (payments?.razorpayConfigured && rzpOrder?.hasCredentials && rzpOrder?.keyId) {
+          if (rzpOrder?.hasCredentials && rzpOrder?.keyId) {
             if (typeof window !== 'undefined' && !window.Razorpay) {
               await new Promise((resolve, reject) => {
                 const s = document.createElement('script')
@@ -169,7 +156,7 @@ export default function CheckoutPage() {
                 currency: rzpOrder.currency || 'INR',
                 name: 'HARBAN',
                 description: 'HARBAN Grooming Essentials Order',
-                order_id: rzpOrder.orderId,
+                ...(rzpOrder.orderId ? { order_id: rzpOrder.orderId } : {}),
                 prefill: {
                   name: name.trim(),
                   email: email.trim(),

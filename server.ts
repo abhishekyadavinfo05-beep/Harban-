@@ -148,16 +148,18 @@ function getRazorpayConfig() {
   const keySecret = cleanEnvStr(
     process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_TEST_KEY_SECRET,
   )
-  console.log('ENV DEBUG:', { KEY_ID: process.env.RAZORPAY_KEY_ID, MODE: process.env.RAZORPAY_MODE, keyId })
   const hasCredentials =
     Boolean(keyId) &&
     Boolean(keySecret) &&
     !keyId.startsWith('MY_') &&
     !keySecret.startsWith('MY_')
   const enabled = parseEnvBool(process.env.RAZORPAY_ENABLED, true)
-  const mode = 'live'
-
-  console.log('RZP CONFIG DEBUG:', { keyId: keyId.slice(0, 10) + '...', mode, hasCredentials })
+  const requestedMode = cleanEnvStr(process.env.RAZORPAY_MODE).toLowerCase()
+  const mode =
+    (requestedMode === 'live' || (!requestedMode && keyId.startsWith('rzp_live_'))) &&
+    keyId.startsWith('rzp_live_')
+      ? 'live'
+      : 'test'
 
   return {
     enabled,
@@ -709,6 +711,7 @@ async function startServer() {
               amount,
               currency: 'INR',
               receipt,
+              payment_capture: 1,
               notes: {
                 store: 'HARBAN',
                 ...(req.body?.customerEmail
