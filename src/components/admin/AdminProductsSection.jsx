@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle,
   ArrowLeft,
@@ -52,6 +52,7 @@ function createEmptyProduct(defaultCategory = 'beard') {
 }
 
 export default function AdminProductsSection({
+  mode = 'all',
   products = [],
   categories = [],
   lowStockThreshold = 5,
@@ -62,9 +63,10 @@ export default function AdminProductsSection({
   onUploadImage,
   onReload,
   pushToast,
-  externalCreateTrigger = 0,
   selectedProductId = null,
-  onClearSelectedProduct,
+  onOpenProduct,
+  onStartNewProduct,
+  onCloseProduct,
 }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
@@ -75,7 +77,6 @@ export default function AdminProductsSection({
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10)
 
-  const [editing, setEditing] = useState(null) // null | 'new' | productId
   const [form, setForm] = useState(() =>
     createEmptyProduct(categories[0]?.id || 'beard'),
   )
@@ -85,7 +86,6 @@ export default function AdminProductsSection({
   const [uploadingImages, setUploadingImages] = useState(false)
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
-  const [lastTrigger, setLastTrigger] = useState(0)
 
   // Quick Price & Stock Modal
   const [quickTarget, setQuickTarget] = useState(null)
@@ -103,12 +103,64 @@ export default function AdminProductsSection({
   const [previewImgIdx, setPreviewImgIdx] = useState(0)
   const [previewVariantIdx, setPreviewVariantIdx] = useState(0)
 
-  if (externalCreateTrigger !== lastTrigger) {
-    setLastTrigger(externalCreateTrigger)
-    setEditing('new')
-    setFormError('')
-    setForm(createEmptyProduct(categories[0]?.id || 'beard'))
-  }
+  const isCreateMode = mode === 'add'
+  const isDetailView = isCreateMode || Boolean(selectedProductId)
+  const loadedKeyRef = useRef('')
+
+  const activeCatalogProduct = useMemo(() => {
+    if (!selectedProductId) return null
+    return products.find((p) => p.id === selectedProductId) || null
+  }, [products, selectedProductId])
+
+  useEffect(() => {
+    if (isCreateMode) {
+      if (loadedKeyRef.current !== 'new') {
+        loadedKeyRef.current = 'new'
+        setFormError('')
+        setForm(createEmptyProduct(categories[0]?.id || 'beard'))
+      }
+      return
+    }
+    if (selectedProductId && activeCatalogProduct) {
+      if (loadedKeyRef.current !== activeCatalogProduct.id) {
+        loadedKeyRef.current = activeCatalogProduct.id
+        const p = activeCatalogProduct
+        const gallery =
+          Array.isArray(p.images) && p.images.length > 0
+            ? p.images
+            : [p.image || '/images/product-ht100.jpg']
+        setFormError('')
+        setForm({
+          id: p.id,
+          sku: p.sku || '',
+          brand: p.brand || 'HARBAN',
+          name: p.name,
+          tagline: p.tagline || '',
+          category: p.category,
+          price: p.price,
+          mrp: p.mrp,
+          stock: typeof p.stock === 'number' ? p.stock : 25,
+          image: gallery[0],
+          images: gallery,
+          badge: p.badge || '',
+          short: p.short || '',
+          description: p.description || '',
+          features: Array.isArray(p.features) ? p.features : [],
+          specs: Array.isArray(p.specs)
+            ? p.specs.filter((s) => String(s.label || '').toLowerCase() !== 'brand')
+            : [],
+          variants: Array.isArray(p.variants) ? p.variants : [],
+          meeshoUrl: p.meeshoUrl || '',
+          isActive: p.isActive !== false,
+          isFeatured: Boolean(p.isFeatured),
+        })
+      }
+      return
+    }
+    if (!selectedProductId && !isCreateMode) {
+      loadedKeyRef.current = ''
+    }
+  }, [isCreateMode, selectedProductId, activeCatalogProduct, categories])
 
   const categoryMap = useMemo(
     () => new Map(categories.map((c) => [c.id, c.label])),
@@ -156,6 +208,9 @@ export default function AdminProductsSection({
         return false
       }
       if (statusFilter === 'out_of_stock' && (p.stock ?? 0) !== 0) return false
+      if (mode === 'variants' && (!p.variants || p.variants.length === 0)) {
+        return false
+      }
       if (!searchQuery.trim()) return true
       return matchesSearch(
         searchQuery,
@@ -199,6 +254,7 @@ export default function AdminProductsSection({
     sortBy,
     lowStockThreshold,
     categoryMap,
+    mode,
   ])
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
@@ -228,55 +284,6 @@ export default function AdminProductsSection({
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     )
   }
-
-  const startNew = () => {
-    setEditing('new')
-    setFormError('')
-    setForm(createEmptyProduct(categories[0]?.id || 'beard'))
-  }
-
-  const startEdit = (p) => {
-    const gallery =
-      Array.isArray(p.images) && p.images.length > 0
-        ? p.images
-        : [p.image || '/images/product-ht100.jpg']
-    setEditing(p.id)
-    setFormError('')
-    setForm({
-      id: p.id,
-      sku: p.sku || '',
-      brand: p.brand || 'HARBAN',
-      name: p.name,
-      tagline: p.tagline || '',
-      category: p.category,
-      price: p.price,
-      mrp: p.mrp,
-      stock: typeof p.stock === 'number' ? p.stock : 25,
-      image: gallery[0],
-      images: gallery,
-      badge: p.badge || '',
-      short: p.short || '',
-      description: p.description || '',
-      features: Array.isArray(p.features) ? p.features : [],
-      specs: Array.isArray(p.specs)
-        ? p.specs.filter((s) => String(s.label || '').toLowerCase() !== 'brand')
-        : [],
-      variants: Array.isArray(p.variants) ? p.variants : [],
-      meeshoUrl: p.meeshoUrl || '',
-      isActive: p.isActive !== false,
-      isFeatured: Boolean(p.isFeatured),
-    })
-  }
-
-  useEffect(() => {
-    if (!selectedProductId) return
-    const target = products.find((p) => p.id === selectedProductId)
-    if (target) {
-      startEdit(target)
-      onClearSelectedProduct?.()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProductId, products])
 
   const openQuickModal = (p) => {
     setQuickTarget(p)
@@ -476,8 +483,12 @@ export default function AdminProductsSection({
     try {
       const payload = buildSanitizedPayload()
       await onSaveProduct(payload)
-      setEditing(null)
+      pushToast(`Saved product: ${payload.name}`)
       await onReload()
+      loadedKeyRef.current = ''
+      if (isCreateMode && onOpenProduct) {
+        onOpenProduct(payload.id)
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unable to save product'
       setFormError(msg)
@@ -518,11 +529,14 @@ export default function AdminProductsSection({
 
   const handleConfirmDelete = async () => {
     if (!confirmDelete) return
+    const deletingId = confirmDelete.id
     try {
-      await onDeleteProduct(confirmDelete.id)
-      if (editing === confirmDelete.id) setEditing(null)
+      await onDeleteProduct(deletingId)
       setConfirmDelete(null)
       await onReload()
+      if (selectedProductId === deletingId) {
+        onCloseProduct?.()
+      }
     } catch (err) {
       pushToast(err instanceof Error ? err.message : 'Delete failed')
       setConfirmDelete(null)
@@ -603,6 +617,1093 @@ export default function AdminProductsSection({
     pushToast(`Exported ${filteredProducts.length} product(s)`)
   }
 
+  const sharedModals = (
+    <>
+      {quickTarget && (
+        <div className="fixed inset-0 z-[82] grid place-items-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+            onClick={() => setQuickTarget(null)}
+          />
+          <form
+            onSubmit={handleQuickModalSave}
+            className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-lg w-full p-5 space-y-4 shadow-xl"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-display font-bold text-[16px] text-[#111827]">
+                  Quick Update Price &amp; Stock
+                </h3>
+                <p className="text-[12px] text-[#6B7280]">
+                  {quickTarget.name} ·{' '}
+                  <span className="font-mono">{quickTarget.sku || quickTarget.id}</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuickTarget(null)}
+                className="p-1 text-[#6B7280] hover:text-[#111827] cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {quickError && (
+              <div className="bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-[12px] font-semibold px-3 py-2 rounded-xl">
+                {quickError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#374151] mb-1">
+                  Selling Price (INR)
+                </label>
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  value={quickForm.price}
+                  onChange={(e) =>
+                    setQuickForm((q) => ({ ...q, price: Number(e.target.value) }))
+                  }
+                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[13px] tabular-nums outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-[#374151] mb-1">
+                  MRP (INR)
+                </label>
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  value={quickForm.mrp}
+                  onChange={(e) =>
+                    setQuickForm((q) => ({ ...q, mrp: Number(e.target.value) }))
+                  }
+                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[13px] tabular-nums outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-[#374151] mb-1">
+                  Stock Qty
+                </label>
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  value={quickForm.stock}
+                  onChange={(e) =>
+                    setQuickForm((q) => ({ ...q, stock: Number(e.target.value) }))
+                  }
+                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[13px] tabular-nums outline-none"
+                />
+              </div>
+            </div>
+
+            {quickForm.variants.length > 0 && (
+              <div className="space-y-2 border-t border-[#EAECF0] pt-3">
+                <p className="text-[11.5px] font-bold text-[#111827]">
+                  Variant Stock &amp; Pricing ({quickForm.variants.length})
+                </p>
+                <div className="max-h-44 overflow-y-auto space-y-1.5">
+                  {quickForm.variants.map((v, idx) => (
+                    <div
+                      key={v.id || idx}
+                      className="grid grid-cols-[1.5fr_1fr_1fr] gap-2 items-center bg-[#F9FAFB] px-2.5 py-1.5 rounded-xl text-[12px]"
+                    >
+                      <span className="font-semibold truncate">
+                        {[v.size, v.color].filter(Boolean).join(' / ') ||
+                          v.sku ||
+                          `Variant ${idx + 1}`}
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={v.price ?? quickForm.price}
+                        onChange={(e) =>
+                          setQuickForm((q) => ({
+                            ...q,
+                            variants: q.variants.map((row, i) =>
+                              i === idx ? { ...row, price: Number(e.target.value) } : row,
+                            ),
+                          }))
+                        }
+                        className="bg-white border border-[#E5E7EB] rounded-lg px-2 py-1 tabular-nums outline-none"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        value={v.stock ?? 0}
+                        onChange={(e) =>
+                          setQuickForm((q) => ({
+                            ...q,
+                            variants: q.variants.map((row, i) =>
+                              i === idx ? { ...row, stock: Number(e.target.value) } : row,
+                            ),
+                          }))
+                        }
+                        className="bg-white border border-[#E5E7EB] rounded-lg px-2 py-1 tabular-nums outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setQuickTarget(null)}
+                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={quickSaving}
+                className="px-4 py-2 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] disabled:opacity-50 text-white rounded-xl cursor-pointer"
+              >
+                {quickSaving ? 'Updating...' : 'Save Price & Stock'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {previewProduct && (
+        <div className="fixed inset-0 z-[85] grid place-items-center p-4">
+          <div
+            className="absolute inset-0 bg-black/55 backdrop-blur-xs"
+            onClick={() => setPreviewProduct(null)}
+          />
+          <div className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#EAECF0] pb-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#5B21B6]">
+                  Storefront Pre-Publish Preview
+                </p>
+                <h3 className="font-display font-bold text-[17px] text-[#111827]">
+                  {previewProduct.name || 'Untitled Product'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewProduct(null)}
+                className="p-1.5 rounded-lg hover:bg-[#F3F4F6] text-[#6B7280] cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="grid sm:grid-cols-[1fr_1.15fr] gap-5">
+              <div className="space-y-2.5">
+                <div className="aspect-square rounded-2xl overflow-hidden bg-[#F9FAFB] border border-[#EAECF0] relative">
+                  <Img
+                    src={
+                      previewProduct.images[previewImgIdx] || previewProduct.image
+                    }
+                    alt={previewProduct.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {previewProduct.badge && (
+                    <span className="absolute top-3 left-3 bg-[#111827] text-white text-[10.5px] font-bold uppercase tracking-wide px-2.5 py-1 rounded">
+                      {previewProduct.badge}
+                    </span>
+                  )}
+                </div>
+                {previewProduct.images.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto">
+                    {previewProduct.images.map((src, idx) => (
+                      <button
+                        key={`${src}-${idx}`}
+                        type="button"
+                        onClick={() => setPreviewImgIdx(idx)}
+                        className={`w-14 h-14 rounded-xl overflow-hidden border-2 shrink-0 cursor-pointer ${
+                          previewImgIdx === idx
+                            ? 'border-[#5B21B6]'
+                            : 'border-[#EAECF0]'
+                        }`}
+                      >
+                        <Img src={src} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-[11.5px] font-bold text-[#5B21B6]">
+                  <span>{previewProduct.brand || 'HARBAN'}</span>
+                  <span className="text-[#D1D5DB]">·</span>
+                  <span>
+                    {categoryMap.get(previewProduct.category) ||
+                      previewProduct.category}
+                  </span>
+                </div>
+
+                <h4 className="font-display font-bold text-[20px] text-[#111827] leading-tight">
+                  {previewProduct.name || 'Product Name'}
+                </h4>
+
+                {previewProduct.tagline && (
+                  <p className="text-[13px] text-[#6B7280]">{previewProduct.tagline}</p>
+                )}
+
+                <div className="flex items-baseline gap-2.5">
+                  <span className="font-display font-bold text-[22px] text-[#111827] tabular-nums">
+                    {formatINR(previewProduct.price)}
+                  </span>
+                  {previewProduct.mrp > previewProduct.price && (
+                    <>
+                      <span className="text-[14px] text-[#9CA3AF] line-through tabular-nums">
+                        {formatINR(previewProduct.mrp)}
+                      </span>
+                      <span className="text-[12px] font-bold text-[#15803D] bg-[#DCFCE7] px-2 py-0.5 rounded-md">
+                        {Math.round(
+                          ((previewProduct.mrp - previewProduct.price) /
+                            previewProduct.mrp) *
+                            100,
+                        )}
+                        % OFF
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                <p className="text-[12px] font-semibold text-[#6B7280]">
+                  Availability:{' '}
+                  <span
+                    className={
+                      previewProduct.stock === 0
+                        ? 'text-[#E11D48]'
+                        : 'text-[#15803D]'
+                    }
+                  >
+                    {previewProduct.stock === 0
+                      ? 'Out of Stock'
+                      : `In Stock (${previewProduct.stock} units)`}
+                  </span>
+                </p>
+
+                {previewProduct.variants.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] font-bold uppercase text-[#6B7280]">
+                      Available Options
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {previewProduct.variants.map((v, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setPreviewVariantIdx(idx)}
+                          className={`px-2.5 py-1 rounded-lg border text-[12px] font-semibold cursor-pointer ${
+                            previewVariantIdx === idx
+                              ? 'border-[#5B21B6] bg-[#F5F3FF] text-[#5B21B6]'
+                              : 'border-[#E5E7EB] text-[#6B7280]'
+                          }`}
+                        >
+                          {[v.size, v.color].filter(Boolean).join(' / ') || v.sku}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {previewProduct.description && (
+                  <p className="text-[12.5px] text-[#4B5563] leading-relaxed border-t border-[#EAECF0] pt-2.5">
+                    {previewProduct.description}
+                  </p>
+                )}
+
+                {previewProduct.features.length > 0 && (
+                  <ul className="space-y-1 text-[12px] text-[#374151] list-disc pl-4">
+                    {previewProduct.features.map((f, i) => (
+                      <li key={i}>{f}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[80] grid place-items-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+            onClick={() => setConfirmDelete(null)}
+          />
+          <div className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-sm w-full p-5 space-y-4 shadow-xl">
+            <h3 className="font-display font-bold text-[16px] text-[#111827]">
+              Delete product permanently?
+            </h3>
+            <p className="text-[13px] text-[#6B7280] leading-relaxed">
+              This will permanently remove <strong>{confirmDelete.name}</strong> (
+              {confirmDelete.sku || confirmDelete.id}) from your store catalog. Past order history items keep their snapshot.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(null)}
+                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 text-[12.5px] font-semibold bg-[#E11D48] hover:bg-[#BE123C] text-white rounded-xl cursor-pointer"
+              >
+                Delete Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+
+  /* ------------------------------------- FULL-PAGE PRODUCT DETAIL / CREATE */
+  if (isDetailView) {
+    if (!isCreateMode && !activeCatalogProduct) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => onCloseProduct?.()}
+              className="w-9 h-9 rounded-xl border border-[#E5E7EB] bg-white hover:bg-[#F9FAFB] grid place-items-center text-[#111827] cursor-pointer"
+              aria-label="Back to products"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <h1 className="font-display font-bold text-[20px] text-[#111827]">
+              Product not found
+            </h1>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-[#EAECF0] p-10 text-center space-y-3 shadow-2xs">
+            <p className="text-[13px] text-[#6B7280]">
+              We couldn&apos;t find product ID <span className="font-mono">{selectedProductId}</span>.
+            </p>
+            <button
+              type="button"
+              onClick={() => onCloseProduct?.()}
+              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
+            >
+              <ArrowLeft size={14} /> Back to All Products
+            </button>
+          </div>
+          {sharedModals}
+        </div>
+      )
+    }
+
+    const navList = filteredProducts.some((p) => p.id === selectedProductId)
+      ? filteredProducts
+      : products
+    const currIdx = !isCreateMode
+      ? navList.findIndex((p) => p.id === selectedProductId)
+      : -1
+    const prevProd = currIdx > 0 ? navList[currIdx - 1] : null
+    const nextProd =
+      currIdx >= 0 && currIdx < navList.length - 1 ? navList[currIdx + 1] : null
+
+    return (
+      <form onSubmit={handleSave} className="space-y-4">
+        {/* Shopify-Style Product Top Bar */}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => onCloseProduct?.()}
+              title="Back to Products"
+              aria-label="Back to Products"
+              className="mt-0.5 w-9 h-9 rounded-xl border border-[#E5E7EB] bg-white hover:bg-[#F9FAFB] grid place-items-center text-[#111827] shadow-2xs shrink-0 cursor-pointer"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="font-display font-bold text-[22px] text-[#111827] tracking-tight truncate max-w-[480px]">
+                  {isCreateMode ? 'Add Product' : form.name || form.id}
+                </h1>
+                <span
+                  className={`inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-md ${
+                    form.isActive
+                      ? 'bg-[#DCFCE7] text-[#15803D]'
+                      : 'bg-[#F3F4F6] text-[#4B5563]'
+                  }`}
+                >
+                  {form.isActive ? 'Active' : 'Draft'}
+                </span>
+              </div>
+              <p className="text-[12.5px] text-[#6B7280] mt-0.5">
+                {isCreateMode
+                  ? 'Create a new product listing for the live HARBAN catalog.'
+                  : `${form.sku || form.id} · ${categoryMap.get(form.category) || form.category}`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={openPreview}
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#E5E7EB] hover:bg-[#F9FAFB] text-[#111827] px-3.5 py-2 rounded-xl shadow-2xs cursor-pointer whitespace-nowrap"
+            >
+              <Eye size={14} className="text-[#4B5563]" /> Preview
+            </button>
+
+            {!isCreateMode && activeCatalogProduct && (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(activeCatalogProduct)}
+                className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#FECDD3] hover:bg-[#FFF5F6] text-[#E11D48] px-3.5 py-2 rounded-xl shadow-2xs cursor-pointer whitespace-nowrap"
+              >
+                <Trash2 size={14} /> Delete
+              </button>
+            )}
+
+            {!isCreateMode && (
+              <div className="inline-flex items-center rounded-xl border border-[#E5E7EB] bg-white overflow-hidden shadow-2xs">
+                <button
+                  type="button"
+                  disabled={!prevProd}
+                  onClick={() => prevProd && onOpenProduct?.(prevProd.id)}
+                  title={prevProd ? `Previous: ${prevProd.name}` : 'First product'}
+                  aria-label="Previous product"
+                  className="w-9 h-9 grid place-items-center text-[#374151] hover:bg-[#F9FAFB] disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer border-r border-[#E5E7EB]"
+                >
+                  <ChevronLeft size={15} />
+                </button>
+                <button
+                  type="button"
+                  disabled={!nextProd}
+                  onClick={() => nextProd && onOpenProduct?.(nextProd.id)}
+                  title={nextProd ? `Next: ${nextProd.name}` : 'Last product'}
+                  aria-label="Next product"
+                  className="w-9 h-9 grid place-items-center text-[#374151] hover:bg-[#F9FAFB] disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 disabled:opacity-60 text-white text-[12.5px] font-semibold px-5 py-2 rounded-xl shadow-xs transition cursor-pointer whitespace-nowrap"
+            >
+              {saving ? 'Saving...' : isCreateMode ? 'Publish Product' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+
+        {formError && (
+          <div className="bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-[12.5px] font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2">
+            <AlertCircle size={15} className="shrink-0" />
+            <span>{formError}</span>
+          </div>
+        )}
+
+        {/* Shopify 2-Column Product Workspace */}
+        <div className="grid lg:grid-cols-[1fr_340px] gap-4 items-start">
+          {/* Left Primary Column */}
+          <div className="space-y-4 min-w-0">
+            {/* Core Copy Card */}
+            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-4 shadow-2xs">
+              <div>
+                <label className="block text-[12px] font-semibold text-[#374151] mb-1">
+                  Title *
+                </label>
+                <input
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                  placeholder="e.g. HARBAN HT-200 Pro Beard Trimmer"
+                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-[14px] font-medium outline-none focus:border-[#5B21B6]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-semibold text-[#374151] mb-1">
+                  Short Tagline (Storefront Card Subtitle)
+                </label>
+                <input
+                  value={form.tagline}
+                  onChange={(e) => setForm((p) => ({ ...p, tagline: e.target.value }))}
+                  placeholder="Zero-gap titanium blades · 90 min USB-C runtime"
+                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] outline-none focus:border-[#5B21B6]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-semibold text-[#374151] mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows={4}
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, description: e.target.value }))
+                  }
+                  placeholder="Detailed product overview displayed on Product Page & Quick View..."
+                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-[13px] outline-none focus:border-[#5B21B6] resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Media Gallery Card */}
+            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3.5 shadow-2xs">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="font-display font-bold text-[14px] text-[#111827]">
+                    Media ({form.images?.length || 0})
+                  </h2>
+                  <p className="text-[11.5px] text-[#6B7280]">
+                    First image is the primary storefront thumbnail.
+                  </p>
+                </div>
+                <label className="inline-flex items-center gap-1.5 bg-[#F9FAFB] border border-[#E5E7EB] hover:border-[#5B21B6] text-[#111827] text-[12px] font-semibold px-3.5 py-2 rounded-xl cursor-pointer transition">
+                  <Upload size={13} />
+                  {uploadingImages ? 'Uploading...' : 'Upload Images'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleMultiImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="Or paste image URL (e.g. /images/product-ht100.jpg or https://...)"
+                  className="flex-1 min-w-0 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12.5px] outline-none focus:border-[#5B21B6]"
+                />
+                <button
+                  type="button"
+                  onClick={addImageByUrl}
+                  className="shrink-0 bg-white border border-[#E5E7EB] hover:border-[#5B21B6] text-[#111827] text-[12px] font-semibold px-3.5 py-2 rounded-xl cursor-pointer"
+                >
+                  Add URL
+                </button>
+              </div>
+
+              {form.images && form.images.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
+                  {form.images.map((src, idx) => (
+                    <div
+                      key={`${src}-${idx}`}
+                      className={`bg-[#F9FAFB] rounded-xl border p-1.5 space-y-1.5 ${
+                        idx === 0 ? 'border-[#5B21B6]' : 'border-[#EAECF0]'
+                      }`}
+                    >
+                      <div className="relative aspect-square rounded-lg overflow-hidden bg-white">
+                        <Img
+                          src={src}
+                          alt={`Gallery ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {idx === 0 && (
+                          <span className="absolute top-1 left-1 bg-[#5B21B6] text-white text-[9.5px] font-bold px-1.5 py-0.5 rounded">
+                            Primary
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-0.5">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => moveImage(idx, -1)}
+                            className="p-1 text-[#6B7280] hover:text-[#111827] disabled:opacity-30 cursor-pointer"
+                          >
+                            <ArrowLeft size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === form.images.length - 1}
+                            onClick={() => moveImage(idx, 1)}
+                            className="p-1 text-[#6B7280] hover:text-[#111827] disabled:opacity-30 cursor-pointer"
+                          >
+                            <ArrowRight size={12} />
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeImage(idx)}
+                          className="p-1 text-[#E11D48] hover:bg-[#FFF5F6] rounded cursor-pointer"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Pricing Card */}
+            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3.5 shadow-2xs">
+              <h2 className="font-display font-bold text-[14px] text-[#111827]">
+                Pricing
+              </h2>
+              <div className="grid sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11.5px] font-semibold text-[#374151] mb-1">
+                    Selling Price (INR)
+                  </label>
+                  <input
+                    required
+                    type="number"
+                    min="0"
+                    value={form.price}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, price: Number(e.target.value) }))
+                    }
+                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#5B21B6]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11.5px] font-semibold text-[#374151] mb-1">
+                    Compare-at / MRP (INR)
+                  </label>
+                  <input
+                    required
+                    type="number"
+                    min="0"
+                    value={form.mrp}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, mrp: Number(e.target.value) }))
+                    }
+                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#5B21B6]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11.5px] font-semibold text-[#374151] mb-1">
+                    Discount (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="95"
+                    value={marginPct}
+                    onChange={(e) => applyDiscountPercent(e.target.value)}
+                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#5B21B6]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Inventory & Identifiers Card */}
+            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3.5 shadow-2xs">
+              <h2 className="font-display font-bold text-[14px] text-[#111827]">
+                Inventory &amp; Catalog Identifiers
+              </h2>
+              <div className="grid sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11.5px] font-semibold text-[#374151] mb-1">
+                    SKU (Stock Keeping Unit)
+                  </label>
+                  <input
+                    value={form.sku}
+                    onChange={(e) => setForm((p) => ({ ...p, sku: e.target.value }))}
+                    placeholder="HRB-HT200-BLK"
+                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] font-mono outline-none focus:border-[#5B21B6]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11.5px] font-semibold text-[#374151] mb-1">
+                    Available Quantity
+                  </label>
+                  <input
+                    required
+                    type="number"
+                    min="0"
+                    value={form.stock}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, stock: Number(e.target.value) }))
+                    }
+                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#5B21B6]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11.5px] font-semibold text-[#374151] mb-1">
+                    URL Handle / Slug
+                  </label>
+                  <input
+                    value={form.id}
+                    disabled={!isCreateMode}
+                    onChange={(e) => setForm((p) => ({ ...p, id: e.target.value }))}
+                    placeholder="auto-generated"
+                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] font-mono outline-none disabled:opacity-60"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11.5px] font-semibold text-[#374151] mb-1">
+                  Meesho External Link (Optional)
+                </label>
+                <input
+                  value={form.meeshoUrl}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, meeshoUrl: e.target.value }))
+                  }
+                  placeholder="https://www.meesho.com/..."
+                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] outline-none focus:border-[#5B21B6]"
+                />
+              </div>
+            </div>
+
+            {/* Variants Builder Card */}
+            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3 shadow-2xs">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h2 className="font-display font-bold text-[14px] text-[#111827]">
+                    Variants ({form.variants?.length || 0})
+                  </h2>
+                  <p className="text-[11.5px] text-[#6B7280]">
+                    Add size, color or edition options with independent SKU, pricing &amp; stock.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addVariantRow}
+                  className="inline-flex items-center gap-1 bg-[#F9FAFB] border border-[#E5E7EB] hover:border-[#5B21B6] text-[12px] font-semibold px-3 py-1.5 rounded-xl cursor-pointer"
+                >
+                  <Plus size={13} /> Add Variant
+                </button>
+              </div>
+
+              {form.variants && form.variants.length > 0 && (
+                <div className="space-y-2">
+                  {form.variants.map((v, idx) => (
+                    <div
+                      key={`variant-${idx}`}
+                      className="grid grid-cols-2 sm:grid-cols-6 gap-2 bg-[#F9FAFB] p-2.5 rounded-xl border border-[#EAECF0] items-center"
+                    >
+                      <input
+                        value={v.size || ''}
+                        onChange={(e) => updateVariantField(idx, 'size', e.target.value)}
+                        placeholder="Size / Edition"
+                        className="bg-white border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
+                      />
+                      <input
+                        value={v.color || ''}
+                        onChange={(e) => updateVariantField(idx, 'color', e.target.value)}
+                        placeholder="Color"
+                        className="bg-white border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
+                      />
+                      <input
+                        value={v.sku || ''}
+                        onChange={(e) => updateVariantField(idx, 'sku', e.target.value)}
+                        placeholder="Variant SKU"
+                        className="bg-white border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] font-mono outline-none"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        value={v.price ?? form.price}
+                        onChange={(e) =>
+                          updateVariantField(idx, 'price', Number(e.target.value))
+                        }
+                        placeholder="Price"
+                        className="bg-white border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] tabular-nums outline-none"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        value={v.stock ?? 0}
+                        onChange={(e) =>
+                          updateVariantField(idx, 'stock', Number(e.target.value))
+                        }
+                        placeholder="Stock"
+                        className="bg-white border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] tabular-nums outline-none"
+                      />
+                      <div className="flex items-center justify-end gap-2">
+                        <label className="text-[11px] font-semibold flex items-center gap-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={v.isActive !== false}
+                            onChange={(e) =>
+                              updateVariantField(idx, 'isActive', e.target.checked)
+                            }
+                            className="accent-[#5B21B6]"
+                          />
+                          Active
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => removeVariantRow(idx)}
+                          className="text-[#E11D48] hover:bg-[#FFF5F6] p-1 rounded cursor-pointer"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Key Highlights & Technical Specs */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-2.5 shadow-2xs">
+                <h2 className="font-display font-bold text-[13.5px] text-[#111827]">
+                  Key Highlights ({form.features?.length || 0})
+                </h2>
+                <div className="flex gap-2">
+                  <input
+                    value={newFeature}
+                    onChange={(e) => setNewFeature(e.target.value)}
+                    placeholder="Add highlight bullet..."
+                    className="flex-1 min-w-0 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-1.5 text-[12.5px] outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!newFeature.trim()) return
+                      setForm((p) => ({
+                        ...p,
+                        features: [...(p.features || []), newFeature.trim()],
+                      }))
+                      setNewFeature('')
+                    }}
+                    className="bg-[#111827] text-white text-[12px] font-semibold px-3 rounded-xl cursor-pointer"
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="space-y-1 max-h-36 overflow-y-auto">
+                  {(form.features || []).map((f, idx) => (
+                    <div
+                      key={`${f}-${idx}`}
+                      className="flex items-center justify-between gap-2 text-[12px] bg-[#F9FAFB] px-2.5 py-1.5 rounded-lg"
+                    >
+                      <span className="truncate">{f}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((p) => ({
+                            ...p,
+                            features: p.features.filter((_, i) => i !== idx),
+                          }))
+                        }
+                        className="text-[#E11D48] shrink-0 cursor-pointer"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-2.5 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-display font-bold text-[13.5px] text-[#111827]">
+                    Specifications ({form.specs?.length || 0})
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((p) => ({
+                        ...p,
+                        specs: [...(p.specs || []), { label: '', value: '' }],
+                      }))
+                    }
+                    className="text-[11.5px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
+                  >
+                    + Add Spec Row
+                  </button>
+                </div>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {(form.specs || []).map((s, idx) => (
+                    <div key={`spec-${idx}`} className="flex items-center gap-1.5">
+                      <input
+                        value={s.label}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            specs: p.specs.map((row, i) =>
+                              i === idx ? { ...row, label: e.target.value } : row,
+                            ),
+                          }))
+                        }
+                        placeholder="Label (e.g. Battery)"
+                        className="w-1/2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
+                      />
+                      <input
+                        value={s.value}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            specs: p.specs.map((row, i) =>
+                              i === idx ? { ...row, value: e.target.value } : row,
+                            ),
+                          }))
+                        }
+                        placeholder="Value (e.g. 90 mins)"
+                        className="w-1/2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((p) => ({
+                            ...p,
+                            specs: p.specs.filter((_, i) => i !== idx),
+                          }))
+                        }
+                        className="text-[#E11D48] p-1 cursor-pointer"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Organization & Publishing Sidebar */}
+          <aside className="space-y-4">
+            {/* Publishing Status Card */}
+            <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 space-y-3 shadow-2xs">
+              <h3 className="font-display font-bold text-[13.5px] text-[#111827]">
+                Status &amp; Visibility
+              </h3>
+              <label className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#F9FAFB] border border-[#EAECF0] text-[12.5px] font-semibold text-[#111827] cursor-pointer">
+                <span>Enabled on Storefront</span>
+                <input
+                  type="checkbox"
+                  checked={form.isActive}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, isActive: e.target.checked }))
+                  }
+                  className="accent-[#5B21B6]"
+                />
+              </label>
+              <label className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#F9FAFB] border border-[#EAECF0] text-[12.5px] font-semibold text-[#111827] cursor-pointer">
+                <span>Featured Product</span>
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.isFeatured)}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, isFeatured: e.target.checked }))
+                  }
+                  className="accent-[#5B21B6]"
+                />
+              </label>
+            </div>
+
+            {/* Product Organization Card */}
+            <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 space-y-3 shadow-2xs">
+              <h3 className="font-display font-bold text-[13.5px] text-[#111827]">
+                Product Organization
+              </h3>
+              <div>
+                <label className="block text-[11.5px] font-semibold text-[#374151] mb-1">
+                  Category *
+                </label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
+                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12.5px] outline-none"
+                >
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11.5px] font-semibold text-[#374151] mb-1">
+                  Brand / Vendor *
+                </label>
+                <input
+                  required
+                  value={form.brand}
+                  onChange={(e) => setForm((p) => ({ ...p, brand: e.target.value }))}
+                  placeholder="HARBAN"
+                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12.5px] outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11.5px] font-semibold text-[#374151] mb-1">
+                  Storefront Badge
+                </label>
+                <input
+                  value={form.badge}
+                  onChange={(e) => setForm((p) => ({ ...p, badge: e.target.value }))}
+                  placeholder="Bestseller / New"
+                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12.5px] outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Storefront Snapshot Preview Card */}
+            <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 space-y-3 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display font-bold text-[13.5px] text-[#111827]">
+                  Storefront Snapshot
+                </h3>
+                <button
+                  type="button"
+                  onClick={openPreview}
+                  className="text-[11.5px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
+                >
+                  Full Preview
+                </button>
+              </div>
+              <div className="aspect-square rounded-xl overflow-hidden bg-[#F9FAFB] border border-[#EAECF0]">
+                <Img
+                  src={form.images?.[0] || form.image}
+                  alt={form.name || 'Product preview'}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-[#5B21B6]">
+                  {form.brand || 'HARBAN'} ·{' '}
+                  {categoryMap.get(form.category) || form.category}
+                </p>
+                <p className="font-display font-bold text-[14px] text-[#111827] mt-0.5 truncate">
+                  {form.name || 'Untitled Product'}
+                </p>
+                <div className="flex items-baseline gap-2 mt-1 tabular-nums">
+                  <span className="font-bold text-[15px] text-[#111827]">
+                    {formatINR(form.price)}
+                  </span>
+                  {Number(form.mrp) > Number(form.price) && (
+                    <>
+                      <span className="text-[12px] text-[#9CA3AF] line-through">
+                        {formatINR(form.mrp)}
+                      </span>
+                      <span className="text-[11px] font-bold text-[#15803D]">
+                        {marginPct}% OFF
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        {sharedModals}
+      </form>
+    )
+  }
+
   const kpiCards = [
     {
       id: 'all',
@@ -656,16 +1757,16 @@ export default function AdminProductsSection({
     },
   ]
 
+  /* -------------------------------------------- FULL-WIDTH PRODUCTS TABLE */
   return (
     <div className="space-y-4">
-      {/* Page Header Row (Matches Products Screenshot) */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display font-bold text-[22px] text-[#111827] tracking-tight leading-tight">
-            Products
+            {mode === 'variants' ? 'Product Variants' : 'Products'}
           </h1>
           <p className="text-[13px] text-[#6B7280] mt-0.5">
-            Manage your products, inventory, variants and pricing.
+            Click any product to open its full detail editor, gallery and variants.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -678,7 +1779,7 @@ export default function AdminProductsSection({
           </button>
           <button
             type="button"
-            onClick={startNew}
+            onClick={() => onStartNewProduct?.()}
             className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl shadow-xs transition cursor-pointer whitespace-nowrap"
           >
             <Plus size={14} /> Add Product
@@ -724,592 +1825,7 @@ export default function AdminProductsSection({
         })}
       </div>
 
-      {/* Full Add / Edit Product Form */}
-      {editing && (
-        <form
-          onSubmit={handleSave}
-          className="bg-white rounded-2xl border border-[#C4B5FD] p-5 sm:p-6 space-y-5 shadow-2xs"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EAECF0] pb-3.5">
-            <div>
-              <h2 className="font-display font-bold text-[17px] text-[#111827]">
-                {editing === 'new'
-                  ? 'Create New Product'
-                  : `Editing · ${form.name || form.id}`}
-              </h2>
-              <p className="text-[12px] text-[#6B7280]">
-                Changes persist directly to PostgreSQL &amp; Supabase and update the live HARBAN storefront.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={openPreview}
-                className="inline-flex items-center gap-1.5 text-[12px] font-semibold bg-[#F9FAFB] hover:bg-[#F3F4F6] border border-[#E5E7EB] text-[#111827] px-3 py-1.5 rounded-xl cursor-pointer"
-              >
-                <Eye size={13} /> Preview Before Publishing
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditing(null)}
-                className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#6B7280] hover:text-[#111827] px-3 py-1.5 rounded-xl hover:bg-[#F3F4F6] cursor-pointer"
-              >
-                <X size={14} /> Close
-              </button>
-            </div>
-          </div>
-
-          {formError && (
-            <div className="bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-[12.5px] font-semibold px-3.5 py-2.5 rounded-xl flex items-center gap-2">
-              <AlertCircle size={15} className="shrink-0" />
-              <span>{formError}</span>
-            </div>
-          )}
-
-          {/* Core Identity */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            <div className="sm:col-span-2">
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                Product Title *
-              </label>
-              <input
-                required
-                value={form.name}
-                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                placeholder="e.g. HARBAN HT-200 Pro Beard Trimmer"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm outline-none focus:border-[#5B21B6]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                Brand *
-              </label>
-              <input
-                required
-                value={form.brand}
-                onChange={(e) => setForm((p) => ({ ...p, brand: e.target.value }))}
-                placeholder="HARBAN"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm outline-none focus:border-[#5B21B6]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                URL Slug / ID
-              </label>
-              <input
-                value={form.id}
-                disabled={editing !== 'new'}
-                onChange={(e) => setForm((p) => ({ ...p, id: e.target.value }))}
-                placeholder="auto-generated"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm font-mono outline-none disabled:opacity-60"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                SKU
-              </label>
-              <input
-                value={form.sku}
-                onChange={(e) => setForm((p) => ({ ...p, sku: e.target.value }))}
-                placeholder="HRB-HT200-BLK"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm font-mono outline-none focus:border-[#5B21B6]"
-              />
-            </div>
-          </div>
-
-          {/* Pricing, Discount, Category & Stock */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                Category *
-              </label>
-              <select
-                value={form.category}
-                onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm outline-none"
-              >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                Selling Price (INR)
-              </label>
-              <input
-                required
-                type="number"
-                min="0"
-                value={form.price}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, price: Number(e.target.value) }))
-                }
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm tabular-nums outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                MRP (INR)
-              </label>
-              <input
-                required
-                type="number"
-                min="0"
-                value={form.mrp}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, mrp: Number(e.target.value) }))
-                }
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm tabular-nums outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                Discount (%)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="95"
-                value={marginPct}
-                onChange={(e) => applyDiscountPercent(e.target.value)}
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm tabular-nums outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                Stock Quantity
-              </label>
-              <input
-                required
-                type="number"
-                min="0"
-                value={form.stock}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, stock: Number(e.target.value) }))
-                }
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm tabular-nums outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                Storefront Badge
-              </label>
-              <input
-                value={form.badge}
-                onChange={(e) => setForm((p) => ({ ...p, badge: e.target.value }))}
-                placeholder="Bestseller / New"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Copy & External Link */}
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                Short Tagline (Product Cards)
-              </label>
-              <input
-                value={form.tagline}
-                onChange={(e) => setForm((p) => ({ ...p, tagline: e.target.value }))}
-                placeholder="Zero-gap titanium blades · 90 min USB-C runtime"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                Meesho External Link (Optional)
-              </label>
-              <input
-                value={form.meeshoUrl}
-                onChange={(e) => setForm((p) => ({ ...p, meeshoUrl: e.target.value }))}
-                placeholder="https://www.meesho.com/..."
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm outline-none"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-              Full Product Description
-            </label>
-            <textarea
-              rows={3}
-              value={form.description}
-              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-              placeholder="Detailed overview displayed on Product Page & Quick View..."
-              className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm outline-none resize-none"
-            />
-          </div>
-
-          {/* Multi-Image Gallery Manager */}
-          <div className="border border-[#EAECF0] rounded-2xl p-4 space-y-3 bg-[#F9FAFB]">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h3 className="text-[13px] font-bold text-[#111827]">
-                  Product Media Gallery ({form.images?.length || 0})
-                </h3>
-                <p className="text-[11.5px] text-[#6B7280]">
-                  First image is the primary storefront thumbnail. Upload multiple files directly to Supabase Storage.
-                </p>
-              </div>
-              <label className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white text-[12px] font-semibold px-3.5 py-2 rounded-xl cursor-pointer transition">
-                <Upload size={13} />
-                {uploadingImages ? 'Uploading...' : 'Upload Images'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleMultiImageUpload}
-                  className="hidden"
-                />
-              </label>
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="Or paste image URL (e.g. /images/product-ht100.jpg or https://...)"
-                className="flex-1 min-w-0 bg-white border border-[#E5E7EB] rounded-xl px-3 py-1.5 text-[12.5px] outline-none"
-              />
-              <button
-                type="button"
-                onClick={addImageByUrl}
-                className="shrink-0 bg-white border border-[#E5E7EB] hover:border-[#5B21B6] text-[#111827] text-[12px] font-semibold px-3.5 py-1.5 rounded-xl cursor-pointer"
-              >
-                Add URL
-              </button>
-            </div>
-
-            {form.images && form.images.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
-                {form.images.map((src, idx) => (
-                  <div
-                    key={`${src}-${idx}`}
-                    className={`bg-white rounded-xl border p-1.5 space-y-1.5 ${
-                      idx === 0 ? 'border-[#5B21B6]' : 'border-[#EAECF0]'
-                    }`}
-                  >
-                    <div className="relative aspect-square rounded-lg overflow-hidden bg-[#F3F4F6]">
-                      <Img
-                        src={src}
-                        alt={`Gallery ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      {idx === 0 && (
-                        <span className="absolute top-1 left-1 bg-[#5B21B6] text-white text-[9.5px] font-bold px-1.5 py-0.5 rounded">
-                          Primary
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between gap-1">
-                      <div className="flex items-center gap-0.5">
-                        <button
-                          type="button"
-                          disabled={idx === 0}
-                          onClick={() => moveImage(idx, -1)}
-                          className="p-1 text-[#6B7280] hover:text-[#111827] disabled:opacity-30 cursor-pointer"
-                        >
-                          <ArrowLeft size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={idx === form.images.length - 1}
-                          onClick={() => moveImage(idx, 1)}
-                          className="p-1 text-[#6B7280] hover:text-[#111827] disabled:opacity-30 cursor-pointer"
-                        >
-                          <ArrowRight size={12} />
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeImage(idx)}
-                        className="p-1 text-[#E11D48] hover:bg-[#FFF5F6] rounded cursor-pointer"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Product Variants Builder */}
-          <div className="border border-[#EAECF0] rounded-2xl p-4 space-y-3 bg-[#F9FAFB]">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <h3 className="text-[13px] font-bold text-[#111827]">
-                  Product Variants (Size, Color, SKU, Price, Stock)
-                </h3>
-                <p className="text-[11.5px] text-[#6B7280]">
-                  Manage per-variant stock, SKU &amp; pricing cleanly
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={addVariantRow}
-                className="inline-flex items-center gap-1 bg-white border border-[#E5E7EB] hover:border-[#5B21B6] text-[12px] font-semibold px-3 py-1.5 rounded-xl cursor-pointer"
-              >
-                <Plus size={13} /> Add Variant
-              </button>
-            </div>
-
-            {form.variants && form.variants.length > 0 && (
-              <div className="space-y-2">
-                {form.variants.map((v, idx) => (
-                  <div
-                    key={`variant-${idx}`}
-                    className="grid grid-cols-2 sm:grid-cols-6 gap-2 bg-white p-2.5 rounded-xl border border-[#EAECF0] items-center"
-                  >
-                    <input
-                      value={v.size || ''}
-                      onChange={(e) => updateVariantField(idx, 'size', e.target.value)}
-                      placeholder="Size / Edition"
-                      className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
-                    />
-                    <input
-                      value={v.color || ''}
-                      onChange={(e) => updateVariantField(idx, 'color', e.target.value)}
-                      placeholder="Color"
-                      className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
-                    />
-                    <input
-                      value={v.sku || ''}
-                      onChange={(e) => updateVariantField(idx, 'sku', e.target.value)}
-                      placeholder="Variant SKU"
-                      className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] font-mono outline-none"
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      value={v.price ?? form.price}
-                      onChange={(e) =>
-                        updateVariantField(idx, 'price', Number(e.target.value))
-                      }
-                      placeholder="Price"
-                      className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] tabular-nums outline-none"
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      value={v.stock ?? 0}
-                      onChange={(e) =>
-                        updateVariantField(idx, 'stock', Number(e.target.value))
-                      }
-                      placeholder="Stock"
-                      className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] tabular-nums outline-none"
-                    />
-                    <div className="flex items-center justify-end gap-2">
-                      <label className="text-[11px] font-semibold flex items-center gap-1 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={v.isActive !== false}
-                          onChange={(e) =>
-                            updateVariantField(idx, 'isActive', e.target.checked)
-                          }
-                          className="accent-[#5B21B6]"
-                        />
-                        Active
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => removeVariantRow(idx)}
-                        className="text-[#E11D48] hover:bg-[#FFF5F6] p-1 rounded cursor-pointer"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Features & Specs */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="border border-[#EAECF0] rounded-2xl p-4 space-y-2.5">
-              <h3 className="text-[12.5px] font-bold text-[#111827]">
-                Key Highlights ({form.features?.length || 0})
-              </h3>
-              <div className="flex gap-2">
-                <input
-                  value={newFeature}
-                  onChange={(e) => setNewFeature(e.target.value)}
-                  placeholder="Add highlight bullet..."
-                  className="flex-1 min-w-0 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-1.5 text-[12.5px] outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!newFeature.trim()) return
-                    setForm((p) => ({
-                      ...p,
-                      features: [...(p.features || []), newFeature.trim()],
-                    }))
-                    setNewFeature('')
-                  }}
-                  className="bg-[#111827] text-white text-[12px] font-semibold px-3 rounded-xl cursor-pointer"
-                >
-                  Add
-                </button>
-              </div>
-              <div className="space-y-1 max-h-32 overflow-y-auto">
-                {(form.features || []).map((f, idx) => (
-                  <div
-                    key={`${f}-${idx}`}
-                    className="flex items-center justify-between gap-2 text-[12px] bg-[#F9FAFB] px-2.5 py-1.5 rounded-lg"
-                  >
-                    <span className="truncate">{f}</span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setForm((p) => ({
-                          ...p,
-                          features: p.features.filter((_, i) => i !== idx),
-                        }))
-                      }
-                      className="text-[#E11D48] shrink-0 cursor-pointer"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="border border-[#EAECF0] rounded-2xl p-4 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-[12.5px] font-bold text-[#111827]">
-                  Specifications ({form.specs?.length || 0})
-                </h3>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm((p) => ({
-                      ...p,
-                      specs: [...(p.specs || []), { label: '', value: '' }],
-                    }))
-                  }
-                  className="text-[11.5px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
-                >
-                  + Add Spec Row
-                </button>
-              </div>
-              <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                {(form.specs || []).map((s, idx) => (
-                  <div key={`spec-${idx}`} className="flex items-center gap-1.5">
-                    <input
-                      value={s.label}
-                      onChange={(e) =>
-                        setForm((p) => ({
-                          ...p,
-                          specs: p.specs.map((row, i) =>
-                            i === idx ? { ...row, label: e.target.value } : row,
-                          ),
-                        }))
-                      }
-                      placeholder="Label (e.g. Battery)"
-                      className="w-1/2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
-                    />
-                    <input
-                      value={s.value}
-                      onChange={(e) =>
-                        setForm((p) => ({
-                          ...p,
-                          specs: p.specs.map((row, i) =>
-                            i === idx ? { ...row, value: e.target.value } : row,
-                          ),
-                        }))
-                      }
-                      placeholder="Value (e.g. 90 mins)"
-                      className="w-1/2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setForm((p) => ({
-                          ...p,
-                          specs: p.specs.filter((_, i) => i !== idx),
-                        }))
-                      }
-                      className="text-[#E11D48] p-1 cursor-pointer"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#EAECF0]">
-            <div className="flex flex-wrap items-center gap-5">
-              <label className="inline-flex items-center gap-2 text-[12.5px] font-semibold text-[#111827] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.isActive}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, isActive: e.target.checked }))
-                  }
-                  className="accent-[#5B21B6]"
-                />
-                Enabled on Storefront
-              </label>
-
-              <label className="inline-flex items-center gap-2 text-[12.5px] font-semibold text-[#111827] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={Boolean(form.isFeatured)}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, isFeatured: e.target.checked }))
-                  }
-                  className="accent-[#5B21B6]"
-                />
-                Featured Product
-              </label>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={openPreview}
-                className="px-3.5 py-2 text-[12.5px] font-semibold text-[#111827] border border-[#E5E7EB] hover:border-[#5B21B6] rounded-xl cursor-pointer inline-flex items-center gap-1.5"
-              >
-                <Eye size={13} /> Preview
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditing(null)}
-                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 disabled:opacity-60 text-white text-[13px] font-semibold px-5 py-2 rounded-xl transition cursor-pointer"
-              >
-                {saving ? 'Saving Product...' : 'Publish & Save'}
-              </button>
-            </div>
-          </div>
-        </form>
-      )}
-
-      {/* Main Products White Card Container (Matches Products Screenshot) */}
+      {/* Main Products White Card Container */}
       <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs overflow-hidden">
         {/* Underline Filter Tabs */}
         <div className="px-4 pt-1 border-b border-[#EAECF0] flex items-center gap-5 overflow-x-auto text-[12.5px]">
@@ -1475,11 +1991,15 @@ export default function AdminProductsSection({
                   return (
                     <tr
                       key={p.id}
-                      className={`hover:bg-[#F9FAFB] ${
+                      onClick={() => onOpenProduct?.(p.id)}
+                      className={`hover:bg-[#F9FAFB] cursor-pointer ${
                         isChecked ? 'bg-[#F5F3FF]/60' : ''
                       }`}
                     >
-                      <td className="py-3 pl-4 pr-2">
+                      <td
+                        className="py-3 pl-4 pr-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -1498,16 +2018,15 @@ export default function AdminProductsSection({
                           />
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => startEdit(p)}
-                                className="font-semibold text-[#111827] hover:text-[#5B21B6] truncate max-w-[230px] text-left cursor-pointer"
-                              >
+                              <span className="font-semibold text-[#111827] hover:text-[#5B21B6] truncate max-w-[230px]">
                                 {p.name}
-                              </button>
+                              </span>
                               <button
                                 type="button"
-                                onClick={() => handleToggleFlag(p, 'isFeatured')}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleToggleFlag(p, 'isFeatured')
+                                }}
                                 title={
                                   p.isFeatured ? 'Featured product' : 'Mark featured'
                                 }
@@ -1558,7 +2077,10 @@ export default function AdminProductsSection({
                         </div>
                       </td>
 
-                      <td className="py-3 px-2.5 whitespace-nowrap">
+                      <td
+                        className="py-3 px-2.5 whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <div className="inline-flex items-center gap-1.5">
                           <span
                             className={`font-bold tabular-nums min-w-[24px] ${
@@ -1590,7 +2112,10 @@ export default function AdminProductsSection({
                         </div>
                       </td>
 
-                      <td className="py-3 px-2.5 whitespace-nowrap">
+                      <td
+                        className="py-3 px-2.5 whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <button
                           type="button"
                           onClick={() => handleToggleFlag(p, 'isActive')}
@@ -1601,7 +2126,10 @@ export default function AdminProductsSection({
                         </button>
                       </td>
 
-                      <td className="py-3 pl-2.5 pr-4 text-right whitespace-nowrap">
+                      <td
+                        className="py-3 pl-2.5 pr-4 text-right whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <div className="inline-flex items-center gap-1">
                           <button
                             type="button"
@@ -1613,8 +2141,8 @@ export default function AdminProductsSection({
                           </button>
                           <button
                             type="button"
-                            onClick={() => startEdit(p)}
-                            title="Edit product"
+                            onClick={() => onOpenProduct?.(p.id)}
+                            title="Open product editor"
                             className="w-7 h-7 rounded-lg border border-[#E5E7EB] hover:bg-[#F3F4F6] grid place-items-center text-[#4B5563] cursor-pointer"
                           >
                             <Pencil size={13} />
@@ -1699,353 +2227,7 @@ export default function AdminProductsSection({
         </div>
       </div>
 
-      {/* Quick Price & Stock Modal */}
-      {quickTarget && (
-        <div className="fixed inset-0 z-[82] grid place-items-center p-4">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
-            onClick={() => setQuickTarget(null)}
-          />
-          <form
-            onSubmit={handleQuickModalSave}
-            className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-lg w-full p-5 space-y-4 shadow-xl"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="font-display font-bold text-[16px] text-[#111827]">
-                  Quick Update Price &amp; Stock
-                </h3>
-                <p className="text-[12px] text-[#6B7280]">
-                  {quickTarget.name} ·{' '}
-                  <span className="font-mono">{quickTarget.sku || quickTarget.id}</span>
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setQuickTarget(null)}
-                className="p-1 text-[#6B7280] hover:text-[#111827] cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {quickError && (
-              <div className="bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-[12px] font-semibold px-3 py-2 rounded-xl">
-                {quickError}
-              </div>
-            )}
-
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                  Selling Price (INR)
-                </label>
-                <input
-                  required
-                  type="number"
-                  min="0"
-                  value={quickForm.price}
-                  onChange={(e) =>
-                    setQuickForm((q) => ({ ...q, price: Number(e.target.value) }))
-                  }
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[13px] tabular-nums outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                  MRP (INR)
-                </label>
-                <input
-                  required
-                  type="number"
-                  min="0"
-                  value={quickForm.mrp}
-                  onChange={(e) =>
-                    setQuickForm((q) => ({ ...q, mrp: Number(e.target.value) }))
-                  }
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[13px] tabular-nums outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-semibold text-[#374151] mb-1">
-                  Stock Qty
-                </label>
-                <input
-                  required
-                  type="number"
-                  min="0"
-                  value={quickForm.stock}
-                  onChange={(e) =>
-                    setQuickForm((q) => ({ ...q, stock: Number(e.target.value) }))
-                  }
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[13px] tabular-nums outline-none"
-                />
-              </div>
-            </div>
-
-            {quickForm.variants.length > 0 && (
-              <div className="space-y-2 border-t border-[#EAECF0] pt-3">
-                <p className="text-[11.5px] font-bold text-[#111827]">
-                  Variant Stock &amp; Pricing ({quickForm.variants.length})
-                </p>
-                <div className="max-h-44 overflow-y-auto space-y-1.5">
-                  {quickForm.variants.map((v, idx) => (
-                    <div
-                      key={v.id || idx}
-                      className="grid grid-cols-[1.5fr_1fr_1fr] gap-2 items-center bg-[#F9FAFB] px-2.5 py-1.5 rounded-xl text-[12px]"
-                    >
-                      <span className="font-semibold truncate">
-                        {[v.size, v.color].filter(Boolean).join(' / ') ||
-                          v.sku ||
-                          `Variant ${idx + 1}`}
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={v.price ?? quickForm.price}
-                        onChange={(e) =>
-                          setQuickForm((q) => ({
-                            ...q,
-                            variants: q.variants.map((row, i) =>
-                              i === idx ? { ...row, price: Number(e.target.value) } : row,
-                            ),
-                          }))
-                        }
-                        className="bg-white border border-[#E5E7EB] rounded-lg px-2 py-1 tabular-nums outline-none"
-                      />
-                      <input
-                        type="number"
-                        min="0"
-                        value={v.stock ?? 0}
-                        onChange={(e) =>
-                          setQuickForm((q) => ({
-                            ...q,
-                            variants: q.variants.map((row, i) =>
-                              i === idx ? { ...row, stock: Number(e.target.value) } : row,
-                            ),
-                          }))
-                        }
-                        className="bg-white border border-[#E5E7EB] rounded-lg px-2 py-1 tabular-nums outline-none"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setQuickTarget(null)}
-                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={quickSaving}
-                className="px-4 py-2 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] disabled:opacity-50 text-white rounded-xl cursor-pointer"
-              >
-                {quickSaving ? 'Updating...' : 'Save Price & Stock'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Product Preview Modal */}
-      {previewProduct && (
-        <div className="fixed inset-0 z-[85] grid place-items-center p-4">
-          <div
-            className="absolute inset-0 bg-black/55 backdrop-blur-xs"
-            onClick={() => setPreviewProduct(null)}
-          />
-          <div className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#EAECF0] pb-3">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-[#5B21B6]">
-                  Storefront Pre-Publish Preview
-                </p>
-                <h3 className="font-display font-bold text-[17px] text-[#111827]">
-                  {previewProduct.name || 'Untitled Product'}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPreviewProduct(null)}
-                className="p-1.5 rounded-lg hover:bg-[#F3F4F6] text-[#6B7280] cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="grid sm:grid-cols-[1fr_1.15fr] gap-5">
-              <div className="space-y-2.5">
-                <div className="aspect-square rounded-2xl overflow-hidden bg-[#F9FAFB] border border-[#EAECF0] relative">
-                  <Img
-                    src={
-                      previewProduct.images[previewImgIdx] || previewProduct.image
-                    }
-                    alt={previewProduct.name}
-                    className="w-full h-full object-cover"
-                  />
-                  {previewProduct.badge && (
-                    <span className="absolute top-3 left-3 bg-[#111827] text-white text-[10.5px] font-bold uppercase tracking-wide px-2.5 py-1 rounded">
-                      {previewProduct.badge}
-                    </span>
-                  )}
-                </div>
-                {previewProduct.images.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto">
-                    {previewProduct.images.map((src, idx) => (
-                      <button
-                        key={`${src}-${idx}`}
-                        type="button"
-                        onClick={() => setPreviewImgIdx(idx)}
-                        className={`w-14 h-14 rounded-xl overflow-hidden border-2 shrink-0 cursor-pointer ${
-                          previewImgIdx === idx
-                            ? 'border-[#5B21B6]'
-                            : 'border-[#EAECF0]'
-                        }`}
-                      >
-                        <Img src={src} alt="" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-[11.5px] font-bold text-[#5B21B6]">
-                  <span>{previewProduct.brand || 'HARBAN'}</span>
-                  <span className="text-[#D1D5DB]">·</span>
-                  <span>
-                    {categoryMap.get(previewProduct.category) ||
-                      previewProduct.category}
-                  </span>
-                </div>
-
-                <h4 className="font-display font-bold text-[20px] text-[#111827] leading-tight">
-                  {previewProduct.name || 'Product Name'}
-                </h4>
-
-                {previewProduct.tagline && (
-                  <p className="text-[13px] text-[#6B7280]">{previewProduct.tagline}</p>
-                )}
-
-                <div className="flex items-baseline gap-2.5">
-                  <span className="font-display font-bold text-[22px] text-[#111827] tabular-nums">
-                    {formatINR(previewProduct.price)}
-                  </span>
-                  {previewProduct.mrp > previewProduct.price && (
-                    <>
-                      <span className="text-[14px] text-[#9CA3AF] line-through tabular-nums">
-                        {formatINR(previewProduct.mrp)}
-                      </span>
-                      <span className="text-[12px] font-bold text-[#15803D] bg-[#DCFCE7] px-2 py-0.5 rounded-md">
-                        {Math.round(
-                          ((previewProduct.mrp - previewProduct.price) /
-                            previewProduct.mrp) *
-                            100,
-                        )}
-                        % OFF
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                <p className="text-[12px] font-semibold text-[#6B7280]">
-                  Availability:{' '}
-                  <span
-                    className={
-                      previewProduct.stock === 0
-                        ? 'text-[#E11D48]'
-                        : 'text-[#15803D]'
-                    }
-                  >
-                    {previewProduct.stock === 0
-                      ? 'Out of Stock'
-                      : `In Stock (${previewProduct.stock} units)`}
-                  </span>
-                </p>
-
-                {previewProduct.variants.length > 0 && (
-                  <div className="space-y-1.5">
-                    <p className="text-[11px] font-bold uppercase text-[#6B7280]">
-                      Available Options
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {previewProduct.variants.map((v, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setPreviewVariantIdx(idx)}
-                          className={`px-2.5 py-1 rounded-lg border text-[12px] font-semibold cursor-pointer ${
-                            previewVariantIdx === idx
-                              ? 'border-[#5B21B6] bg-[#F5F3FF] text-[#5B21B6]'
-                              : 'border-[#E5E7EB] text-[#6B7280]'
-                          }`}
-                        >
-                          {[v.size, v.color].filter(Boolean).join(' / ') || v.sku}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {previewProduct.description && (
-                  <p className="text-[12.5px] text-[#4B5563] leading-relaxed border-t border-[#EAECF0] pt-2.5">
-                    {previewProduct.description}
-                  </p>
-                )}
-
-                {previewProduct.features.length > 0 && (
-                  <ul className="space-y-1 text-[12px] text-[#374151] list-disc pl-4">
-                    {previewProduct.features.map((f, i) => (
-                      <li key={i}>{f}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {confirmDelete && (
-        <div className="fixed inset-0 z-[80] grid place-items-center p-4">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
-            onClick={() => setConfirmDelete(null)}
-          />
-          <div className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-sm w-full p-5 space-y-4 shadow-xl">
-            <h3 className="font-display font-bold text-[16px] text-[#111827]">
-              Delete product permanently?
-            </h3>
-            <p className="text-[13px] text-[#6B7280] leading-relaxed">
-              This will permanently remove <strong>{confirmDelete.name}</strong> (
-              {confirmDelete.sku || confirmDelete.id}) from your store catalog. Past order history items keep their snapshot.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(null)}
-                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 text-[12.5px] font-semibold bg-[#E11D48] hover:bg-[#BE123C] text-white rounded-xl cursor-pointer"
-              >
-                Delete Product
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {sharedModals}
     </div>
   )
 }

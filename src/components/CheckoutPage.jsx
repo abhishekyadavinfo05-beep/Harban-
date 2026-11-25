@@ -35,6 +35,8 @@ export default function CheckoutPage() {
     saveAddress,
     subtotal,
     payments,
+    storeSettings,
+    freeShipThreshold,
     user,
     go,
     pushToast,
@@ -69,26 +71,71 @@ export default function CheckoutPage() {
     }
   }, [user])
 
+  const activeShipThreshold = Math.max(
+    0,
+    Number(freeShipThreshold ?? FREE_SHIP_THRESHOLD),
+  )
   const normalizedPhone = normalizeClientPhone(phone)
   const isPhoneValid = /^[1-9]\d{9}$/.test(normalizedPhone)
-  const progress = Math.min(100, (subtotal / FREE_SHIP_THRESHOLD) * 100)
+  const progress =
+    activeShipThreshold > 0
+      ? Math.min(100, (subtotal / activeShipThreshold) * 100)
+      : 100
 
-  const paymentOptions = [
-    {
-      id: 'Razorpay Online',
-      label: 'Pay Online via Razorpay',
-      desc: 'Instant checkout with UPI (GPay, PhonePe, Paytm), Cards, NetBanking & Wallets.',
-      badges: ['UPI', 'Visa / Mastercard', 'RuPay', 'NetBanking'],
-      icon: Wallet,
-    },
-    {
-      id: 'Cash on Delivery',
-      label: 'Cash on Delivery (COD)',
-      desc: 'Pay with cash or UPI at your doorstep. Zero extra charges.',
-      badges: [],
-      icon: Banknote,
-    },
+  const payPrefs = storeSettings?.payments || {}
+  const rzpEnabled =
+    payments?.razorpayEnabled !== false && payPrefs.razorpayEnabled !== false
+  const codEnabled = payPrefs.codEnabled !== false
+  const onlineBadges = [
+    ...(payPrefs.upiEnabled !== false ? ['UPI'] : []),
+    ...(payPrefs.cardsEnabled !== false ? ['Visa / Mastercard', 'RuPay'] : []),
+    ...(payPrefs.netbankingEnabled !== false ? ['NetBanking'] : []),
   ]
+
+  const rawOptions = [
+    ...(rzpEnabled
+      ? [
+          {
+            id: 'Razorpay Online',
+            label: 'Pay Online via Razorpay',
+            desc: 'Instant checkout with UPI (GPay, PhonePe, Paytm), Cards, NetBanking & Wallets.',
+            badges: onlineBadges.length
+              ? onlineBadges
+              : ['UPI', 'Visa / Mastercard', 'RuPay', 'NetBanking'],
+            icon: Wallet,
+          },
+        ]
+      : []),
+    ...(codEnabled
+      ? [
+          {
+            id: 'Cash on Delivery',
+            label: 'Cash on Delivery (COD)',
+            desc: 'Pay with cash or UPI at your doorstep. Zero extra charges.',
+            badges: [],
+            icon: Banknote,
+          },
+        ]
+      : []),
+  ]
+  const paymentOptions =
+    rawOptions.length > 0
+      ? rawOptions
+      : [
+          {
+            id: 'Cash on Delivery',
+            label: 'Cash on Delivery (COD)',
+            desc: 'Pay with cash or UPI at your doorstep. Zero extra charges.',
+            badges: [],
+            icon: Banknote,
+          },
+        ]
+
+  useEffect(() => {
+    if (!paymentOptions.some((opt) => opt.id === paymentMethod)) {
+      setPaymentMethod(paymentOptions[0].id)
+    }
+  }, [rzpEnabled, codEnabled, paymentMethod])
 
   const executeOrderSubmission = async (overrideData = {}) => {
     setSubmitting(true)
@@ -598,7 +645,7 @@ export default function CheckoutPage() {
 
               <div className="mt-4">
                 <p className="text-[12px] text-neutral-600">
-                  {subtotal >= FREE_SHIP_THRESHOLD ? (
+                  {subtotal >= activeShipThreshold ? (
                     <span className="font-bold text-emerald-700">
                       Free express delivery unlocked on this order
                     </span>
@@ -606,7 +653,7 @@ export default function CheckoutPage() {
                     <>
                       Free shipping included · Add{' '}
                       <span className="font-bold tabular-nums">
-                        {formatINR(FREE_SHIP_THRESHOLD - subtotal)}
+                        {formatINR(activeShipThreshold - subtotal)}
                       </span>{' '}
                       for priority dispatch
                     </>

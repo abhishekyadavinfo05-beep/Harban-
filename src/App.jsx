@@ -312,7 +312,9 @@ function PolicyPage({ kind }) {
 export default function App() {
   const { route, quickView, categories, products, user } = useShop()
 
-  if (route === 'admin' && user?.role === 'admin') {
+  const isAdminRoute = route === 'admin' || route?.startsWith('admin:')
+
+  if (isAdminRoute && user?.role === 'admin') {
     return (
       <div className="min-h-screen bg-[#F1F1F1] overflow-x-clip">
         <AdminPanel />
@@ -370,7 +372,7 @@ export default function App() {
     page = <AccountPage />
   } else if (route === 'orders') {
     page = <OrdersPage />
-  } else if (route === 'admin') {
+  } else if (isAdminRoute) {
     page = <AccountPage initialTab="admin" />
   } else if (route === 'support') {
     page = <SupportPage />

@@ -34,6 +34,7 @@ import {
   getOrderByCode,
   getOrdersForCustomer,
   getRecentActivityForAdmin,
+  getStoreSettingsConfig,
   getStorefrontData,
   logCartEventInDb,
   logProductViewInDb,
@@ -43,10 +44,12 @@ import {
   upsertCategoryInDb,
   upsertDiscountInDb,
   upsertProductInDb,
+  upsertStoreSettingsInDb,
 } from './src/db/store.ts'
 import {
   createAdminCustomerInDb,
   createEmailUser,
+  deleteCustomerInDb,
   deleteUserAddress,
   findUserByEmail,
   getOrCreateUser,
@@ -56,10 +59,12 @@ import {
   setDefaultUserAddress,
   updateUserPassword,
   updateUserProfile,
+  updateUserRoleInDb,
 } from './src/db/users.ts'
 import { withDbRetry } from './src/db/index.ts'
 import {
   deleteAddressFromSupabase,
+  deleteCustomerFromSupabase,
   getSupabaseHealth,
   syncContactMessageToSupabase,
   syncCustomerToSupabase,
@@ -178,12 +183,31 @@ async function startServer() {
   app.get('/api/storefront', async (_req, res) => {
     try {
       res.setHeader('Cache-Control', 'no-store')
-      const data = await getStorefrontData()
+      const [data, settingsCfg] = await Promise.all([
+        getStorefrontData(),
+        getStoreSettingsConfig(),
+      ])
       const rzp = getRazorpayConfig()
       res.json({
         ...data,
+        settings: {
+          storeName: settingsCfg.storeName,
+          supportEmail: settingsCfg.supportEmail,
+          supportPhone: settingsCfg.supportPhone,
+          freeShippingThreshold: settingsCfg.freeShippingThreshold,
+          lowStockThreshold: settingsCfg.lowStockThreshold,
+          general: settingsCfg.general,
+          payments: settingsCfg.payments,
+          shipping: {
+            freeShippingMin: settingsCfg.shipping.freeShippingMin,
+            standardCharge: settingsCfg.shipping.standardCharge,
+          },
+          appearance: settingsCfg.appearance,
+          seo: settingsCfg.seo,
+        },
         payments: {
-          razorpayEnabled: rzp.enabled,
+          razorpayEnabled:
+            rzp.enabled && settingsCfg.payments.razorpayEnabled !== false,
           razorpayMode: rzp.mode,
           razorpayConfigured: rzp.hasCredentials,
         },
@@ -1223,6 +1247,77 @@ async function startServer() {
       }
     },
   )
+
+  app.patch(
+    '/api/admin/customers/:uid/role',
+    requireAuth,
+    requireAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        const nextRole =
+          req.body?.role === 'admin' ? 'admin' : 'customer'
+        const updated = await updateUserRoleInDb(
+          req.params.uid,
+          nextRole,
+          req.authUser?.email,
+        )
+        void syncCustomerToSupabase(
+          {
+            uid: updated.uid,
+            email: updated.email,
+            name: updated.name,
+            phone: updated.phone,
+            role: updated.role,
+          },
+          [],
+        )
+        res.json({ customer: updated })
+      } catch (error: any) {
+        const msg = error?.message || 'Failed to update user role.'
+        const isValidation =
+          msg.includes('not found') ||
+          msg.includes('cannot') ||
+          msg.includes('required')
+        res.status(isValidation ? 400 : 500).json({ error: msg })
+      }
+    },
+  )
+
+  app.delete(
+    '/api/admin/customers/:uid',
+    requireAuth,
+    requireAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        const removed = await deleteCustomerInDb(
+          req.params.uid,
+          req.authUser?.email,
+        )
+        if (removed) {
+          void deleteCustomerFromSupabase(removed.uid)
+        }
+        res.json({ ok: true })
+      } catch (error: any) {
+        const msg = error?.message || 'Failed to delete customer.'
+        const isValidation = msg.includes('cannot') || msg.includes('required')
+        res.status(isValidation ? 400 : 500).json({ error: msg })
+      }
+    },
+  )
+
+  const handleSaveSettings = async (req: AuthRequest, res: any) => {
+    try {
+      const saved = await upsertStoreSettingsInDb(req.body || {})
+      res.json({ settings: saved })
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({ error: error?.message || 'Failed to save store settings.' })
+    }
+  }
+
+  app.patch('/api/admin/settings', requireAuth, requireAdmin, handleSaveSettings)
+  app.post('/api/admin/settings', requireAuth, requireAdmin, handleSaveSettings)
 
   app.post(
     '/api/admin/orders',

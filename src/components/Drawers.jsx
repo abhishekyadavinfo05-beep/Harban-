@@ -31,13 +31,14 @@ export function CartDrawer() {
     removeFromCart,
     trackCheckoutStarted,
     subtotal,
+    freeShipThreshold,
     go,
   } = useShop()
 
   if (!cartOpen) return null
 
-  const freeShipTarget = 1500
-  const progress = Math.min(100, (subtotal / freeShipTarget) * 100)
+  const freeShipTarget = Math.max(0, Number(freeShipThreshold ?? 1500))
+  const progress = freeShipTarget > 0 ? Math.min(100, (subtotal / freeShipTarget) * 100) : 100
 
   return (
     <div className="fixed inset-0 z-[60]">

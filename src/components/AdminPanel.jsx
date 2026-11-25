@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle,
+  ArrowLeft,
+  ArrowRight,
   BarChart3,
   Bell,
   Boxes,
@@ -43,6 +45,7 @@ const PRIMARY_NAV = [
     label: 'Orders',
     icon: Inbox,
     children: [
+      { id: 'orders', label: 'All Orders' },
       { id: 'orders_drafts', label: 'Drafts' },
       { id: 'abandoned_checkouts', label: 'Abandoned checkouts' },
     ],
@@ -68,10 +71,36 @@ const PRIMARY_NAV = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ]
 
+function parseAdminRoute(routeStr) {
+  if (!routeStr || routeStr === 'admin' || routeStr === 'admin:home') {
+    return { section: 'home', detailId: null }
+  }
+  if (!routeStr.startsWith('admin:')) {
+    return { section: 'home', detailId: null }
+  }
+  const rest = routeStr.slice('admin:'.length)
+  if (!rest) return { section: 'home', detailId: null }
+  const colonIdx = rest.indexOf(':')
+  const section = colonIdx === -1 ? rest : rest.slice(0, colonIdx)
+  const rawDetail = colonIdx === -1 ? '' : rest.slice(colonIdx + 1)
+  return {
+    section: section || 'home',
+    detailId: rawDetail ? rawDetail : null,
+  }
+}
+
+function sectionToAdminRoute(id) {
+  if (!id || id === 'home') return 'admin'
+  return `admin:${id}`
+}
+
 export default function AdminPanel() {
   const {
     loadAdminOverview,
     syncAdminSupabase,
+    saveAdminSettings,
+    updateAdminCustomerRole,
+    deleteAdminCustomer,
     saveAdminProduct,
     updateAdminProductQuick,
     updateAdminStock,
@@ -86,19 +115,71 @@ export default function AdminPanel() {
     uploadAdminImage,
     pushToast,
     user,
+    route,
     go,
   } = useShop()
 
-  const [section, setSection] = useState('home')
-  const [selectedOrderCode, setSelectedOrderCode] = useState(null)
-  const [selectedProductId, setSelectedProductId] = useState(null)
-  const [selectedCustomerId, setSelectedCustomerId] = useState(null)
-  const [selectedDiscountId, setSelectedDiscountId] = useState(null)
+  const { section, detailId } = useMemo(() => parseAdminRoute(route), [route])
+  const selectedOrderCode = section === 'orders' ? detailId : null
+  const selectedProductId = section === 'products' ? detailId : null
+  const selectedCustomerId = section === 'customers' ? detailId : null
+  const selectedDiscountId = section === 'discounts' ? detailId : null
+  const settingsTab = section === 'settings' && detailId ? detailId : 'general'
+
+  const [navHistory, setNavHistory] = useState(() => ({
+    stack: [route && route.startsWith('admin') ? route : 'admin'],
+    idx: 0,
+  }))
+  const pendingHistoryStepRef = useRef(null)
+
+  useEffect(() => {
+    if (!route || (route !== 'admin' && !route.startsWith('admin:'))) return
+    const step = pendingHistoryStepRef.current
+    pendingHistoryStepRef.current = null
+    setNavHistory((prev) => {
+      if (step === 'back') {
+        if (prev.idx > 0 && prev.stack[prev.idx - 1] === route) {
+          return { ...prev, idx: prev.idx - 1 }
+        }
+      } else if (step === 'forward') {
+        if (prev.idx < prev.stack.length - 1 && prev.stack[prev.idx + 1] === route) {
+          return { ...prev, idx: prev.idx + 1 }
+        }
+      }
+      if (prev.stack[prev.idx] === route) return prev
+      if (prev.idx > 0 && prev.stack[prev.idx - 1] === route) {
+        return { ...prev, idx: prev.idx - 1 }
+      }
+      if (prev.idx < prev.stack.length - 1 && prev.stack[prev.idx + 1] === route) {
+        return { ...prev, idx: prev.idx + 1 }
+      }
+      const nextStack = [...prev.stack.slice(0, prev.idx + 1), route]
+      if (nextStack.length > 50) {
+        nextStack.shift()
+      }
+      return { stack: nextStack, idx: nextStack.length - 1 }
+    })
+  }, [route])
+
+  const canGoBack = navHistory.idx > 0
+  const canGoForward = navHistory.idx < navHistory.stack.length - 1
+
+  const handleHistoryBack = useCallback(() => {
+    if (!canGoBack) return
+    pendingHistoryStepRef.current = 'back'
+    window.history.back()
+  }, [canGoBack])
+
+  const handleHistoryForward = useCallback(() => {
+    if (!canGoForward) return
+    pendingHistoryStepRef.current = 'forward'
+    window.history.forward()
+  }, [canGoForward])
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [syncingSupabase, setSyncingSupabase] = useState(false)
   const [loadError, setLoadError] = useState('')
-  const [createProductTrigger, setCreateProductTrigger] = useState(0)
   const [createOrderTrigger, setCreateOrderTrigger] = useState(0)
   const [cmdOpen, setCmdOpen] = useState(false)
   const [cmdQuery, setCmdQuery] = useState('')
@@ -147,6 +228,80 @@ export default function AdminPanel() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
+  const selectSection = useCallback(
+    (id) => {
+      setNotifOpen(false)
+      setMobileMenuOpen(false)
+      go(sectionToAdminRoute(id))
+    },
+    [go],
+  )
+
+  const handleOpenOrder = useCallback(
+    (code) => {
+      setNotifOpen(false)
+      setMobileMenuOpen(false)
+      if (!code) {
+        go('admin:orders')
+        return
+      }
+      go(`admin:orders:${code}`)
+    },
+    [go],
+  )
+
+  const handleOpenProduct = useCallback(
+    (productId) => {
+      setNotifOpen(false)
+      setMobileMenuOpen(false)
+      if (!productId) {
+        go('admin:products')
+        return
+      }
+      go(`admin:products:${productId}`)
+    },
+    [go],
+  )
+
+  const handleOpenCustomer = useCallback(
+    (customerId) => {
+      setNotifOpen(false)
+      setMobileMenuOpen(false)
+      if (!customerId) {
+        go('admin:customers')
+        return
+      }
+      go(`admin:customers:${customerId}`)
+    },
+    [go],
+  )
+
+  const handleOpenDiscount = useCallback(
+    (discountId) => {
+      setNotifOpen(false)
+      setMobileMenuOpen(false)
+      if (!discountId) {
+        go('admin:discounts')
+        return
+      }
+      go(`admin:discounts:${discountId}`)
+    },
+    [go],
+  )
+
+  const handleQuickAddProduct = useCallback(() => {
+    setNotifOpen(false)
+    setMobileMenuOpen(false)
+    go('admin:products_add')
+  }, [go])
+
+  const handleQuickCreateOrder = useCallback(() => {
+    setNotifOpen(false)
+    setMobileMenuOpen(false)
+    go('admin:orders')
+    setCreateOrderTrigger((n) => n + 1)
+  }, [go])
+
   const openOrdersCount = (overview.orders || []).filter(
     (o) => !o.cancelled && o.orderStatus !== 'cancelled' && o.orderStatus !== 'delivered',
   ).length
@@ -175,7 +330,7 @@ export default function AdminPanel() {
         action: () => handleOpenProduct(p.id),
       }))
     return [...pendingOrders, ...lowStockItems]
-  }, [overview.orders, overview.products, overview.settings])
+  }, [overview.orders, overview.products, overview.settings, handleOpenOrder, handleOpenProduct])
 
   const handleSyncSupabase = async () => {
     setSyncingSupabase(true)
@@ -187,69 +342,6 @@ export default function AdminPanel() {
     } finally {
       setSyncingSupabase(false)
     }
-  }
-
-  const selectSection = (id) => {
-    setNotifOpen(false)
-    if (id === 'products_add') {
-      setSelectedProductId(null)
-      setSection('products_add')
-      setCreateProductTrigger((n) => n + 1)
-      setMobileMenuOpen(false)
-      return
-    }
-    if (!['orders', 'orders_drafts', 'abandoned_checkouts'].includes(id)) {
-      setSelectedOrderCode(null)
-    }
-    if (!['products', 'products_add', 'products_brands', 'products_variants'].includes(id)) {
-      setSelectedProductId(null)
-    }
-    if (id !== 'customers') setSelectedCustomerId(null)
-    if (id !== 'discounts') setSelectedDiscountId(null)
-    setSection(id)
-    setMobileMenuOpen(false)
-  }
-
-  const handleOpenOrder = (code) => {
-    setNotifOpen(false)
-    setSelectedOrderCode(code)
-    setSection('orders')
-    setMobileMenuOpen(false)
-  }
-
-  const handleOpenProduct = (productId) => {
-    setNotifOpen(false)
-    setSelectedProductId(productId)
-    setSection('products')
-    setMobileMenuOpen(false)
-  }
-
-  const handleOpenCustomer = (customerId) => {
-    setNotifOpen(false)
-    setSelectedCustomerId(customerId)
-    setSection('customers')
-    setMobileMenuOpen(false)
-  }
-
-  const handleOpenDiscount = (discountId) => {
-    setNotifOpen(false)
-    setSelectedDiscountId(discountId)
-    setSection('discounts')
-    setMobileMenuOpen(false)
-  }
-
-  const handleQuickAddProduct = () => {
-    setSelectedProductId(null)
-    setSection('products_add')
-    setCreateProductTrigger((n) => n + 1)
-    setMobileMenuOpen(false)
-  }
-
-  const handleQuickCreateOrder = () => {
-    setSelectedOrderCode(null)
-    setSection('orders')
-    setCreateOrderTrigger((n) => n + 1)
-    setMobileMenuOpen(false)
   }
 
   const categoryNameMap = useMemo(
@@ -369,7 +461,7 @@ export default function AdminPanel() {
               : section === id
           const hasActiveChild =
             id === 'orders'
-              ? ['orders_drafts', 'abandoned_checkouts'].includes(section)
+              ? ['orders', 'orders_drafts', 'abandoned_checkouts'].includes(section)
               : id === 'products'
                 ? ['products_add', 'collections', 'products_brands', 'products_variants', 'inventory'].includes(section)
                 : false
@@ -409,7 +501,12 @@ export default function AdminPanel() {
               {showChildren && (
                 <div className="mt-1 ml-2 pl-4 border-l border-white/10 space-y-0.5 bg-white/[0.03] rounded-r-xl py-1 pr-1.5">
                   {children.map((ch) => {
-                    const childActive = section === ch.id
+                    const childActive =
+                      ch.id === 'products'
+                        ? section === 'products' && !detailId
+                        : ch.id === 'orders'
+                          ? section === 'orders' && !detailId
+                          : section === ch.id
                     return (
                       <button
                         key={ch.id}
@@ -478,7 +575,7 @@ export default function AdminPanel() {
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Clean White Top Header Bar */}
         <header className="no-print h-[60px] bg-white border-b border-[#EAECF0] px-4 sm:px-6 flex items-center justify-between gap-3 sticky top-0 z-40">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
@@ -487,6 +584,30 @@ export default function AdminPanel() {
             >
               <Menu size={18} />
             </button>
+
+            {/* In-Dashboard Back / Forward Navigation */}
+            <div className="inline-flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={handleHistoryBack}
+                disabled={!canGoBack}
+                title="Back"
+                aria-label="Go back"
+                className="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F4F5F8] disabled:opacity-35 disabled:cursor-not-allowed grid place-items-center text-[#374151] transition cursor-pointer"
+              >
+                <ArrowLeft size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={handleHistoryForward}
+                disabled={!canGoForward}
+                title="Forward"
+                aria-label="Go forward"
+                className="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F4F5F8] disabled:opacity-35 disabled:cursor-not-allowed grid place-items-center text-[#374151] transition cursor-pointer"
+              >
+                <ArrowRight size={14} />
+              </button>
+            </div>
 
             <button
               type="button"
@@ -658,7 +779,10 @@ export default function AdminPanel() {
                       : 'all'
                 }
                 selectedOrderCode={selectedOrderCode}
-                onClearSelectedOrder={() => setSelectedOrderCode(null)}
+                onOpenOrder={handleOpenOrder}
+                onCloseOrder={() => selectSection('orders')}
+                onOpenProduct={handleOpenProduct}
+                onOpenCustomer={handleOpenCustomer}
                 externalCreateTrigger={createOrderTrigger}
                 onCreateOrder={createAdminOrder}
                 onUpdateOrder={updateAdminOrder}
@@ -679,7 +803,10 @@ export default function AdminPanel() {
                         ? 'variants'
                         : 'all'
                 }
-                onBackToAll={() => selectSection('products')}
+                selectedProductId={selectedProductId}
+                onOpenProduct={handleOpenProduct}
+                onStartNewProduct={() => selectSection('products_add')}
+                onCloseProduct={() => selectSection('products')}
                 products={overview.products}
                 categories={overview.categories}
                 lowStockThreshold={Number(overview.settings?.lowStockThreshold ?? 5)}
@@ -690,9 +817,6 @@ export default function AdminPanel() {
                 onUploadImage={uploadAdminImage}
                 onReload={reload}
                 pushToast={pushToast}
-                externalCreateTrigger={createProductTrigger}
-                selectedProductId={selectedProductId}
-                onClearSelectedProduct={() => setSelectedProductId(null)}
               />
             ) : section === 'collections' ? (
               <AdminCategoriesSection
@@ -715,7 +839,8 @@ export default function AdminPanel() {
               <AdminCustomersSection
                 overview={overview}
                 selectedCustomerId={selectedCustomerId}
-                onClearSelectedCustomer={() => setSelectedCustomerId(null)}
+                onOpenCustomer={handleOpenCustomer}
+                onCloseCustomer={() => selectSection('customers')}
                 onOpenOrder={handleOpenOrder}
                 onCreateCustomer={createAdminCustomer}
                 onReload={reload}
@@ -726,7 +851,7 @@ export default function AdminPanel() {
                 discounts={overview.discounts || []}
                 orders={overview.orders || []}
                 selectedDiscountId={selectedDiscountId}
-                onClearSelectedDiscount={() => setSelectedDiscountId(null)}
+                onClearSelectedDiscount={() => {}}
                 onSaveDiscount={saveAdminDiscount}
                 onDeleteDiscount={deleteAdminDiscount}
                 onReload={reload}
@@ -736,16 +861,30 @@ export default function AdminPanel() {
               <AdminMarketingSection
                 overview={overview}
                 onNavigate={selectSection}
+                onSaveSettings={saveAdminSettings}
+                onReload={reload}
+                pushToast={pushToast}
               />
             ) : section === 'analytics' ? (
-              <AdminAnalyticsSection overview={overview} />
+              <AdminAnalyticsSection
+                overview={overview}
+                pushToast={pushToast}
+              />
             ) : section === 'reports' ? (
               <AdminReportsSection overview={overview} pushToast={pushToast} />
             ) : section === 'settings' ? (
               <AdminSettingsSection
                 overview={overview}
+                activeTabProp={settingsTab}
+                onTabChange={(tab) => go(`admin:settings:${tab}`)}
                 onSyncSupabase={handleSyncSupabase}
                 syncingSupabase={syncingSupabase}
+                onSaveSettings={saveAdminSettings}
+                onUpdateUserRole={updateAdminCustomerRole}
+                onCreateUser={createAdminCustomer}
+                onDeleteUser={deleteAdminCustomer}
+                onReload={reload}
+                pushToast={pushToast}
               />
             ) : (
               <AdminHomeSection

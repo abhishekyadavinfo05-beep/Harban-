@@ -949,3 +949,24 @@ export async function deleteDiscountFromSupabase(code: string) {
     }
   })
 }
+
+export async function syncStoreSettingsToSupabase(row: Record<string, unknown>) {
+  return runSupabaseSync('store-settings-upsert', async (sb) => {
+    const { error } = await sb
+      .from('store_settings')
+      .upsert(row, { onConflict: 'id' })
+    if (error && !/does not exist|schema cache/i.test(error.message)) {
+      throw new Error(`store_settings: ${error.message}`)
+    }
+  })
+}
+
+export async function deleteCustomerFromSupabase(uid: string) {
+  return runSupabaseSync('customer-delete', async (sb) => {
+    const { error } = await sb.from('customers').delete().eq('uid', uid)
+    if (error && !/does not exist|schema cache/i.test(error.message)) {
+      throw new Error(`customers_delete: ${error.message}`)
+    }
+  })
+}
+

@@ -19,7 +19,13 @@ import {
   syncDiscountToSupabase,
   syncOrderToSupabase,
   syncProductToSupabase,
+  syncStoreSettingsToSupabase,
 } from '../lib/supabase.ts'
+import {
+  type ExtendedStoreSettings,
+  packStoreSettings,
+  unpackStoreSettings,
+} from '../lib/storeSettings.ts'
 import { db, withDbRetry } from './index.ts'
 import {
   type ProductVariantOption,
@@ -2194,7 +2200,7 @@ export async function getRecentActivityForAdmin() {
       inventoryLogs: recentInventoryLogs,
       discounts: discountRows,
       fulfillments: fulfillmentRows,
-      settings,
+      settings: unpackStoreSettings(settings),
       marketingAttributions: marketingRows,
       clickEvents: clickRows,
       checkoutEvents: checkoutRows,
@@ -2386,4 +2392,58 @@ export async function deleteDiscountFromDb(id: number) {
     throw new Error('Unable to delete discount.', { cause: error })
   }
 }
+
+export async function getStoreSettingsConfig(): Promise<ExtendedStoreSettings> {
+  try {
+    const rows = await db
+      .select()
+      .from(storeSettings)
+      .where(eq(storeSettings.id, 'default'))
+      .limit(1)
+    return unpackStoreSettings(rows[0] || null)
+  } catch (error) {
+    console.warn('getStoreSettingsConfig fallback:', error)
+    return unpackStoreSettings(null)
+  }
+}
+
+export async function upsertStoreSettingsInDb(
+  input: Partial<ExtendedStoreSettings>,
+): Promise<ExtendedStoreSettings> {
+  try {
+    const existingRows = await db
+      .select()
+      .from(storeSettings)
+      .where(eq(storeSettings.id, 'default'))
+      .limit(1)
+    const { dbValues, supabaseRow } = packStoreSettings(input, existingRows[0])
+
+    const rows = await db
+      .insert(storeSettings)
+      .values(dbValues)
+      .onConflictDoUpdate({
+        target: storeSettings.id,
+        set: {
+          storeName: dbValues.storeName,
+          supportEmail: dbValues.supportEmail,
+          supportPhone: dbValues.supportPhone,
+          lowStockThreshold: dbValues.lowStockThreshold,
+          freeShippingThreshold: dbValues.freeShippingThreshold,
+          razorpayTestMode: dbValues.razorpayTestMode,
+          courierProvider: dbValues.courierProvider,
+          courierApiEndpoint: dbValues.courierApiEndpoint,
+          courierAutoDispatch: dbValues.courierAutoDispatch,
+          updatedAt: dbValues.updatedAt,
+        },
+      })
+      .returning()
+
+    void syncStoreSettingsToSupabase(supabaseRow)
+    return unpackStoreSettings(rows[0])
+  } catch (error) {
+    console.error('Database upsertStoreSettingsInDb failed:', error)
+    throw new Error('Unable to save store settings.', { cause: error })
+  }
+}
+
 

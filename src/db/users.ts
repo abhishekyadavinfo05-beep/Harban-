@@ -371,3 +371,74 @@ export async function createAdminCustomerInDb(input: {
   }
 }
 
+export async function updateUserRoleInDb(
+  uid: string,
+  role: 'admin' | 'customer',
+  actorEmail?: string,
+) {
+  const cleanUid = String(uid || '').trim()
+  const cleanRole = role === 'admin' ? 'admin' : 'customer'
+  if (!cleanUid) throw new Error('User ID is required.')
+
+  const rows = await db
+    .select()
+    .from(users)
+    .where(eq(users.uid, cleanUid))
+    .limit(1)
+  const existing = rows[0]
+  if (!existing) throw new Error('User not found.')
+
+  if (cleanRole !== 'admin' && isAdminEmail(existing.email)) {
+    throw new Error('Primary allowlisted owner accounts cannot be demoted.')
+  }
+  if (
+    cleanRole !== 'admin' &&
+    actorEmail &&
+    existing.email.toLowerCase() === actorEmail.trim().toLowerCase()
+  ) {
+    throw new Error('You cannot remove your own admin access.')
+  }
+
+  const updated = await db
+    .update(users)
+    .set({ role: cleanRole })
+    .where(eq(users.uid, cleanUid))
+    .returning({
+      id: users.id,
+      uid: users.uid,
+      email: users.email,
+      name: users.name,
+      phone: users.phone,
+      role: users.role,
+      createdAt: users.createdAt,
+    })
+  return updated[0]
+}
+
+export async function deleteCustomerInDb(uid: string, actorEmail?: string) {
+  const cleanUid = String(uid || '').trim()
+  if (!cleanUid) throw new Error('User ID is required.')
+
+  const rows = await db
+    .select()
+    .from(users)
+    .where(eq(users.uid, cleanUid))
+    .limit(1)
+  const existing = rows[0]
+  if (!existing) return null
+
+  if (isAdminEmail(existing.email)) {
+    throw new Error('Primary owner account cannot be deleted.')
+  }
+  if (
+    actorEmail &&
+    existing.email.toLowerCase() === actorEmail.trim().toLowerCase()
+  ) {
+    throw new Error('You cannot delete your currently signed-in account.')
+  }
+
+  await db.delete(users).where(eq(users.uid, cleanUid))
+  return existing
+}
+
+

@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
+  ArrowLeft,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   Download,
   ExternalLink,
   Mail,
+  MapPin,
   Phone,
   Plus,
   Repeat,
@@ -35,7 +39,8 @@ function phoneTail(phone) {
 export default function AdminCustomersSection({
   overview,
   selectedCustomerId = null,
-  onClearSelectedCustomer,
+  onOpenCustomer,
+  onCloseCustomer,
   onOpenOrder,
   onCreateCustomer,
   onReload,
@@ -47,7 +52,6 @@ export default function AdminCustomersSection({
   const [tab, setTab] = useState('all')
   const [roleFilter, setRoleFilter] = useState('all')
   const [dateRange, setDateRange] = useState('all')
-  const [inspectCustomer, setInspectCustomer] = useState(null)
 
   const [addOpen, setAddOpen] = useState(false)
   const [addForm, setAddForm] = useState({ name: '', email: '', phone: '', role: 'customer' })
@@ -84,20 +88,12 @@ export default function AdminCustomersSection({
         ordersCount: allCustOrders.length,
         validCount: validOrders.length,
         spend,
+        aov: validOrders.length > 0 ? Math.round(spend / validOrders.length) : 0,
         latestOrder,
         locationCity,
       }
     })
   }, [customers, orders])
-
-  useEffect(() => {
-    if (!selectedCustomerId) return
-    const target = enriched.find((c) => c.id === selectedCustomerId)
-    if (target) {
-      setInspectCustomer(target)
-    }
-    onClearSelectedCustomer?.()
-  }, [selectedCustomerId, enriched, onClearSelectedCustomer])
 
   const counts = useMemo(() => {
     const now = new Date()
@@ -145,8 +141,16 @@ export default function AdminCustomersSection({
     })
   }, [enriched, search, tab, roleFilter, dateRange])
 
-  const activeDetail =
-    enriched.find((c) => c.id === inspectCustomer?.id) || inspectCustomer || filtered[0] || null
+  const activeDetail = useMemo(() => {
+    if (!selectedCustomerId) return null
+    return (
+      enriched.find(
+        (c) =>
+          String(c.id) === String(selectedCustomerId) ||
+          String(c.uid || '') === String(selectedCustomerId),
+      ) || null
+    )
+  }, [enriched, selectedCustomerId])
 
   const handleExportCsv = () => {
     const header = ['Name', 'Email', 'Phone', 'Role', 'Location', 'Orders', 'AmountSpentINR']
@@ -186,7 +190,7 @@ export default function AdminCustomersSection({
       setAddOpen(false)
       setAddForm({ name: '', email: '', phone: '', role: 'customer' })
       await onReload?.()
-      if (created) setInspectCustomer({ ...created, allOrders: [], ordersCount: 0, spend: 0 })
+      if (created?.id) onOpenCustomer?.(created.id)
     } catch (err) {
       setAddError(err instanceof Error ? err.message : 'Unable to add customer')
     } finally {
@@ -231,393 +235,8 @@ export default function AdminCustomersSection({
     }
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display font-bold text-[22px] text-[#111827] tracking-tight leading-tight">
-            Customers
-          </h1>
-          <p className="text-[13px] text-[#6B7280] mt-0.5">
-            Manage your customer base, view order history and track lifetime value.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setImportOpen(true)}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#E5E7EB] hover:bg-[#F9FAFB] text-[#111827] px-3.5 py-2 rounded-xl shadow-2xs cursor-pointer"
-          >
-            <Upload size={13} className="text-[#4B5563]" /> Import
-          </button>
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#E5E7EB] hover:bg-[#F9FAFB] text-[#111827] px-3.5 py-2 rounded-xl shadow-2xs cursor-pointer"
-          >
-            <Download size={13} className="text-[#4B5563]" /> Export
-          </button>
-          {onCreateCustomer && (
-            <button
-              type="button"
-              onClick={() => {
-                setAddError('')
-                setAddOpen(true)
-              }}
-              className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
-            >
-              <Plus size={14} /> Add Customer
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 5 Pastel KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#F3E8FF] text-[#6D28D9] grid place-items-center shrink-0">
-            <Users size={18} />
-          </span>
-          <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Total Customers</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
-              {counts.all}
-            </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">{counts.withOrders} ordered</p>
-          </div>
-        </div>
-        <div className="bg-[#F0FDF4] rounded-2xl border border-[#DCFCE7] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#DCFCE7] text-[#16A34A] grid place-items-center shrink-0">
-            <Repeat size={18} />
-          </span>
-          <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Repeat Customers</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
-              {counts.repeatBuyers}
-            </p>
-            <p className="text-[11px] text-[#16A34A] mt-0.5">2+ orders</p>
-          </div>
-        </div>
-        <div className="bg-[#FFFBEB] rounded-2xl border border-[#FEF3C7] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#D97706] grid place-items-center shrink-0">
-            <UserPlus size={18} />
-          </span>
-          <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">New This Month</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
-              {counts.newThisMonth}
-            </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">Signups</p>
-          </div>
-        </div>
-        <div className="bg-[#EFF6FF] rounded-2xl border border-[#DBEAFE] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#DBEAFE] text-[#2563EB] grid place-items-center shrink-0">
-            <TrendingUp size={18} />
-          </span>
-          <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Avg Order Value</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
-              {formatINR(counts.aov)}
-            </p>
-            <p className="text-[11px] text-[#2563EB] mt-0.5">Completed orders</p>
-          </div>
-        </div>
-        <div className="bg-[#FFF5F6] rounded-2xl border border-[#FFE4E6] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#FFE4E6] text-[#E11D48] grid place-items-center shrink-0">
-            <CreditCard size={18} />
-          </span>
-          <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Total Revenue</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
-              {formatINR(counts.totalSpend)}
-            </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">Lifetime spend</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Directory + Sticky Right-Side Profile */}
-      <div className="grid xl:grid-cols-[1fr_340px] gap-4 items-start">
-        <div className="bg-white rounded-2xl border border-[#EAECF0] overflow-hidden shadow-2xs">
-          <div className="px-4 pt-1 border-b border-[#EAECF0] flex items-center gap-5 overflow-x-auto text-[12.5px]">
-            {[
-              { id: 'all', label: `All Customers (${counts.all})` },
-              { id: 'ordered', label: `With Orders (${counts.withOrders})` },
-              { id: 'repeat', label: `Repeat Buyers (${counts.repeatBuyers})` },
-              { id: 'admin', label: `Admins (${counts.admins})` },
-            ].map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                className={`py-3 border-b-2 transition cursor-pointer whitespace-nowrap ${
-                  tab === t.id
-                    ? 'border-[#5B21B6] text-[#5B21B6] font-semibold'
-                    : 'border-transparent text-[#6B7280] hover:text-[#111827] font-medium'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="p-3.5 border-b border-[#EAECF0] flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center gap-2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 flex-1 min-w-[200px]">
-              <Search size={14} className="text-[#9CA3AF] shrink-0" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search customer by name, email, phone or city..."
-                className="bg-transparent outline-none text-[12.5px] text-[#111827] placeholder:text-[#9CA3AF] w-full"
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="text-[#6B7280] hover:text-[#111827] cursor-pointer"
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12px] font-medium text-[#374151] outline-none cursor-pointer"
-            >
-              <option value="all">All Time</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="7d">Last 7 Days</option>
-            </select>
-
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12px] font-medium text-[#374151] outline-none cursor-pointer"
-            >
-              <option value="all">All Roles</option>
-              <option value="customer">Customer</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          {filtered.length === 0 ? (
-            <div className="p-10 text-center text-[13px] text-[#6B7280]">
-              No customers match your filters.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-[12.5px]">
-                <thead className="bg-[#F9FAFB] text-[#6B7280] font-medium border-b border-[#EAECF0]">
-                  <tr>
-                    <th className="py-3 px-4">Customer</th>
-                    <th className="py-3 px-3">Email &amp; Phone</th>
-                    <th className="py-3 px-3">Location</th>
-                    <th className="py-3 px-3 text-right">Orders</th>
-                    <th className="py-3 px-3 text-right">Total Spent</th>
-                    <th className="py-3 px-4">Last Order</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#EAECF0]">
-                  {filtered.map((c) => {
-                    const selected = activeDetail?.id === c.id
-                    return (
-                      <tr
-                        key={c.id}
-                        onClick={() => setInspectCustomer(c)}
-                        className={`hover:bg-[#F9FAFB] cursor-pointer ${
-                          selected ? 'bg-[#F5F3FF]/70' : ''
-                        }`}
-                      >
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2.5">
-                            <span className="w-8 h-8 rounded-full bg-[#F3E8FF] text-[#5B21B6] text-[11px] font-bold grid place-items-center shrink-0">
-                              {getInitials(c.name)}
-                            </span>
-                            <div className="min-w-0">
-                              <p className="font-semibold text-[#111827] truncate">{c.name}</p>
-                              <span
-                                className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize ${
-                                  c.role === 'admin'
-                                    ? 'bg-[#F3E8FF] text-[#6D28D9]'
-                                    : 'bg-[#DCFCE7] text-[#15803D]'
-                                }`}
-                              >
-                                {c.role || 'customer'}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <p className="text-[#374151]">{c.email}</p>
-                          <p className="text-[11px] text-[#6B7280] font-mono">
-                            {c.phone || '—'}
-                          </p>
-                        </td>
-                        <td className="py-3 px-3 text-[#6B7280]">
-                          {c.locationCity || '—'}
-                        </td>
-                        <td className="py-3 px-3 text-right font-semibold text-[#111827] tabular-nums">
-                          {c.ordersCount}
-                        </td>
-                        <td className="py-3 px-3 text-right font-bold text-[#111827] tabular-nums">
-                          {formatINR(c.spend)}
-                        </td>
-                        <td className="py-3 px-4 text-[#6B7280] whitespace-nowrap">
-                          {c.latestOrder ? (
-                            <>
-                              <span className="font-mono font-semibold text-[#5B21B6] block">
-                                #{c.latestOrder.id}
-                              </span>
-                              <span className="text-[11px]">
-                                {new Date(c.latestOrder.placedAt).toLocaleDateString('en-IN', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}
-                              </span>
-                            </>
-                          ) : (
-                            '—'
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Sticky Customer Details Side Card */}
-        <aside className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-4 shadow-2xs xl:sticky xl:top-20">
-          {!activeDetail ? (
-            <div className="py-8 text-center text-[13px] text-[#6B7280]">
-              Select a customer to view profile details and order history.
-            </div>
-          ) : (
-            <>
-              <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#EAECF0]">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-11 h-11 rounded-full bg-gradient-to-br from-[#6D28D9] to-[#4F46E5] text-white font-display font-bold text-[14px] grid place-items-center shrink-0">
-                    {getInitials(activeDetail.name)}
-                  </span>
-                  <div className="min-w-0">
-                    <h2 className="font-display font-bold text-[16px] text-[#111827] truncate">
-                      {activeDetail.name}
-                    </h2>
-                    <span className="inline-block text-[10.5px] font-semibold px-2 py-0.5 rounded bg-[#DCFCE7] text-[#15803D] capitalize">
-                      {activeDetail.role || 'customer'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-1.5 text-[12.5px] text-[#4B5563]">
-                <p className="flex items-center gap-2 truncate">
-                  <Mail size={13} className="text-[#9CA3AF] shrink-0" />
-                  <span className="truncate">{activeDetail.email}</span>
-                </p>
-                <p className="flex items-center gap-2 font-mono">
-                  <Phone size={13} className="text-[#9CA3AF] shrink-0" />
-                  <span>{activeDetail.phone || 'Not provided'}</span>
-                </p>
-                {activeDetail.createdAt && (
-                  <p className="flex items-center gap-2">
-                    <Calendar size={13} className="text-[#9CA3AF] shrink-0" />
-                    <span>
-                      Joined{' '}
-                      {new Date(activeDetail.createdAt).toLocaleDateString('en-IN', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </span>
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2.5 text-[12px]">
-                <div className="bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-3">
-                  <p className="text-[#6B7280]">Total Orders</p>
-                  <p className="font-display font-bold text-[18px] text-[#111827] tabular-nums mt-0.5">
-                    {activeDetail.ordersCount}
-                  </p>
-                </div>
-                <div className="bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-3">
-                  <p className="text-[#6B7280]">Total Spent</p>
-                  <p className="font-display font-bold text-[18px] text-[#111827] tabular-nums mt-0.5">
-                    {formatINR(activeDetail.spend)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="font-display font-bold text-[13px] text-[#111827] flex items-center gap-1.5">
-                  <ShoppingBag size={14} className="text-[#5B21B6]" />
-                  Recent Orders ({activeDetail.allOrders.length})
-                </p>
-                {activeDetail.allOrders.length === 0 ? (
-                  <p className="text-[12px] text-[#6B7280] bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-3 text-center">
-                    No orders placed yet.
-                  </p>
-                ) : (
-                  <div className="divide-y divide-[#EAECF0] border border-[#EAECF0] rounded-xl overflow-hidden max-h-60 overflow-y-auto">
-                    {activeDetail.allOrders.slice(0, 6).map((ord) => (
-                      <button
-                        key={ord.id}
-                        type="button"
-                        onClick={() => onOpenOrder?.(ord.id)}
-                        className="w-full text-left px-3 py-2.5 hover:bg-[#F9FAFB] flex items-center justify-between gap-2 cursor-pointer"
-                      >
-                        <div className="min-w-0">
-                          <p className="font-mono font-bold text-[12px] text-[#5B21B6] flex items-center gap-1">
-                            #{ord.id}
-                            <ExternalLink size={10} />
-                          </p>
-                          <p className="text-[11px] text-[#6B7280]">
-                            {new Date(ord.placedAt).toLocaleDateString('en-IN', {
-                              day: 'numeric',
-                              month: 'short',
-                            })}{' '}
-                            · {ord.orderStatus || 'pending'}
-                          </p>
-                        </div>
-                        <span className="font-bold text-[12.5px] tabular-nums text-[#111827]">
-                          {formatINR(ord.total)}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                {activeDetail.allOrders[0] ? (
-                  <button
-                    type="button"
-                    onClick={() => onOpenOrder?.(activeDetail.allOrders[0].id)}
-                    className="bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white text-[12px] font-semibold py-2 rounded-xl cursor-pointer text-center"
-                  >
-                    Latest Order
-                  </button>
-                ) : (
-                  <span />
-                )}
-                <a
-                  href={`mailto:${activeDetail.email}`}
-                  className="bg-[#F9FAFB] border border-[#E5E7EB] hover:border-[#5B21B6] text-[#111827] text-[12px] font-semibold py-2 rounded-xl text-center inline-flex items-center justify-center gap-1"
-                >
-                  <Mail size={12} /> Send Email
-                </a>
-              </div>
-            </>
-          )}
-        </aside>
-      </div>
-
-      {/* Add Customer Modal */}
+  const modalsJsx = (
+    <>
       {addOpen && (
         <div className="fixed inset-0 z-[85] grid place-items-center p-4">
           <div
@@ -721,7 +340,6 @@ export default function AdminCustomersSection({
         </div>
       )}
 
-      {/* Import Customers CSV Modal */}
       {importOpen && (
         <div className="fixed inset-0 z-[85] grid place-items-center p-4">
           <div
@@ -774,6 +392,542 @@ export default function AdminCustomersSection({
           </form>
         </div>
       )}
+    </>
+  )
+
+  /* ------------------------------------------ FULL-PAGE CUSTOMER DETAIL */
+  if (selectedCustomerId) {
+    if (!activeDetail) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => onCloseCustomer?.()}
+              className="w-9 h-9 rounded-xl border border-[#E5E7EB] bg-white hover:bg-[#F9FAFB] grid place-items-center text-[#111827] cursor-pointer"
+              aria-label="Back to customers"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <h1 className="font-display font-bold text-[20px] text-[#111827]">
+              Customer not found
+            </h1>
+          </div>
+          <div className="bg-white rounded-2xl border border-[#EAECF0] p-10 text-center space-y-3 shadow-2xs">
+            <p className="text-[13px] text-[#6B7280]">
+              Customer profile was not found.
+            </p>
+            <button
+              type="button"
+              onClick={() => onCloseCustomer?.()}
+              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
+            >
+              <ArrowLeft size={14} /> Back to Customers
+            </button>
+          </div>
+          {modalsJsx}
+        </div>
+      )
+    }
+
+    const navList = filtered.some((c) => c.id === activeDetail.id) ? filtered : enriched
+    const currIdx = navList.findIndex((c) => c.id === activeDetail.id)
+    const prevCustomer = currIdx > 0 ? navList[currIdx - 1] : null
+    const nextCustomer =
+      currIdx >= 0 && currIdx < navList.length - 1 ? navList[currIdx + 1] : null
+
+    const shippingAddr = activeDetail.latestOrder?.shippingAddress || null
+
+    return (
+      <div className="space-y-4">
+        {/* Top Bar */}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={() => onCloseCustomer?.()}
+              title="Back to Customers"
+              aria-label="Back to Customers"
+              className="mt-0.5 w-9 h-9 rounded-xl border border-[#E5E7EB] bg-white hover:bg-[#F9FAFB] grid place-items-center text-[#111827] shadow-2xs shrink-0 cursor-pointer"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <div className="flex items-center gap-3">
+              <span className="w-11 h-11 rounded-full bg-gradient-to-br from-[#6D28D9] to-[#4F46E5] text-white font-display font-bold text-[14px] grid place-items-center shrink-0">
+                {getInitials(activeDetail.name)}
+              </span>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="font-display font-bold text-[22px] text-[#111827] tracking-tight">
+                    {activeDetail.name}
+                  </h1>
+                  <span
+                    className={`inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-md capitalize ${
+                      activeDetail.role === 'admin'
+                        ? 'bg-[#F3E8FF] text-[#6D28D9]'
+                        : 'bg-[#DCFCE7] text-[#15803D]'
+                    }`}
+                  >
+                    {activeDetail.role || 'customer'}
+                  </span>
+                </div>
+                <p className="text-[12.5px] text-[#6B7280] mt-0.5">
+                  {activeDetail.locationCity ? `${activeDetail.locationCity} · ` : ''}
+                  {activeDetail.createdAt
+                    ? `Customer since ${new Date(activeDetail.createdAt).toLocaleDateString('en-IN', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}`
+                    : activeDetail.email}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <a
+              href={`mailto:${activeDetail.email}`}
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#E5E7EB] hover:bg-[#F9FAFB] text-[#111827] px-3.5 py-2 rounded-xl shadow-2xs"
+            >
+              <Mail size={14} className="text-[#4B5563]" /> Send Email
+            </a>
+
+            <div className="inline-flex items-center rounded-xl border border-[#E5E7EB] bg-white overflow-hidden shadow-2xs">
+              <button
+                type="button"
+                disabled={!prevCustomer}
+                onClick={() => prevCustomer && onOpenCustomer?.(prevCustomer.id)}
+                title={prevCustomer ? `Previous: ${prevCustomer.name}` : 'First customer'}
+                aria-label="Previous customer"
+                className="w-9 h-9 grid place-items-center text-[#374151] hover:bg-[#F9FAFB] disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer border-r border-[#E5E7EB]"
+              >
+                <ChevronLeft size={15} />
+              </button>
+              <button
+                type="button"
+                disabled={!nextCustomer}
+                onClick={() => nextCustomer && onOpenCustomer?.(nextCustomer.id)}
+                title={nextCustomer ? `Next: ${nextCustomer.name}` : 'Last customer'}
+                aria-label="Next customer"
+                className="w-9 h-9 grid place-items-center text-[#374151] hover:bg-[#F9FAFB] disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 2-Column Customer Detail Workspace */}
+        <div className="grid lg:grid-cols-[1fr_340px] gap-4 items-start">
+          {/* Left Column */}
+          <div className="space-y-4 min-w-0">
+            {/* Lifetime Metrics Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 shadow-2xs">
+                <p className="text-[12px] text-[#6B7280]">Amount Spent</p>
+                <p className="font-display font-bold text-[20px] text-[#111827] mt-1 tabular-nums">
+                  {formatINR(activeDetail.spend)}
+                </p>
+              </div>
+              <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 shadow-2xs">
+                <p className="text-[12px] text-[#6B7280]">Total Orders</p>
+                <p className="font-display font-bold text-[20px] text-[#111827] mt-1 tabular-nums">
+                  {activeDetail.ordersCount}
+                </p>
+              </div>
+              <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 shadow-2xs col-span-2 sm:col-span-1">
+                <p className="text-[12px] text-[#6B7280]">Average Order Value</p>
+                <p className="font-display font-bold text-[20px] text-[#111827] mt-1 tabular-nums">
+                  {formatINR(activeDetail.aov)}
+                </p>
+              </div>
+            </div>
+
+            {/* Customer Orders Table */}
+            <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#EAECF0] flex items-center justify-between">
+                <h2 className="font-display font-bold text-[15px] text-[#111827] flex items-center gap-2">
+                  <ShoppingBag size={15} className="text-[#5B21B6]" />
+                  Orders ({activeDetail.allOrders.length})
+                </h2>
+              </div>
+
+              {activeDetail.allOrders.length === 0 ? (
+                <div className="p-8 text-center text-[13px] text-[#6B7280]">
+                  This customer has not placed any orders yet.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[12.5px]">
+                    <thead className="bg-[#F9FAFB] text-[#6B7280] font-medium border-b border-[#EAECF0]">
+                      <tr>
+                        <th className="py-3 px-4">Order ID</th>
+                        <th className="py-3 px-3">Date</th>
+                        <th className="py-3 px-3">Items</th>
+                        <th className="py-3 px-3">Payment</th>
+                        <th className="py-3 px-3">Status</th>
+                        <th className="py-3 px-4 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EAECF0]">
+                      {activeDetail.allOrders.map((ord) => (
+                        <tr
+                          key={ord.id}
+                          onClick={() => onOpenOrder?.(ord.id)}
+                          className="hover:bg-[#F9FAFB] cursor-pointer"
+                        >
+                          <td className="py-3 px-4 font-mono font-bold text-[#5B21B6] inline-flex items-center gap-1">
+                            #{ord.id} <ExternalLink size={11} />
+                          </td>
+                          <td className="py-3 px-3 text-[#6B7280] whitespace-nowrap">
+                            {new Date(ord.placedAt).toLocaleDateString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </td>
+                          <td className="py-3 px-3 text-[#374151] tabular-nums">
+                            {(ord.items || []).reduce((s, it) => s + (it.qty || 1), 0)} item(s)
+                          </td>
+                          <td className="py-3 px-3 capitalize text-[#374151]">
+                            {ord.paymentStatus || 'pending'}
+                          </td>
+                          <td className="py-3 px-3 capitalize text-[#374151]">
+                            {ord.cancelled ? 'cancelled' : ord.orderStatus || 'pending'}
+                          </td>
+                          <td className="py-3 px-4 text-right font-bold tabular-nums text-[#111827]">
+                            {formatINR(ord.total)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Sidebar */}
+          <aside className="space-y-4">
+            <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 space-y-3 shadow-2xs">
+              <h3 className="font-display font-bold text-[13.5px] text-[#111827]">
+                Contact information
+              </h3>
+              <div className="space-y-2 text-[12.5px] text-[#4B5563]">
+                <a
+                  href={`mailto:${activeDetail.email}`}
+                  className="flex items-center gap-2 text-[#5B21B6] hover:underline truncate"
+                >
+                  <Mail size={13} className="text-[#9CA3AF] shrink-0" />
+                  <span className="truncate">{activeDetail.email}</span>
+                </a>
+                <p className="flex items-center gap-2 font-mono">
+                  <Phone size={13} className="text-[#9CA3AF] shrink-0" />
+                  <span>{activeDetail.phone || 'Not provided'}</span>
+                </p>
+                {activeDetail.createdAt && (
+                  <p className="flex items-center gap-2">
+                    <Calendar size={13} className="text-[#9CA3AF] shrink-0" />
+                    <span>
+                      Joined{' '}
+                      {new Date(activeDetail.createdAt).toLocaleDateString('en-IN', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 space-y-2.5 shadow-2xs">
+              <h3 className="font-display font-bold text-[13.5px] text-[#111827] flex items-center gap-1.5">
+                <MapPin size={14} className="text-[#5B21B6]" /> Default address
+              </h3>
+              {shippingAddr ? (
+                <div className="text-[12.5px] text-[#4B5563] leading-relaxed">
+                  <p className="font-semibold text-[#111827]">
+                    {shippingAddr.fullName || activeDetail.name}
+                  </p>
+                  <p>{shippingAddr.line1}</p>
+                  <p>
+                    {shippingAddr.city}
+                    {shippingAddr.state ? `, ${shippingAddr.state}` : ''}
+                    {shippingAddr.pincode ? ` - ${shippingAddr.pincode}` : ''}
+                  </p>
+                  <p className="text-[#6B7280]">India</p>
+                </div>
+              ) : (
+                <p className="text-[12px] text-[#9CA3AF]">
+                  No shipping address recorded yet.
+                </p>
+              )}
+            </div>
+          </aside>
+        </div>
+
+        {modalsJsx}
+      </div>
+    )
+  }
+
+  /* ------------------------------------------ FULL-WIDTH CUSTOMERS LIST */
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display font-bold text-[22px] text-[#111827] tracking-tight leading-tight">
+            Customers
+          </h1>
+          <p className="text-[13px] text-[#6B7280] mt-0.5">
+            Click any customer to open their profile, shipping details and complete order history.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#E5E7EB] hover:bg-[#F9FAFB] text-[#111827] px-3.5 py-2 rounded-xl shadow-2xs cursor-pointer"
+          >
+            <Upload size={13} className="text-[#4B5563]" /> Import
+          </button>
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#E5E7EB] hover:bg-[#F9FAFB] text-[#111827] px-3.5 py-2 rounded-xl shadow-2xs cursor-pointer"
+          >
+            <Download size={13} className="text-[#4B5563]" /> Export
+          </button>
+          {onCreateCustomer && (
+            <button
+              type="button"
+              onClick={() => {
+                setAddError('')
+                setAddOpen(true)
+              }}
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
+            >
+              <Plus size={14} /> Add Customer
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 5 Pastel KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#F3E8FF] text-[#6D28D9] grid place-items-center shrink-0">
+            <Users size={18} />
+          </span>
+          <div>
+            <p className="text-[12px] font-medium text-[#6B7280]">Total Customers</p>
+            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+              {counts.all}
+            </p>
+            <p className="text-[11px] text-[#6B7280] mt-0.5">{counts.withOrders} ordered</p>
+          </div>
+        </div>
+        <div className="bg-[#F0FDF4] rounded-2xl border border-[#DCFCE7] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#DCFCE7] text-[#16A34A] grid place-items-center shrink-0">
+            <Repeat size={18} />
+          </span>
+          <div>
+            <p className="text-[12px] font-medium text-[#6B7280]">Repeat Customers</p>
+            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+              {counts.repeatBuyers}
+            </p>
+            <p className="text-[11px] text-[#16A34A] mt-0.5">2+ orders</p>
+          </div>
+        </div>
+        <div className="bg-[#FFFBEB] rounded-2xl border border-[#FEF3C7] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#D97706] grid place-items-center shrink-0">
+            <UserPlus size={18} />
+          </span>
+          <div>
+            <p className="text-[12px] font-medium text-[#6B7280]">New This Month</p>
+            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+              {counts.newThisMonth}
+            </p>
+            <p className="text-[11px] text-[#6B7280] mt-0.5">Signups</p>
+          </div>
+        </div>
+        <div className="bg-[#EFF6FF] rounded-2xl border border-[#DBEAFE] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#DBEAFE] text-[#2563EB] grid place-items-center shrink-0">
+            <TrendingUp size={18} />
+          </span>
+          <div>
+            <p className="text-[12px] font-medium text-[#6B7280]">Avg Order Value</p>
+            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+              {formatINR(counts.aov)}
+            </p>
+            <p className="text-[11px] text-[#2563EB] mt-0.5">Completed orders</p>
+          </div>
+        </div>
+        <div className="bg-[#FFF5F6] rounded-2xl border border-[#FFE4E6] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#FFE4E6] text-[#E11D48] grid place-items-center shrink-0">
+            <CreditCard size={18} />
+          </span>
+          <div>
+            <p className="text-[12px] font-medium text-[#6B7280]">Total Revenue</p>
+            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+              {formatINR(counts.totalSpend)}
+            </p>
+            <p className="text-[11px] text-[#6B7280] mt-0.5">Lifetime spend</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Full-Width Customers Directory */}
+      <div className="bg-white rounded-2xl border border-[#EAECF0] overflow-hidden shadow-2xs">
+        <div className="px-4 pt-1 border-b border-[#EAECF0] flex items-center gap-5 overflow-x-auto text-[12.5px]">
+          {[
+            { id: 'all', label: `All Customers (${counts.all})` },
+            { id: 'ordered', label: `With Orders (${counts.withOrders})` },
+            { id: 'repeat', label: `Repeat Buyers (${counts.repeatBuyers})` },
+            { id: 'admin', label: `Admins (${counts.admins})` },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={`py-3 border-b-2 transition cursor-pointer whitespace-nowrap ${
+                tab === t.id
+                  ? 'border-[#5B21B6] text-[#5B21B6] font-semibold'
+                  : 'border-transparent text-[#6B7280] hover:text-[#111827] font-medium'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-3.5 border-b border-[#EAECF0] flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 flex-1 min-w-[200px]">
+            <Search size={14} className="text-[#9CA3AF] shrink-0" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search customer by name, email, phone or city..."
+              className="bg-transparent outline-none text-[12.5px] text-[#111827] placeholder:text-[#9CA3AF] w-full"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="text-[#6B7280] hover:text-[#111827] cursor-pointer"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12px] font-medium text-[#374151] outline-none cursor-pointer"
+          >
+            <option value="all">All Time</option>
+            <option value="30d">Last 30 Days</option>
+            <option value="7d">Last 7 Days</option>
+          </select>
+
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12px] font-medium text-[#374151] outline-none cursor-pointer"
+          >
+            <option value="all">All Roles</option>
+            <option value="customer">Customer</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="p-10 text-center text-[13px] text-[#6B7280]">
+            No customers match your filters.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[12.5px]">
+              <thead className="bg-[#F9FAFB] text-[#6B7280] font-medium border-b border-[#EAECF0]">
+                <tr>
+                  <th className="py-3 px-4">Customer</th>
+                  <th className="py-3 px-3">Email &amp; Phone</th>
+                  <th className="py-3 px-3">Location</th>
+                  <th className="py-3 px-3 text-right">Orders</th>
+                  <th className="py-3 px-3 text-right">Total Spent</th>
+                  <th className="py-3 px-4">Last Order</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EAECF0]">
+                {filtered.map((c) => (
+                  <tr
+                    key={c.id}
+                    onClick={() => onOpenCustomer?.(c.id)}
+                    className="hover:bg-[#F9FAFB] cursor-pointer"
+                  >
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-8 h-8 rounded-full bg-[#F3E8FF] text-[#5B21B6] text-[11px] font-bold grid place-items-center shrink-0">
+                          {getInitials(c.name)}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[#111827] truncate">{c.name}</p>
+                          <span
+                            className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize ${
+                              c.role === 'admin'
+                                ? 'bg-[#F3E8FF] text-[#6D28D9]'
+                                : 'bg-[#DCFCE7] text-[#15803D]'
+                            }`}
+                          >
+                            {c.role || 'customer'}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3">
+                      <p className="text-[#374151]">{c.email}</p>
+                      <p className="text-[11px] text-[#6B7280] font-mono">
+                        {c.phone || '—'}
+                      </p>
+                    </td>
+                    <td className="py-3 px-3 text-[#6B7280]">
+                      {c.locationCity || '—'}
+                    </td>
+                    <td className="py-3 px-3 text-right font-semibold text-[#111827] tabular-nums">
+                      {c.ordersCount}
+                    </td>
+                    <td className="py-3 px-3 text-right font-bold text-[#111827] tabular-nums">
+                      {formatINR(c.spend)}
+                    </td>
+                    <td className="py-3 px-4 text-[#6B7280] whitespace-nowrap">
+                      {c.latestOrder ? (
+                        <>
+                          <span className="font-mono font-semibold text-[#5B21B6] block">
+                            #{c.latestOrder.id}
+                          </span>
+                          <span className="text-[11px]">
+                            {new Date(c.latestOrder.placedAt).toLocaleDateString('en-IN', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </span>
+                        </>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {modalsJsx}
     </div>
   )
 }

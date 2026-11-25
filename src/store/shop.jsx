@@ -25,6 +25,7 @@ import {
   sbCreateRazorpayOrder,
   sbDeleteAddress,
   sbDeleteCategory,
+  sbDeleteCustomer,
   sbDeleteDiscount,
   sbDeleteProduct,
   sbGetAccount,
@@ -39,6 +40,7 @@ import {
   sbPlaceOrder,
   sbRegisterWithEmail,
   sbSaveAddress,
+  sbSaveAdminSettings,
   sbSaveCategory,
   sbSaveDiscount,
   sbSaveProduct,
@@ -47,12 +49,14 @@ import {
   sbSubscribeNewsletter,
   sbTrackOrderByCode,
   sbUpdateAdminOrder,
+  sbUpdateCustomerRole,
   sbUpdateProductQuick,
   sbUpdateProfile,
   sbUpdateStock,
   sbUploadImage,
   sbVerifyRazorpayPayment,
 } from '../lib/supabaseBrowser'
+import { DEFAULT_STORE_SETTINGS } from '../lib/storeSettings'
 import {
   categories as initialCategories,
   faqs as initialFaqs,
@@ -126,8 +130,79 @@ const STATIC_ROUTE_PATHS = {
   'order-confirmed': '/order-confirmed',
 }
 
+function adminRouteToPath(nextRoute) {
+  if (nextRoute === 'admin' || nextRoute === 'admin:home') return '/admin'
+  const rest = nextRoute.slice('admin:'.length)
+  if (!rest) return '/admin'
+  const colonIdx = rest.indexOf(':')
+  const section = colonIdx === -1 ? rest : rest.slice(0, colonIdx)
+  const detailId = colonIdx === -1 ? '' : rest.slice(colonIdx + 1)
+  const encDetail = detailId ? encodeURIComponent(detailId) : ''
+  switch (section) {
+    case 'orders':
+      return encDetail ? `/admin/orders/${encDetail}` : '/admin/orders'
+    case 'orders_drafts':
+      return '/admin/orders/drafts'
+    case 'abandoned_checkouts':
+      return '/admin/orders/abandoned'
+    case 'products':
+      return encDetail ? `/admin/products/${encDetail}` : '/admin/products'
+    case 'products_add':
+      return '/admin/products/new'
+    case 'products_variants':
+      return '/admin/products/variants'
+    case 'collections':
+      return '/admin/categories'
+    case 'inventory':
+      return '/admin/inventory'
+    case 'customers':
+      return encDetail ? `/admin/customers/${encDetail}` : '/admin/customers'
+    case 'discounts':
+      return encDetail ? `/admin/discounts/${encDetail}` : '/admin/discounts'
+    case 'marketing':
+      return '/admin/marketing'
+    case 'analytics':
+      return '/admin/analytics'
+    case 'reports':
+      return '/admin/reports'
+    case 'settings':
+      return encDetail ? `/admin/settings/${encDetail}` : '/admin/settings'
+    default:
+      return `/admin/${encodeURIComponent(section)}`
+  }
+}
+
+function pathToAdminRoute(cleanPath) {
+  const parts = cleanPath.slice('/admin'.length).split('/').filter(Boolean)
+  if (parts.length === 0 || parts[0] === 'home') return 'admin'
+  const head = decodeURIComponent(parts[0])
+  const sub = parts[1] ? decodeURIComponent(parts[1]) : ''
+  if (head === 'orders') {
+    if (sub === 'drafts') return 'admin:orders_drafts'
+    if (sub === 'abandoned') return 'admin:abandoned_checkouts'
+    return sub ? `admin:orders:${sub}` : 'admin:orders'
+  }
+  if (head === 'products') {
+    if (sub === 'new') return 'admin:products_add'
+    if (sub === 'variants') return 'admin:products_variants'
+    return sub ? `admin:products:${sub}` : 'admin:products'
+  }
+  if (head === 'categories' || head === 'collections') return 'admin:collections'
+  if (head === 'inventory') return 'admin:inventory'
+  if (head === 'customers') return sub ? `admin:customers:${sub}` : 'admin:customers'
+  if (head === 'discounts') return sub ? `admin:discounts:${sub}` : 'admin:discounts'
+  if (head === 'marketing') return 'admin:marketing'
+  if (head === 'analytics') return 'admin:analytics'
+  if (head === 'reports') return 'admin:reports'
+  if (head === 'settings') return sub ? `admin:settings:${sub}` : 'admin:settings'
+  return 'admin'
+}
+
 function routeToPath(nextRoute) {
   if (!nextRoute || nextRoute === 'home') return '/'
+  if (nextRoute === 'admin' || nextRoute.startsWith('admin:')) {
+    return adminRouteToPath(nextRoute)
+  }
   if (STATIC_ROUTE_PATHS[nextRoute]) return STATIC_ROUTE_PATHS[nextRoute]
   if (nextRoute.startsWith('policy:')) {
     return `/policy/${encodeURIComponent(nextRoute.slice('policy:'.length))}`
@@ -141,6 +216,9 @@ function routeToPath(nextRoute) {
 function pathToRoute(pathname) {
   const clean = String(pathname || '/').replace(/\/+$/, '') || '/'
   if (clean === '/') return 'home'
+  if (clean === '/admin' || clean.startsWith('/admin/')) {
+    return pathToAdminRoute(clean)
+  }
   if (clean === '/my-orders' || clean === '/track' || clean === '/track-order') {
     return 'orders'
   }
@@ -330,6 +408,9 @@ export function ShopProvider({ children }) {
   const [testimonials, setTestimonials] = useState(initialTestimonials)
   const [faqs, setFaqs] = useState(initialFaqs)
   const [marqueeStats, setMarqueeStats] = useState(initialMarqueeStats)
+  const [storeSettings, setStoreSettings] = useState(() =>
+    readLocal('harban-store-settings', DEFAULT_STORE_SETTINGS),
+  )
   const [payments, setPayments] = useState({
     razorpayEnabled: true,
     razorpayMode: 'live',
@@ -559,6 +640,13 @@ export function ShopProvider({ children }) {
       if (Array.isArray(data.marqueeStats) && data.marqueeStats.length) {
         setMarqueeStats(data.marqueeStats)
       }
+      if (data.settings && typeof data.settings === 'object') {
+        setStoreSettings((prev) => {
+          const next = { ...prev, ...data.settings }
+          writeLocal('harban-store-settings', next)
+          return next
+        })
+      }
       if (data.payments && typeof data.payments.razorpayEnabled === 'boolean') {
         setPayments({
           razorpayEnabled: data.payments.razorpayEnabled,
@@ -642,6 +730,21 @@ export function ShopProvider({ children }) {
       document.removeEventListener('visibilitychange', onResume)
     }
   }, [refreshStorefront])
+
+  useEffect(() => {
+    if (typeof document === 'undefined' || !storeSettings) return
+    const title = storeSettings.seo?.metaTitle
+    const desc = storeSettings.seo?.metaDesc
+    if (title) document.title = title
+    if (desc) {
+      const metaEl = document.querySelector('meta[name="description"]')
+      if (metaEl) metaEl.setAttribute('content', desc)
+    }
+    const primary = storeSettings.appearance?.primaryColor
+    const accent = storeSettings.appearance?.accentColor
+    if (primary) document.documentElement.style.setProperty('--harban-primary', primary)
+    if (accent) document.documentElement.style.setProperty('--harban-accent', accent)
+  }, [storeSettings])
 
   const sendCartTelemetry = useCallback(
     (payload) => {
@@ -1492,11 +1595,16 @@ export function ShopProvider({ children }) {
   }, [])
 
   const syncAdminSupabase = useCallback(async () => {
-    return withSupabaseFallback(
+    const res = await withSupabaseFallback(
       () => apiFetch('/api/admin/supabase/sync', { method: 'POST' }),
-      async () => ({ ok: true, supabase: (await sbGetAdminOverview()).integrations.supabase }),
+      async () => ({
+        ok: true,
+        supabase: (await sbGetAdminOverview()).integrations.supabase,
+      }),
     )
-  }, [])
+    pushToast('Synced with Supabase successfully')
+    return res
+  }, [pushToast])
 
   const saveAdminProduct = useCallback(
     async (payload) => {
@@ -1687,9 +1795,72 @@ export function ShopProvider({ children }) {
     [pushToast],
   )
 
+  const saveAdminSettings = useCallback(
+    async (payload, { silent = false } = {}) => {
+      const data = await withSupabaseFallback(
+        () =>
+          apiFetch('/api/admin/settings', {
+            method: 'PATCH',
+            body: JSON.stringify(payload),
+          }),
+        () => sbSaveAdminSettings(payload),
+      )
+      if (data?.settings) {
+        setStoreSettings((prev) => {
+          const next = { ...prev, ...data.settings }
+          writeLocal('harban-store-settings', next)
+          return next
+        })
+        if (typeof data.settings.payments?.razorpayEnabled === 'boolean') {
+          setPayments((prev) => ({
+            ...prev,
+            razorpayEnabled: data.settings.payments.razorpayEnabled,
+          }))
+        }
+      }
+      if (!silent) {
+        pushToast('Settings saved successfully')
+      }
+      return data.settings
+    },
+    [pushToast],
+  )
+
+  const updateAdminCustomerRole = useCallback(
+    async (uid, role) => {
+      const data = await withSupabaseFallback(
+        () =>
+          apiFetch(`/api/admin/customers/${encodeURIComponent(uid)}/role`, {
+            method: 'PATCH',
+            body: JSON.stringify({ role }),
+          }),
+        () => sbUpdateCustomerRole(uid, role),
+      )
+      pushToast(
+        `${data.customer?.name || 'User'} is now ${data.customer?.role || role}`,
+      )
+      return data.customer
+    },
+    [pushToast],
+  )
+
+  const deleteAdminCustomer = useCallback(
+    async (uid) => {
+      await withSupabaseFallback(
+        () =>
+          apiFetch(`/api/admin/customers/${encodeURIComponent(uid)}`, {
+            method: 'DELETE',
+          }),
+        () => sbDeleteCustomer(uid),
+      )
+      pushToast('Account removed')
+    },
+    [pushToast],
+  )
+
   const go = useCallback(
-    (next) => {
-      navigateRoute(next)
+    (next, options) => {
+      navigateRoute(next, options)
       if (next !== 'all') setSearch('')
       if (next?.startsWith('product:')) {
         const pid = next.slice('product:'.length)
@@ -1706,7 +1877,10 @@ export function ShopProvider({ children }) {
           category: next,
         })
       }
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      window.scrollTo({
+        top: 0,
+        behavior: next === 'admin' || next?.startsWith('admin:') ? 'instant' : 'smooth',
+      })
     },
     [navigateRoute, products, sendViewTelemetry],
   )
@@ -1720,6 +1894,10 @@ export function ShopProvider({ children }) {
       testimonials,
       faqs,
       marqueeStats,
+      storeSettings,
+      freeShipThreshold: Number(
+        storeSettings?.freeShippingThreshold ?? FREE_SHIP_THRESHOLD,
+      ),
       payments,
       cart,
       cartCount,
@@ -1761,6 +1939,9 @@ export function ShopProvider({ children }) {
       refreshStorefront,
       loadAdminOverview,
       syncAdminSupabase,
+      saveAdminSettings,
+      updateAdminCustomerRole,
+      deleteAdminCustomer,
       saveAdminProduct,
       updateAdminProductQuick,
       updateAdminStock,
@@ -1792,6 +1973,7 @@ export function ShopProvider({ children }) {
     testimonials,
     faqs,
     marqueeStats,
+    storeSettings,
     payments,
     cart,
     orders,
@@ -1827,6 +2009,9 @@ export function ShopProvider({ children }) {
     refreshStorefront,
     loadAdminOverview,
     syncAdminSupabase,
+    saveAdminSettings,
+    updateAdminCustomerRole,
+    deleteAdminCustomer,
     saveAdminProduct,
     updateAdminProductQuick,
     updateAdminStock,

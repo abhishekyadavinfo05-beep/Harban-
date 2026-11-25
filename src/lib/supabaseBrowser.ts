@@ -6,6 +6,7 @@ import {
   products as seedProducts,
   testimonials as seedTestimonials,
 } from '../data/products'
+import { packStoreSettings, unpackStoreSettings } from './storeSettings'
 
 const DEFAULT_SUPABASE_URL = 'https://yynubnoijafkzcengteb.supabase.co'
 const DEFAULT_SUPABASE_PUBLISHABLE_KEY =
@@ -358,7 +359,7 @@ async function ensureCustomerProfile(sbUser: User) {
 
 export async function sbGetStorefront(includeInactive = false) {
   const sb = getBrowserSupabase()
-  const [catRes, prodRes, revRes, faqRes] = await Promise.all([
+  const [catRes, prodRes, revRes, faqRes, settingsRes] = await Promise.all([
     sb
       .from('categories')
       .select('*')
@@ -371,6 +372,7 @@ export async function sbGetStorefront(includeInactive = false) {
       .order('id', { ascending: true }),
     sb.from('reviews').select('*').order('id', { ascending: true }),
     sb.from('faqs').select('*').order('sort_order', { ascending: true }),
+    sb.from('store_settings').select('*').eq('id', 'default').maybeSingle(),
   ])
 
   const categories =
@@ -420,14 +422,38 @@ export async function sbGetStorefront(includeInactive = false) {
       ? faqRes.data.map((f: any) => ({ q: f.question, a: f.answer }))
       : seedFaqs
 
+  const parsedSettings =
+    !settingsRes.error && settingsRes.data
+      ? unpackStoreSettings(settingsRes.data)
+      : null
+
   return {
     categories,
     products,
     testimonials,
     faqs,
     marqueeStats,
+    settings: parsedSettings
+      ? {
+          storeName: parsedSettings.storeName,
+          supportEmail: parsedSettings.supportEmail,
+          supportPhone: parsedSettings.supportPhone,
+          lowStockThreshold: parsedSettings.lowStockThreshold,
+          freeShippingThreshold: parsedSettings.freeShippingThreshold,
+          general: parsedSettings.general,
+          payments: parsedSettings.payments,
+          shipping: {
+            freeShippingMin: parsedSettings.shipping.freeShippingMin,
+            standardCharge: parsedSettings.shipping.standardCharge,
+          },
+          appearance: parsedSettings.appearance,
+          seo: parsedSettings.seo,
+        }
+      : null,
     payments: {
-      razorpayEnabled: true,
+      razorpayEnabled: parsedSettings
+        ? parsedSettings.payments.razorpayEnabled !== false
+        : true,
       razorpayMode: 'live',
       razorpayConfigured: true,
     },
@@ -1027,6 +1053,7 @@ export async function sbGetAdminOverview() {
     mktRes,
     clickRes,
     chkRes,
+    rzpCfg,
   ] = await Promise.all([
     sbGetStorefront(true),
     sb.from('orders').select('*').order('placed_at', { ascending: false }).limit(500),
@@ -1042,6 +1069,11 @@ export async function sbGetAdminOverview() {
     sb.from('marketing_attributions').select('*').order('created_at', { ascending: false }).limit(150),
     sb.from('click_events').select('*').order('created_at', { ascending: false }).limit(150),
     sb.from('checkout_events').select('*').order('created_at', { ascending: false }).limit(150),
+    sbGetRazorpayConfig().catch(() => ({
+      razorpayEnabled: true,
+      razorpayMode: 'live',
+      razorpayConfigured: true,
+    })),
   ])
 
   const orderRows = ordRes.data || []
@@ -1098,31 +1130,7 @@ export async function sbGetAdminOverview() {
     createdAt: l.created_at,
   }))
 
-  const settings = settingsRes.data
-    ? {
-        id: settingsRes.data.id,
-        storeName: settingsRes.data.store_name,
-        supportEmail: settingsRes.data.support_email,
-        supportPhone: settingsRes.data.support_phone,
-        lowStockThreshold: settingsRes.data.low_stock_threshold,
-        freeShippingThreshold: settingsRes.data.free_shipping_threshold,
-        razorpayTestMode: settingsRes.data.razorpay_test_mode,
-        courierProvider: settingsRes.data.courier_provider,
-        courierApiEndpoint: settingsRes.data.courier_api_endpoint,
-        courierAutoDispatch: settingsRes.data.courier_auto_dispatch,
-      }
-    : {
-        id: 'default',
-        storeName: 'HARBAN',
-        supportEmail: 'care@harban.in',
-        supportPhone: '+91 98765 43210',
-        lowStockThreshold: 5,
-        freeShippingThreshold: 1500,
-        razorpayTestMode: true,
-        courierProvider: 'Manual / Configurable',
-        courierApiEndpoint: '',
-        courierAutoDispatch: false,
-      }
+  const settings = unpackStoreSettings(settingsRes.data || null)
 
   const supabaseUrl = getBrowserSupabaseUrl()
   return {
@@ -1157,9 +1165,12 @@ export async function sbGetAdminOverview() {
         error: ordRes.error?.message || null,
       },
       razorpay: {
-        enabled: false,
-        mode: 'test',
-        configured: false,
+        enabled:
+          typeof rzpCfg?.razorpayEnabled === 'boolean'
+            ? rzpCfg.razorpayEnabled
+            : true,
+        mode: rzpCfg?.razorpayMode || 'live',
+        configured: Boolean(rzpCfg?.razorpayConfigured ?? true),
       },
     },
   }
@@ -1629,6 +1640,80 @@ export async function sbCreateCustomer(payload: any) {
       createdAt: data.created_at,
     },
   }
+}
+
+export async function sbSaveAdminSettings(payload: Record<string, unknown>) {
+  const sb = getBrowserSupabase()
+  const { data: existing } = await sb
+    .from('store_settings')
+    .select('*')
+    .eq('id', 'default')
+    .maybeSingle()
+
+  const { supabaseRow, merged } = packStoreSettings(payload as any, existing)
+  const { data, error } = await sb
+    .from('store_settings')
+    .upsert(supabaseRow, { onConflict: 'id' })
+    .select()
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message || 'Unable to save settings in Supabase.')
+  }
+  return { settings: data ? unpackStoreSettings(data) : merged }
+}
+
+export async function sbUpdateCustomerRole(
+  uid: string,
+  role: 'admin' | 'customer',
+) {
+  const sb = getBrowserSupabase()
+  const cleanRole = role === 'admin' ? 'admin' : 'customer'
+  const { data: existing, error: fetchErr } = await sb
+    .from('customers')
+    .select('*')
+    .eq('uid', uid)
+    .maybeSingle()
+  if (fetchErr) throw new Error(fetchErr.message)
+  if (!existing) throw new Error('User not found.')
+  if (cleanRole !== 'admin' && isAllowlistedAdminEmail(existing.email)) {
+    throw new Error('Primary allowlisted owner accounts cannot be demoted.')
+  }
+
+  const { data, error } = await sb
+    .from('customers')
+    .update({ role: cleanRole, updated_at: new Date().toISOString() })
+    .eq('uid', uid)
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+
+  return {
+    customer: {
+      id: data.uid,
+      uid: data.uid,
+      email: data.email,
+      name: data.name,
+      phone: data.phone || '',
+      role: data.role,
+      createdAt: data.created_at,
+    },
+  }
+}
+
+export async function sbDeleteCustomer(uid: string) {
+  const sb = getBrowserSupabase()
+  const { data: existing } = await sb
+    .from('customers')
+    .select('email')
+    .eq('uid', uid)
+    .maybeSingle()
+  if (existing && isAllowlistedAdminEmail(existing.email)) {
+    throw new Error('Primary owner account cannot be deleted.')
+  }
+  const { error } = await sb.from('customers').delete().eq('uid', uid)
+  if (error) throw new Error(error.message)
+  return { ok: true }
 }
 
 /* ------------------------------------------- Razorpay via Supabase Edge Fn */
