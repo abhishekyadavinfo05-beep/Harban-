@@ -33,22 +33,13 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
-      - name: Deploy to Firebase Hosting (Service Account Key)
-        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' || secrets.FIREBASE_SERVICE_ACCOUNT_HARBAN_C82E1 != '' }}
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_HARBAN_C82E1 || secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: harban-c82e1
-
-      - name: Authenticate to Google Cloud (Keyless WIF)
-        if: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && secrets.FIREBASE_SERVICE_ACCOUNT == '' && secrets.FIREBASE_SERVICE_ACCOUNT_HARBAN_C82E1 == '' }}
+      - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT || 'firebase-adminsdk-fbsvc@harban-c82e1.iam.gserviceaccount.com' }}
+          service_account: firebase-adminsdk-fbsvc@harban-c82e1.iam.gserviceaccount.com
+          create_credentials_file: true
+          export_environment_variables: true
 
-      - name: Deploy to Firebase Hosting (Keyless WIF)
-        if: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && secrets.FIREBASE_SERVICE_ACCOUNT == '' && secrets.FIREBASE_SERVICE_ACCOUNT_HARBAN_C82E1 == '' }}
+      - name: Deploy to Firebase Hosting (harban.web.app)
         run: npx firebase-tools deploy --only hosting --project harban-c82e1 --non-interactive
