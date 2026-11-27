@@ -4,7 +4,6 @@ import {
   Boxes,
   CheckCircle2,
   Download,
-  Minus,
   Package,
   Pencil,
   Plus,
@@ -14,6 +13,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import Img from '../Img'
+import InlineStockControl from './InlineStockControl'
 import { ORDER_STAGES, formatINR } from '../../store/shop'
 import { matchesSearch } from '../../lib/search'
 
@@ -574,33 +574,20 @@ export function AdminInventorySection({ overview, onUpdateStock, onReload, pushT
                     </span>
                   </td>
                   <td className="py-3 px-3">
-                    <div className="inline-flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onUpdateStock(p.id, Math.max(0, (p.stock ?? 0) - 1))
-                            .then(onReload)
-                            .catch((err) => pushToast(err.message))
+                    <InlineStockControl
+                      stock={p.stock ?? 0}
+                      minusFirst
+                      onSave={async (next) => {
+                        try {
+                          await onUpdateStock(p.id, next)
+                          await onReload()
+                        } catch (err) {
+                          pushToast(
+                            err instanceof Error ? err.message : 'Stock update failed',
+                          )
                         }
-                        className="w-6 h-6 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F9FAFB] grid place-items-center text-[#4B5563] cursor-pointer"
-                      >
-                        <Minus size={11} />
-                      </button>
-                      <span className="min-w-[28px] text-center font-bold tabular-nums text-[#111827]">
-                        {p.stock ?? 0}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onUpdateStock(p.id, (p.stock ?? 0) + 1)
-                            .then(onReload)
-                            .catch((err) => pushToast(err.message))
-                        }
-                        className="w-6 h-6 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F9FAFB] grid place-items-center text-[#4B5563] cursor-pointer"
-                      >
-                        <Plus size={11} />
-                      </button>
-                    </div>
+                      }}
+                    />
                   </td>
                   <td className="py-3 px-3">
                     {(p.stock ?? 0) === 0 ? (

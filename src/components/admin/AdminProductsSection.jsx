@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Download,
   Eye,
-  Minus,
   PauseCircle,
   Pencil,
   Plus,
@@ -23,6 +22,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import Img from '../Img'
+import InlineStockControl from './InlineStockControl'
 import { formatINR } from '../../store/shop'
 import { matchesSearch } from '../../lib/search'
 
@@ -2081,35 +2081,17 @@ export default function AdminProductsSection({
                         className="py-3 px-2.5 whitespace-nowrap"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="inline-flex items-center gap-1.5">
-                          <span
-                            className={`font-bold tabular-nums min-w-[24px] ${
-                              out
-                                ? 'text-[#E11D48]'
-                                : low
-                                  ? 'text-[#D97706]'
-                                  : 'text-[#111827]'
-                            }`}
-                          >
-                            {stockNum}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleQuickStock(p, stockNum - 1)}
-                            className="w-6 h-6 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F9FAFB] grid place-items-center text-[#4B5563] cursor-pointer"
-                            aria-label="Decrease stock"
-                          >
-                            <Minus size={11} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleQuickStock(p, stockNum + 1)}
-                            className="w-6 h-6 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F9FAFB] grid place-items-center text-[#4B5563] cursor-pointer"
-                            aria-label="Increase stock"
-                          >
-                            <Plus size={11} />
-                          </button>
-                        </div>
+                        <InlineStockControl
+                          stock={stockNum}
+                          colorClass={
+                            out
+                              ? 'text-[#E11D48]'
+                              : low
+                                ? 'text-[#D97706]'
+                                : 'text-[#111827]'
+                          }
+                          onSave={(next) => handleQuickStock(p, next)}
+                        />
                       </td>
 
                       <td
