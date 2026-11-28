@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 import { DEFAULT_COURIER_NAMES, DEFAULT_STORE_SETTINGS } from '../../lib/storeSettings'
 
-const OWNER_EMAILS = ['abhishekyadavinfo05@gmail.com', 'care@harban.in']
+const OWNER_EMAILS = ['abhishekyadavinfo05@gmail.com', 'harban.official@gmail.com']
 
 const TIMEZONES = [
   '(GMT+05:30) India Standard Time — Mumbai',
@@ -269,10 +269,10 @@ export function AdminAnalyticsSection({ overview, pushToast }) {
             sub: 'Per non-cancelled order',
           },
         ].map((kpi, idx) => (
-          <div key={idx} className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-2 shadow-2xs">
-            <p className="text-[12.5px] font-semibold text-[#6B7280]">{kpi.title}</p>
+          <div key={idx} className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-2 shadow-2xs">
+            <p className="text-[12.5px] font-semibold text-[#6B7078]">{kpi.title}</p>
             <div className="flex flex-col gap-1">
-              <span className="font-display font-bold text-[24px] text-[#111827] tracking-tight">
+              <span className="font-display font-bold text-[24px] text-[#111315] tracking-tight">
                 {kpi.value}
               </span>
               <span className="text-[11.5px] text-[#15803D] font-medium">{kpi.sub}</span>
@@ -282,13 +282,13 @@ export function AdminAnalyticsSection({ overview, pushToast }) {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
-          <div className="flex items-center justify-between border-b border-[#EAECF0] pb-3">
+        <div className="lg:col-span-2 bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
+          <div className="flex items-center justify-between border-b border-[#E2E4E8] pb-3">
             <div>
-              <h2 className="font-display font-bold text-[16px] text-[#111827]">
+              <h2 className="font-display font-bold text-[16px] text-[#111315]">
                 Sales Revenue Trend
               </h2>
-              <p className="text-[12.5px] text-[#6B7280]">
+              <p className="text-[12.5px] text-[#6B7078]">
                 Recent non-cancelled orders scaled proportionally in ₹.
               </p>
             </div>
@@ -296,14 +296,14 @@ export function AdminAnalyticsSection({ overview, pushToast }) {
               <span className="font-semibold text-[#15803D] bg-[#DCFCE7] px-2.5 py-1 rounded-lg">
                 Online: {paymentBreakdown.onlineCount} (₹{paymentBreakdown.onlineAmt.toLocaleString('en-IN')})
               </span>
-              <span className="font-semibold text-[#374151] bg-[#F3F4F6] px-2.5 py-1 rounded-lg">
+              <span className="font-semibold text-[#374151] bg-[#F1F2F4] px-2.5 py-1 rounded-lg">
                 COD: {paymentBreakdown.codCount} (₹{paymentBreakdown.codAmt.toLocaleString('en-IN')})
               </span>
             </div>
           </div>
 
           {chartOrders.length === 0 ? (
-            <div className="h-56 flex flex-col items-center justify-center text-center text-[#6B7280] text-[13px] bg-[#F9FAFB] rounded-xl border border-dashed border-[#E5E7EB]">
+            <div className="h-56 flex flex-col items-center justify-center text-center text-[#6B7078] text-[13px] bg-[#F7F8FA] rounded-xl border border-dashed border-[#E2E4E8]">
               <BarChart2 size={32} className="text-[#9CA3AF] mb-2" />
               <p>No sales recorded in this period.</p>
               <p className="text-[11.5px] text-[#9CA3AF] mt-0.5">
@@ -311,7 +311,7 @@ export function AdminAnalyticsSection({ overview, pushToast }) {
               </p>
             </div>
           ) : (
-            <div className="h-64 flex items-end justify-between gap-2 pt-8 pb-2 px-3 bg-[#F9FAFB] rounded-xl border border-[#EAECF0]">
+            <div className="h-64 flex items-end justify-between gap-2 pt-8 pb-2 px-3 bg-[#ECEFF3] rounded-xl border border-[#D8DCE2] shadow-[inset_0_2px_5px_rgba(17,19,21,0.06)]">
               {chartOrders.map((o, i) => {
                 const amt = getOrderAmount(o)
                 const pct = Math.max(12, Math.round((amt / maxOrderAmount) * 100))
@@ -329,9 +329,9 @@ export function AdminAnalyticsSection({ overview, pushToast }) {
                   >
                     <div
                       style={{ height: `${pct}%` }}
-                      className="w-full max-w-[44px] bg-gradient-to-t from-[#5B21B6] to-[#7C3AED] rounded-t-lg transition-all group-hover:opacity-90 relative"
+                      className="w-full max-w-[44px] bg-gradient-to-b from-[#34383F] via-[#17191C] to-[#0E1012] border border-black/25 shadow-[5px_8px_14px_rgba(17,19,21,0.24),inset_1px_1px_0_rgba(255,255,255,0.28)] hover:brightness-110 rounded-t-lg transition-all relative"
                     >
-                      <span className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-[#111827] text-white text-[10px] font-semibold px-2 py-0.5 rounded transition whitespace-nowrap z-10 pointer-events-none">
+                      <span className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-gradient-to-b from-[#2B2F36] to-[#121417] text-white border border-white/15 shadow-[0_6px_14px_rgba(14,16,18,0.4)] text-[10px] font-semibold px-2 py-0.5 rounded-md transition whitespace-nowrap z-10 pointer-events-none">
                         ₹{amt.toLocaleString('en-IN')}
                       </span>
                     </div>
@@ -348,12 +348,12 @@ export function AdminAnalyticsSection({ overview, pushToast }) {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
-          <div className="border-b border-[#EAECF0] pb-3">
-            <h2 className="font-display font-bold text-[16px] text-[#111827]">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
+          <div className="border-b border-[#E2E4E8] pb-3">
+            <h2 className="font-display font-bold text-[16px] text-[#111315]">
               Product Performance &amp; Stock
             </h2>
-            <p className="text-[12.5px] text-[#6B7280]">Units sold &amp; live stock catalog.</p>
+            <p className="text-[12.5px] text-[#686E78]">Units sold &amp; live stock catalog.</p>
           </div>
           <div className="space-y-3">
             {products.slice(0, 6).map((p, idx) => {
@@ -422,7 +422,7 @@ export function AdminMarketingSection({
     Boolean(mkt.whatsappConnected),
   )
   const [whatsappNumber, setWhatsappNumber] = useState(
-    mkt.whatsappNumber || '+91 98765 43210',
+    mkt.whatsappNumber || '+91 95551 37346',
   )
   const [saving, setSaving] = useState(false)
 
@@ -434,7 +434,7 @@ export function AdminMarketingSection({
     setMetaAdsConnected(Boolean(next.metaAdsConnected))
     setMetaPageId(next.metaPageId || '')
     setWhatsappConnected(Boolean(next.whatsappConnected))
-    setWhatsappNumber(next.whatsappNumber || '+91 98765 43210')
+    setWhatsappNumber(next.whatsappNumber || '+91 95551 37346')
   }, [overview.settings])
 
   const customers = (overview.customers || []).filter(
@@ -534,55 +534,55 @@ export function AdminMarketingSection({
         <button
           type="button"
           onClick={() => onNavigate?.('discounts')}
-          className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
         >
           <Megaphone size={14} /> Manage Promo Campaigns
         </button>
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-2 shadow-2xs">
-          <p className="text-[12.5px] font-semibold text-[#6B7280]">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-2 shadow-2xs">
+          <p className="text-[12.5px] font-semibold text-[#6B7078]">
             Connected Ad Channels
           </p>
-          <p className="font-display font-bold text-[24px] text-[#111827]">
+          <p className="font-display font-bold text-[24px] text-[#111315]">
             {connectedCount} / 3
           </p>
-          <p className="text-[12px] text-[#6B7280]">
+          <p className="text-[12px] text-[#6B7078]">
             {connectedCount > 0 ? 'Channel settings synced to database' : 'No ad channels connected yet'}
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-2 shadow-2xs">
-          <p className="text-[12.5px] font-semibold text-[#6B7280]">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-2 shadow-2xs">
+          <p className="text-[12.5px] font-semibold text-[#6B7078]">
             Registered Customers
           </p>
-          <p className="font-display font-bold text-[24px] text-[#111827]">
+          <p className="font-display font-bold text-[24px] text-[#111315]">
             {customers.length}
           </p>
-          <p className="text-[12px] text-[#6B7280]">Active customer accounts in DB</p>
+          <p className="text-[12px] text-[#6B7078]">Active customer accounts in DB</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-2 shadow-2xs">
-          <p className="text-[12.5px] font-semibold text-[#6B7280]">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-2 shadow-2xs">
+          <p className="text-[12.5px] font-semibold text-[#6B7078]">
             Active Discount Codes
           </p>
-          <p className="font-display font-bold text-[24px] text-[#111827]">
+          <p className="font-display font-bold text-[24px] text-[#111315]">
             {activeDiscounts.length}
           </p>
-          <p className="text-[12px] text-[#6B7280]">
+          <p className="text-[12px] text-[#6B7078]">
             {attributedOrders.length} UTM-attributed orders recorded
           </p>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
+      <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="font-display font-bold text-[16px] text-[#111827]">
+            <h2 className="font-display font-bold text-[16px] text-[#111315]">
               Advertising &amp; Integration Channels
             </h2>
-            <p className="text-[12.5px] text-[#6B7280]">
+            <p className="text-[12.5px] text-[#6B7078]">
               Enter your live tracking IDs or Business numbers and save to persist across both servers.
             </p>
           </div>
@@ -602,23 +602,23 @@ export function AdminMarketingSection({
                 'Marketing channel IDs saved',
               )
             }
-            className="inline-flex items-center gap-1.5 text-[12px] font-semibold bg-[#111827] hover:bg-[#1F2937] text-white px-3.5 py-2 rounded-xl cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 text-[12px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-3.5 py-2 rounded-xl cursor-pointer disabled:opacity-50"
           >
             <Save size={13} /> {saving ? 'Saving...' : 'Save Channel IDs'}
           </button>
         </div>
 
         <div className="space-y-3 pt-1">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#F9FAFB] rounded-xl border border-[#EAECF0]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#F7F8FA] rounded-xl border border-[#E2E4E8]">
             <div className="space-y-1 flex-1">
-              <p className="font-semibold text-[13.5px] text-[#111827]">
+              <p className="font-semibold text-[13.5px] text-[#111315]">
                 Google Shopping &amp; Ads Tag
               </p>
               <input
                 value={googleAdsId}
                 onChange={(e) => setGoogleAdsId(e.target.value)}
                 placeholder="Enter Google Ads ID (e.g. AW-123456789)"
-                className="w-full max-w-sm bg-white border border-[#E5E7EB] rounded-lg px-3 py-1.5 text-[12.5px] outline-none focus:border-[#5B21B6]"
+                className="w-full max-w-sm bg-white border border-[#E2E4E8] rounded-lg px-3 py-1.5 text-[12.5px] outline-none focus:border-[#16181A]"
               />
             </div>
             <button
@@ -628,23 +628,23 @@ export function AdminMarketingSection({
               className={`text-[12px] font-semibold px-4 py-2 rounded-xl cursor-pointer transition shrink-0 ${
                 googleAdsConnected
                   ? 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]'
-                  : 'bg-[#5B21B6] text-white hover:opacity-95'
+                  : 'bg-[#16181A] text-white hover:bg-[#272A2E]'
               }`}
             >
               {googleAdsConnected ? 'Connected ✓' : 'Connect Google Ads'}
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#F9FAFB] rounded-xl border border-[#EAECF0]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#F7F8FA] rounded-xl border border-[#E2E4E8]">
             <div className="space-y-1 flex-1">
-              <p className="font-semibold text-[13.5px] text-[#111827]">
+              <p className="font-semibold text-[13.5px] text-[#111315]">
                 Meta Ads (Instagram &amp; Facebook Pixel)
               </p>
               <input
                 value={metaPageId}
                 onChange={(e) => setMetaPageId(e.target.value)}
                 placeholder="Enter Meta Pixel / Page ID"
-                className="w-full max-w-sm bg-white border border-[#E5E7EB] rounded-lg px-3 py-1.5 text-[12.5px] outline-none focus:border-[#5B21B6]"
+                className="w-full max-w-sm bg-white border border-[#E2E4E8] rounded-lg px-3 py-1.5 text-[12.5px] outline-none focus:border-[#16181A]"
               />
             </div>
             <button
@@ -654,23 +654,23 @@ export function AdminMarketingSection({
               className={`text-[12px] font-semibold px-4 py-2 rounded-xl cursor-pointer transition shrink-0 ${
                 metaAdsConnected
                   ? 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]'
-                  : 'bg-[#5B21B6] text-white hover:opacity-95'
+                  : 'bg-[#16181A] text-white hover:bg-[#272A2E]'
               }`}
             >
               {metaAdsConnected ? 'Connected ✓' : 'Connect Meta Ads'}
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#F9FAFB] rounded-xl border border-[#EAECF0]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#F7F8FA] rounded-xl border border-[#E2E4E8]">
             <div className="space-y-1 flex-1">
-              <p className="font-semibold text-[13.5px] text-[#111827]">
+              <p className="font-semibold text-[13.5px] text-[#111315]">
                 WhatsApp Business API
               </p>
               <input
                 value={whatsappNumber}
                 onChange={(e) => setWhatsappNumber(e.target.value)}
-                placeholder="+91 98765 43210"
-                className="w-full max-w-sm bg-white border border-[#E5E7EB] rounded-lg px-3 py-1.5 text-[12.5px] outline-none focus:border-[#5B21B6]"
+                placeholder="+91 95551 37346"
+                className="w-full max-w-sm bg-white border border-[#E2E4E8] rounded-lg px-3 py-1.5 text-[12.5px] outline-none focus:border-[#16181A]"
               />
             </div>
             <button
@@ -680,7 +680,7 @@ export function AdminMarketingSection({
               className={`text-[12px] font-semibold px-4 py-2 rounded-xl cursor-pointer transition shrink-0 ${
                 whatsappConnected
                   ? 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]'
-                  : 'bg-[#5B21B6] text-white hover:opacity-95'
+                  : 'bg-[#16181A] text-white hover:bg-[#272A2E]'
               }`}
             >
               {whatsappConnected ? 'Connected ✓' : 'Connect WhatsApp API'}
@@ -690,21 +690,21 @@ export function AdminMarketingSection({
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5">
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3 shadow-2xs">
-          <div className="flex items-center justify-between border-b border-[#EAECF0] pb-2.5">
-            <h3 className="font-display font-bold text-[15px] text-[#111827]">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-3 shadow-2xs">
+          <div className="flex items-center justify-between border-b border-[#E2E4E8] pb-2.5">
+            <h3 className="font-display font-bold text-[15px] text-[#111315]">
               Live Promo Codes
             </h3>
             <button
               type="button"
               onClick={() => onNavigate?.('discounts')}
-              className="text-[12px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
+              className="text-[12px] font-semibold text-[#111315] hover:underline cursor-pointer"
             >
               Open Discounts →
             </button>
           </div>
           {discounts.length === 0 ? (
-            <p className="text-[12.5px] text-[#6B7280] py-4 text-center">
+            <p className="text-[12.5px] text-[#6B7078] py-4 text-center">
               No discount codes configured yet. Create one in Discounts.
             </p>
           ) : (
@@ -712,10 +712,10 @@ export function AdminMarketingSection({
               {discounts.slice(0, 5).map((d) => (
                 <div key={d.id} className="py-2.5 flex items-center justify-between">
                   <div>
-                    <p className="font-mono font-bold text-[13px] text-[#111827]">
+                    <p className="font-mono font-bold text-[13px] text-[#111315]">
                       {d.code}
                     </p>
-                    <p className="text-[11.5px] text-[#6B7280]">
+                    <p className="text-[11.5px] text-[#6B7078]">
                       {d.discountType === 'fixed' ? `₹${d.value} off` : `${d.value}% off`} · Used {d.usedCount ?? 0} times
                     </p>
                   </div>
@@ -723,7 +723,7 @@ export function AdminMarketingSection({
                     className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
                       d.isActive !== false
                         ? 'bg-[#DCFCE7] text-[#15803D]'
-                        : 'bg-[#F3F4F6] text-[#6B7280]'
+                        : 'bg-[#F1F2F4] text-[#6B7078]'
                     }`}
                   >
                     {d.isActive !== false ? 'Active' : 'Paused'}
@@ -734,8 +734,8 @@ export function AdminMarketingSection({
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3 shadow-2xs">
-          <div className="border-b border-[#EAECF0] pb-2.5">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-3 shadow-2xs">
+          <div className="border-b border-[#E2E4E8] pb-2.5">
             <h3 className="font-display font-bold text-[15px] text-[#111827]">
               UTM Campaign Attributions
             </h3>
@@ -1011,7 +1011,7 @@ export function AdminReportsSection({ overview, pushToast }) {
         <button
           type="button"
           onClick={handleDownloadAll}
-          className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-[#5B21B6] hover:bg-[#4C1D95] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
         >
           <Download size={14} /> Download All Reports (CSV)
         </button>
@@ -1021,25 +1021,25 @@ export function AdminReportsSection({ overview, pushToast }) {
         {reports.map((rep) => (
           <div
             key={rep.key}
-            className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3 shadow-2xs flex flex-col justify-between"
+            className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-3 shadow-2xs flex flex-col justify-between"
           >
             <div className="space-y-1">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="font-display font-bold text-[15px] text-[#111827]">
+                <h3 className="font-display font-bold text-[15px] text-[#111315]">
                   {rep.title}
                 </h3>
-                <span className="text-[11px] font-semibold bg-[#F5F3FF] text-[#5B21B6] px-2.5 py-0.5 rounded-md shrink-0">
+                <span className="text-[11px] font-semibold bg-[#F1F2F4] text-[#111315] border border-[#E2E4E8] px-2.5 py-0.5 rounded-md shrink-0">
                   {rep.count}
                 </span>
               </div>
-              <p className="text-[12.5px] text-[#6B7280]">{rep.desc}</p>
+              <p className="text-[12.5px] text-[#6B7078]">{rep.desc}</p>
             </div>
-            <div className="flex items-center justify-between pt-3 border-t border-[#EAECF0]">
+            <div className="flex items-center justify-between pt-3 border-t border-[#E2E4E8]">
               <span className="text-[11.5px] text-[#9CA3AF]">Live from Database</span>
               <button
                 type="button"
                 onClick={() => handleDownloadSingle(rep.key)}
-                className="text-[12px] font-semibold text-[#5B21B6] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-[12px] font-semibold text-[#111315] hover:underline flex items-center gap-1 cursor-pointer"
               >
                 Download CSV <ArrowUpRight size={13} />
               </button>
@@ -1110,11 +1110,11 @@ export function AdminSettingsSection({
 
   // General
   const [storeName, setStoreName] = useState(s.storeName || 'HARBAN')
-  const [storeEmail, setStoreEmail] = useState(s.supportEmail || 'care@harban.in')
+  const [storeEmail, setStoreEmail] = useState(s.supportEmail || 'harban.official@gmail.com')
   const [storeUrl, setStoreUrl] = useState(
     s.general?.storeUrl || 'https://harban.web.app',
   )
-  const [supportPhone, setSupportPhone] = useState(s.supportPhone || '+91 98765 43210')
+  const [supportPhone, setSupportPhone] = useState(s.supportPhone || '+91 95551 37346')
   const [currency, setCurrency] = useState(s.general?.currency || 'INR')
   const [timezone, setTimezone] = useState(
     s.general?.timezone || '(GMT+05:30) India Standard Time — Mumbai',
@@ -1166,7 +1166,7 @@ export function AdminSettingsSection({
     s.notifications?.whatsappUpdates !== false,
   )
   const [adminAlertEmail, setAdminAlertEmail] = useState(
-    s.notifications?.adminAlertEmail || s.supportEmail || 'care@harban.in',
+    s.notifications?.adminAlertEmail || s.supportEmail || 'harban.official@gmail.com',
   )
 
   // Appearance
@@ -1207,8 +1207,8 @@ export function AdminSettingsSection({
     const src = overview.settings
     if (!src) return
     setStoreName(src.storeName || 'HARBAN')
-    setStoreEmail(src.supportEmail || 'care@harban.in')
-    setSupportPhone(src.supportPhone || '+91 98765 43210')
+    setStoreEmail(src.supportEmail || 'harban.official@gmail.com')
+    setSupportPhone(src.supportPhone || '+91 95551 37346')
     setLowStockThreshold(String(src.lowStockThreshold ?? 5))
     setCourierAutoDispatch(Boolean(src.courierAutoDispatch))
 
@@ -1248,7 +1248,7 @@ export function AdminSettingsSection({
       setNotifSms(src.notifications.smsAlerts !== false)
       setNotifWhatsapp(src.notifications.whatsappUpdates !== false)
       setAdminAlertEmail(
-        src.notifications.adminAlertEmail || src.supportEmail || 'care@harban.in',
+        src.notifications.adminAlertEmail || src.supportEmail || 'harban.official@gmail.com',
       )
     }
     if (src.appearance) {
@@ -1274,7 +1274,7 @@ export function AdminSettingsSection({
 
     return {
       storeName: storeName.trim() || 'HARBAN',
-      supportEmail: storeEmail.trim() || 'care@harban.in',
+      supportEmail: storeEmail.trim() || 'harban.official@gmail.com',
       supportPhone: supportPhone.trim(),
       lowStockThreshold: lowStockNum,
       freeShippingThreshold: freeMinNum,
@@ -1524,7 +1524,7 @@ export function AdminSettingsSection({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer disabled:opacity-60"
           >
             <Save size={14} /> {saving ? 'Saving...' : 'Save Changes'}
           </button>
@@ -1532,7 +1532,7 @@ export function AdminSettingsSection({
       </div>
 
       <div className="grid lg:grid-cols-[260px_1fr] gap-5 items-start">
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-2 space-y-0.5 shadow-2xs">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-2 space-y-0.5 shadow-2xs">
           {SETTING_TABS.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
@@ -1543,12 +1543,12 @@ export function AdminSettingsSection({
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition cursor-pointer ${
                   isActive
-                    ? 'bg-[#F5F3FF] text-[#5B21B6]'
-                    : 'text-[#4B5563] hover:bg-[#F9FAFB] hover:text-[#111827]'
+                    ? 'bg-[#16181A] text-white'
+                    : 'text-[#4B5563] hover:bg-[#F7F8FA] hover:text-[#111315]'
                 }`}
               >
                 <span className="flex items-center gap-2.5 truncate">
-                  <Icon size={16} className={isActive ? 'text-[#5B21B6]' : 'text-[#6B7280]'} />
+                  <Icon size={16} className={isActive ? 'text-white' : 'text-[#6B7078]'} />
                   <span className="truncate">{tab.label}</span>
                 </span>
               </button>
@@ -1558,12 +1558,12 @@ export function AdminSettingsSection({
 
         <div className="space-y-4">
           {activeTab === 'general' && (
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-5 shadow-2xs">
-              <div className="border-b border-[#EAECF0] pb-3">
-                <h2 className="font-display font-bold text-[16px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-5 shadow-2xs">
+              <div className="border-b border-[#E2E4E8] pb-3">
+                <h2 className="font-display font-bold text-[16px] text-[#111315]">
                   General Settings
                 </h2>
-                <p className="text-[12.5px] text-[#6B7280]">
+                <p className="text-[12.5px] text-[#6B7078]">
                   Configure your basic store details and localization.
                 </p>
               </div>
@@ -1576,7 +1576,7 @@ export function AdminSettingsSection({
                   <input
                     value={storeName}
                     onChange={(e) => setStoreName(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -1586,7 +1586,7 @@ export function AdminSettingsSection({
                   <input
                     value={storeEmail}
                     onChange={(e) => setStoreEmail(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                   />
                 </div>
               </div>
@@ -1599,7 +1599,7 @@ export function AdminSettingsSection({
                   <input
                     value={storeUrl}
                     onChange={(e) => setStoreUrl(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -1609,7 +1609,7 @@ export function AdminSettingsSection({
                   <input
                     value={supportPhone}
                     onChange={(e) => setSupportPhone(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                   />
                 </div>
               </div>
@@ -1622,7 +1622,7 @@ export function AdminSettingsSection({
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm outline-none"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2.5 text-sm outline-none"
                   >
                     <option value="INR">INR — Indian Rupee (₹)</option>
                     <option value="USD">USD — US Dollar ($)</option>
@@ -1635,7 +1635,7 @@ export function AdminSettingsSection({
                   <select
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm outline-none"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2.5 text-sm outline-none"
                   >
                     {TIMEZONES.map((tz) => (
                       <option key={tz} value={tz}>
@@ -1651,7 +1651,7 @@ export function AdminSettingsSection({
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm outline-none"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2.5 text-sm outline-none"
                   >
                     <option value="English">English</option>
                     <option value="Hindi">Hindi (हिंदी)</option>
@@ -1659,10 +1659,10 @@ export function AdminSettingsSection({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-[#EAECF0]">
+              <div className="flex items-center justify-between pt-2 border-t border-[#E2E4E8]">
                 <div>
-                  <p className="font-semibold text-[13.5px] text-[#111827]">Store Status</p>
-                  <p className="text-[12px] text-[#6B7280]">
+                  <p className="font-semibold text-[13.5px] text-[#111315]">Store Status</p>
+                  <p className="text-[12px] text-[#6B7078]">
                     {storeStatus
                       ? 'Your store is currently live and accepting orders.'
                       : 'Store is currently paused (maintenance flag saved).'}
@@ -1675,19 +1675,19 @@ export function AdminSettingsSection({
                     onChange={(e) => setStoreStatus(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5B21B6]" />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16181A]" />
                 </label>
               </div>
             </div>
           )}
 
           {activeTab === 'store_info' && (
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
-              <div className="border-b border-[#EAECF0] pb-3">
-                <h2 className="font-display font-bold text-[16px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
+              <div className="border-b border-[#E2E4E8] pb-3">
+                <h2 className="font-display font-bold text-[16px] text-[#111315]">
                   Store Information &amp; Address
                 </h2>
-                <p className="text-[12.5px] text-[#6B7280]">
+                <p className="text-[12.5px] text-[#6B7078]">
                   Business registration and physical operating address for invoices and labels.
                 </p>
               </div>
@@ -1699,7 +1699,7 @@ export function AdminSettingsSection({
                   <input
                     value={addressLine1}
                     onChange={(e) => setAddressLine1(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -1709,7 +1709,7 @@ export function AdminSettingsSection({
                   <input
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                   />
                 </div>
               </div>
@@ -1721,7 +1721,7 @@ export function AdminSettingsSection({
                   <input
                     value={stateName}
                     onChange={(e) => setStateName(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -1731,7 +1731,7 @@ export function AdminSettingsSection({
                   <input
                     value={pincode}
                     onChange={(e) => setPincode(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -1741,7 +1741,7 @@ export function AdminSettingsSection({
                   <input
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                   />
                 </div>
               </div>
@@ -1753,15 +1753,15 @@ export function AdminSettingsSection({
                   value={gstin}
                   onChange={(e) => setGstin(e.target.value)}
                   placeholder="27AABCH0000A1Z5"
-                  className="w-full max-w-sm bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none uppercase font-mono focus:border-[#5B21B6]"
+                  className="w-full max-w-sm bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none uppercase font-mono focus:border-[#16181A]"
                 />
               </div>
             </div>
           )}
 
           {activeTab === 'payments' && (
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-5 shadow-2xs">
-              <div className="border-b border-[#EAECF0] pb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-5 shadow-2xs">
+              <div className="border-b border-[#E2E4E8] pb-3 flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-[#111827]">
                     Payment Gateways
@@ -1782,13 +1782,13 @@ export function AdminSettingsSection({
                 </span>
               </div>
 
-              <div className="bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-4 space-y-3">
+              <div className="bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-display font-bold text-[15px] text-[#111827]">
+                    <span className="font-display font-bold text-[15px] text-[#111315]">
                       Razorpay
                     </span>
-                    <span className="text-[11px] bg-[#0C1B2E] text-white px-2 py-0.5 rounded font-mono">
+                    <span className="text-[11px] bg-[#16181A] text-white px-2 py-0.5 rounded font-mono">
                       {isLiveMode ? 'Live Mode' : 'Test Mode'}
                     </span>
                   </div>
@@ -1799,24 +1799,24 @@ export function AdminSettingsSection({
                       onChange={(e) => setRazorpayEnabled(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1D5CAD]" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16181A]" />
                   </label>
                 </div>
 
-                <div className="rounded-lg bg-white border border-[#E5E7EB] p-3.5 text-[12.5px] text-[#374151] space-y-1.5">
-                  <p className="font-semibold text-[#111827]">
+                <div className="rounded-lg bg-white border border-[#E2E4E8] p-3.5 text-[12.5px] text-[#374151] space-y-1.5">
+                  <p className="font-semibold text-[#111315]">
                     {isConfigured
                       ? 'Razorpay live credentials are connected and active on your domain.'
                       : 'Set server-side Razorpay keys in Edge Function / server environment.'}
                   </p>
-                  <p className="font-mono text-[11.5px] text-[#6B7280]">
+                  <p className="font-mono text-[11.5px] text-[#6B7078]">
                     RAZORPAY_KEY_ID · RAZORPAY_KEY_SECRET · RAZORPAY_MODE={isLiveMode ? 'live' : 'test'}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-2.5 pt-2">
-                <p className="font-display font-bold text-[13.5px] text-[#111827]">
+                <p className="font-display font-bold text-[13.5px] text-[#111315]">
                   Checkout Payment Methods
                 </p>
                 {[
@@ -1843,9 +1843,9 @@ export function AdminSettingsSection({
                 ].map((pm) => (
                   <div
                     key={pm.name}
-                    className="flex items-center justify-between bg-[#F9FAFB] border border-[#EAECF0] rounded-xl px-4 py-3"
+                    className="flex items-center justify-between bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-4 py-3"
                   >
-                    <span className="text-[13px] font-medium text-[#111827]">{pm.name}</span>
+                    <span className="text-[13px] font-medium text-[#111315]">{pm.name}</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
@@ -1853,7 +1853,7 @@ export function AdminSettingsSection({
                         onChange={(e) => pm.setActive(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5B21B6]" />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#16181A]" />
                     </label>
                   </div>
                 ))}
@@ -1862,12 +1862,12 @@ export function AdminSettingsSection({
           )}
 
           {activeTab === 'shipping' && (
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
-              <div className="border-b border-[#EAECF0] pb-3">
-                <h2 className="font-display font-bold text-[16px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
+              <div className="border-b border-[#E2E4E8] pb-3">
+                <h2 className="font-display font-bold text-[16px] text-[#111315]">
                   Shipping &amp; Delivery Rules
                 </h2>
-                <p className="text-[12.5px] text-[#6B7280]">
+                <p className="text-[12.5px] text-[#6B7078]">
                   Configure live cart/checkout free shipping threshold and delivery courier integrations.
                 </p>
               </div>
@@ -1882,7 +1882,7 @@ export function AdminSettingsSection({
                     min="0"
                     value={freeShippingMin}
                     onChange={(e) => setFreeShippingMin(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none tabular-nums focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none tabular-nums focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -1894,17 +1894,17 @@ export function AdminSettingsSection({
                     min="0"
                     value={standardCharge}
                     onChange={(e) => setStandardCharge(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none tabular-nums focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none tabular-nums focus:border-[#16181A]"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between bg-[#F9FAFB] border border-[#EAECF0] rounded-xl px-4 py-3">
+              <div className="flex items-center justify-between bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-4 py-3">
                 <div>
-                  <p className="text-[13px] font-semibold text-[#111827]">
+                  <p className="text-[13px] font-semibold text-[#111315]">
                     Auto-Dispatch Confirmed Orders
                   </p>
-                  <p className="text-[11.5px] text-[#6B7280]">
+                  <p className="text-[11.5px] text-[#6B7078]">
                     Automatically queue confirmed orders for your active courier partner.
                   </p>
                 </div>
@@ -1915,15 +1915,15 @@ export function AdminSettingsSection({
                     onChange={(e) => setCourierAutoDispatch(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5B21B6]" />
+                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#16181A]" />
                 </label>
               </div>
 
               <div className="space-y-2.5 pt-2">
-                <p className="font-display font-bold text-[13.5px] text-[#111827]">
+                <p className="font-display font-bold text-[13.5px] text-[#111315]">
                   Courier Partner Integrations
                 </p>
-                <p className="text-[12px] text-[#6B7280]">
+                <p className="text-[12px] text-[#6B7078]">
                   Enter partner API token if available and click Connect to persist in database.
                 </p>
                 {[
@@ -1936,13 +1936,13 @@ export function AdminSettingsSection({
                   return (
                     <div
                       key={c.name}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F9FAFB] border border-[#EAECF0] rounded-xl px-4 py-3.5"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-4 py-3.5"
                     >
                       <div className="space-y-1 flex-1">
-                        <p className="text-[13.5px] font-semibold text-[#111827]">
+                        <p className="text-[13.5px] font-semibold text-[#111315]">
                           {c.name}
                         </p>
-                        <p className="text-[12px] text-[#6B7280]">
+                        <p className="text-[12px] text-[#6B7078]">
                           {cfg.connected
                             ? 'Connected — Active & persisted'
                             : `${c.desc} — Disconnected`}
@@ -1956,7 +1956,7 @@ export function AdminSettingsSection({
                             }))
                           }
                           placeholder={`${c.name} API key / client token (optional)`}
-                          className="w-full max-w-sm bg-white border border-[#E5E7EB] rounded-lg px-3 py-1.5 text-[12px] outline-none focus:border-[#5B21B6]"
+                          className="w-full max-w-sm bg-white border border-[#E2E4E8] rounded-lg px-3 py-1.5 text-[12px] outline-none focus:border-[#16181A]"
                         />
                       </div>
                       <button
@@ -1966,7 +1966,7 @@ export function AdminSettingsSection({
                         className={`text-[12px] font-semibold px-4 py-2 rounded-xl cursor-pointer transition shrink-0 ${
                           cfg.connected
                             ? 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]'
-                            : 'bg-[#5B21B6] text-white hover:opacity-95'
+                            : 'bg-[#16181A] text-white hover:bg-[#272A2E]'
                         }`}
                       >
                         {cfg.connected ? 'Connected ✓' : 'Connect'}
@@ -1979,24 +1979,24 @@ export function AdminSettingsSection({
           )}
 
           {activeTab === 'users' && (
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
-              <div className="border-b border-[#EAECF0] pb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
+              <div className="border-b border-[#E2E4E8] pb-3 flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h2 className="font-display font-bold text-[16px] text-[#111827]">
+                  <h2 className="font-display font-bold text-[16px] text-[#111315]">
                     Users &amp; Admin Roles
                   </h2>
-                  <p className="text-[12.5px] text-[#6B7280]">
+                  <p className="text-[12.5px] text-[#6B7078]">
                     Add team members, promote customers to admins, or revoke permissions.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[12px] font-bold bg-[#F3E8FF] text-[#6D28D9] px-3 py-1 rounded-xl">
+                  <span className="text-[12px] font-bold bg-[#E5FC6B] text-[#141700] px-3 py-1 rounded-xl">
                     {visibleAccounts.filter((c) => c.role === 'admin').length} Admins
                   </span>
                   <button
                     type="button"
                     onClick={() => setShowAddUser((v) => !v)}
-                    className="inline-flex items-center gap-1.5 text-[12px] font-semibold bg-[#5B21B6] text-white px-3.5 py-1.5 rounded-xl cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-[12px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-3.5 py-1.5 rounded-xl cursor-pointer"
                   >
                     <Plus size={13} /> Add User
                   </button>
@@ -2022,9 +2022,9 @@ export function AdminSettingsSection({
               {showAddUser && (
                 <form
                   onSubmit={handleAddUser}
-                  className="bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-4 space-y-3"
+                  className="bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl p-4 space-y-3"
                 >
-                  <p className="font-semibold text-[13px] text-[#111827]">
+                  <p className="font-semibold text-[13px] text-[#111315]">
                     Add Team Member / Customer
                   </p>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -2033,7 +2033,7 @@ export function AdminSettingsSection({
                       value={newUserName}
                       onChange={(e) => setNewUserName(e.target.value)}
                       placeholder="Full Name *"
-                      className="bg-white border border-[#E5E7EB] rounded-lg px-3 py-2 text-[12.5px] outline-none"
+                      className="bg-white border border-[#E2E4E8] rounded-lg px-3 py-2 text-[12.5px] outline-none"
                     />
                     <input
                       required
@@ -2041,18 +2041,18 @@ export function AdminSettingsSection({
                       value={newUserEmail}
                       onChange={(e) => setNewUserEmail(e.target.value)}
                       placeholder="Email Address *"
-                      className="bg-white border border-[#E5E7EB] rounded-lg px-3 py-2 text-[12.5px] outline-none"
+                      className="bg-white border border-[#E2E4E8] rounded-lg px-3 py-2 text-[12.5px] outline-none"
                     />
                     <input
                       value={newUserPhone}
                       onChange={(e) => setNewUserPhone(e.target.value)}
                       placeholder="Phone (optional)"
-                      className="bg-white border border-[#E5E7EB] rounded-lg px-3 py-2 text-[12.5px] outline-none"
+                      className="bg-white border border-[#E2E4E8] rounded-lg px-3 py-2 text-[12.5px] outline-none"
                     />
                     <select
                       value={newUserRole}
                       onChange={(e) => setNewUserRole(e.target.value)}
-                      className="bg-white border border-[#E5E7EB] rounded-lg px-3 py-2 text-[12.5px] outline-none"
+                      className="bg-white border border-[#E2E4E8] rounded-lg px-3 py-2 text-[12.5px] outline-none"
                     >
                       <option value="admin">Administrator</option>
                       <option value="customer">Customer</option>
@@ -2062,14 +2062,14 @@ export function AdminSettingsSection({
                     <button
                       type="submit"
                       disabled={userBusyUid === 'new'}
-                      className="bg-[#5B21B6] text-white text-[12px] font-semibold px-4 py-1.5 rounded-lg cursor-pointer disabled:opacity-50"
+                      className="bg-[#16181A] hover:bg-[#272A2E] text-white text-[12px] font-semibold px-4 py-1.5 rounded-lg cursor-pointer disabled:opacity-50"
                     >
                       {userBusyUid === 'new' ? 'Adding...' : 'Create User'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowAddUser(false)}
-                      className="text-[12px] text-[#6B7280] px-3 py-1.5 cursor-pointer"
+                      className="text-[12px] text-[#6B7078] px-3 py-1.5 cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -2086,13 +2086,13 @@ export function AdminSettingsSection({
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
                   placeholder="Search admins or customers by name or email..."
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl pl-9 pr-3.5 py-2 text-[12.5px] outline-none focus:border-[#5B21B6]"
+                  className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl pl-9 pr-3.5 py-2 text-[12.5px] outline-none focus:border-[#16181A]"
                 />
               </div>
 
-              <div className="divide-y divide-[#EAECF0]">
+              <div className="divide-y divide-[#E2E4E8]">
                 {visibleAccounts.length === 0 ? (
-                  <p className="py-6 text-center text-[13px] text-[#6B7280]">
+                  <p className="py-6 text-center text-[13px] text-[#6B7078]">
                     No matching users found.
                   </p>
                 ) : (
@@ -2108,7 +2108,7 @@ export function AdminSettingsSection({
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="font-semibold text-[13px] text-[#111827] truncate">
+                            <p className="font-semibold text-[13px] text-[#111315] truncate">
                               {acc.name}
                             </p>
                             {isOwner && (
@@ -2117,7 +2117,7 @@ export function AdminSettingsSection({
                               </span>
                             )}
                           </div>
-                          <p className="text-[11.5px] text-[#6B7280] truncate">
+                          <p className="text-[11.5px] text-[#6B7078] truncate">
                             {acc.email} {acc.phone ? `· ${acc.phone}` : ''}
                           </p>
                         </div>
@@ -2126,8 +2126,8 @@ export function AdminSettingsSection({
                           <span
                             className={`text-[11px] font-bold px-2.5 py-0.5 rounded ${
                               isAdmin
-                                ? 'bg-[#6D28D9] text-white'
-                                : 'bg-[#F3F4F6] text-[#374151]'
+                                ? 'bg-[#16181A] text-white'
+                                : 'bg-[#F1F2F4] text-[#374151]'
                             }`}
                           >
                             {isAdmin ? 'Administrator' : 'Customer'}
@@ -2169,12 +2169,12 @@ export function AdminSettingsSection({
           )}
 
           {activeTab === 'notifications' && (
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
-              <div className="border-b border-[#EAECF0] pb-3">
-                <h2 className="font-display font-bold text-[16px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
+              <div className="border-b border-[#E2E4E8] pb-3">
+                <h2 className="font-display font-bold text-[16px] text-[#111315]">
                   Notifications &amp; Alerts
                 </h2>
-                <p className="text-[12.5px] text-[#6B7280]">
+                <p className="text-[12.5px] text-[#6B7078]">
                   Configure automated customer notifications and admin order alerts.
                 </p>
               </div>
@@ -2198,9 +2198,9 @@ export function AdminSettingsSection({
                 ].map((item) => (
                   <div
                     key={item.label}
-                    className="flex items-center justify-between bg-[#F9FAFB] border border-[#EAECF0] rounded-xl px-4 py-3"
+                    className="flex items-center justify-between bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-4 py-3"
                   >
-                    <span className="text-[13px] font-medium text-[#111827]">
+                    <span className="text-[13px] font-medium text-[#111315]">
                       {item.label}
                     </span>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -2210,7 +2210,7 @@ export function AdminSettingsSection({
                         onChange={(e) => item.set(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5B21B6]" />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16181A]" />
                     </label>
                   </div>
                 ))}
@@ -2223,20 +2223,20 @@ export function AdminSettingsSection({
                   type="email"
                   value={adminAlertEmail}
                   onChange={(e) => setAdminAlertEmail(e.target.value)}
-                  className="w-full max-w-sm bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                  className="w-full max-w-sm bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                 />
               </div>
             </div>
           )}
 
           {activeTab === 'appearance' && (
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
-              <div className="border-b border-[#EAECF0] pb-3 flex items-center justify-between">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
+              <div className="border-b border-[#E2E4E8] pb-3 flex items-center justify-between">
                 <div>
-                  <h2 className="font-display font-bold text-[16px] text-[#111827]">
+                  <h2 className="font-display font-bold text-[16px] text-[#111315]">
                     Storefront Appearance
                   </h2>
-                  <p className="text-[12.5px] text-[#6B7280]">
+                  <p className="text-[12.5px] text-[#6B7078]">
                     Customize brand primary and accent theme colors persisted across sessions.
                   </p>
                 </div>
@@ -2246,7 +2246,7 @@ export function AdminSettingsSection({
                     setPrimaryColor('#0C1B2E')
                     setAccentColor('#1D5CAD')
                   }}
-                  className="text-[12px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
+                  className="text-[12px] font-semibold text-[#111315] hover:underline cursor-pointer"
                 >
                   Reset Defaults
                 </button>
@@ -2261,12 +2261,12 @@ export function AdminSettingsSection({
                       type="color"
                       value={primaryColor}
                       onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="w-11 h-10 rounded-lg border border-[#E5E7EB] cursor-pointer bg-white p-0.5"
+                      className="w-11 h-10 rounded-lg border border-[#E2E4E8] cursor-pointer bg-white p-0.5"
                     />
                     <input
                       value={primaryColor}
                       onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="flex-1 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm font-mono uppercase outline-none"
+                      className="flex-1 bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-sm font-mono uppercase outline-none"
                     />
                   </div>
                 </div>
@@ -2279,17 +2279,17 @@ export function AdminSettingsSection({
                       type="color"
                       value={accentColor}
                       onChange={(e) => setAccentColor(e.target.value)}
-                      className="w-11 h-10 rounded-lg border border-[#E5E7EB] cursor-pointer bg-white p-0.5"
+                      className="w-11 h-10 rounded-lg border border-[#E2E4E8] cursor-pointer bg-white p-0.5"
                     />
                     <input
                       value={accentColor}
                       onChange={(e) => setAccentColor(e.target.value)}
-                      className="flex-1 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm font-mono uppercase outline-none"
+                      className="flex-1 bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-sm font-mono uppercase outline-none"
                     />
                   </div>
                 </div>
               </div>
-              <div className="rounded-xl border border-[#EAECF0] p-4 flex items-center justify-between gap-4 bg-[#F9FAFB]">
+              <div className="rounded-xl border border-[#E2E4E8] p-4 flex items-center justify-between gap-4 bg-[#F7F8FA]">
                 <div className="flex items-center gap-3">
                   <span
                     className="w-9 h-9 rounded-xl border border-black/10"
@@ -2300,10 +2300,10 @@ export function AdminSettingsSection({
                     style={{ backgroundColor: accentColor }}
                   />
                   <div>
-                    <p className="text-[13px] font-semibold text-[#111827]">
+                    <p className="text-[13px] font-semibold text-[#111315]">
                       Theme Preview ({storeName})
                     </p>
-                    <p className="text-[11.5px] text-[#6B7280]">
+                    <p className="text-[11.5px] text-[#6B7078]">
                       Saved colors apply as CSS variables (--harban-primary, --harban-accent).
                     </p>
                   </div>
@@ -2319,12 +2319,12 @@ export function AdminSettingsSection({
           )}
 
           {activeTab === 'seo' && (
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
-              <div className="border-b border-[#EAECF0] pb-3">
-                <h2 className="font-display font-bold text-[16px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
+              <div className="border-b border-[#E2E4E8] pb-3">
+                <h2 className="font-display font-bold text-[16px] text-[#111315]">
                   SEO &amp; Analytics Metadata
                 </h2>
-                <p className="text-[12.5px] text-[#6B7280]">
+                <p className="text-[12.5px] text-[#6B7078]">
                   Optimize document title, meta description, and analytics measurement IDs.
                 </p>
               </div>
@@ -2335,7 +2335,7 @@ export function AdminSettingsSection({
                 <input
                   value={metaTitle}
                   onChange={(e) => setMetaTitle(e.target.value)}
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#5B21B6]"
+                  className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#16181A]"
                 />
               </div>
               <div>
@@ -2346,7 +2346,7 @@ export function AdminSettingsSection({
                   rows={2}
                   value={metaDesc}
                   onChange={(e) => setMetaDesc(e.target.value)}
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm outline-none resize-none focus:border-[#5B21B6]"
+                  className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-sm outline-none resize-none focus:border-[#16181A]"
                 />
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -2358,7 +2358,7 @@ export function AdminSettingsSection({
                     value={gaMeasurementId}
                     onChange={(e) => setGaMeasurementId(e.target.value)}
                     placeholder="G-XXXXXXXXXX"
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm font-mono outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm font-mono outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -2369,7 +2369,7 @@ export function AdminSettingsSection({
                     value={metaPixelId}
                     onChange={(e) => setMetaPixelId(e.target.value)}
                     placeholder="123456789012345"
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm font-mono outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-sm font-mono outline-none focus:border-[#16181A]"
                   />
                 </div>
               </div>
@@ -2377,29 +2377,29 @@ export function AdminSettingsSection({
           )}
 
           {activeTab === 'integrations' && (
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
-              <div className="border-b border-[#EAECF0] pb-3">
-                <h2 className="font-display font-bold text-[16px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
+              <div className="border-b border-[#E2E4E8] pb-3">
+                <h2 className="font-display font-bold text-[16px] text-[#111315]">
                   Integrations &amp; APIs
                 </h2>
-                <p className="text-[12.5px] text-[#6B7280]">
+                <p className="text-[12.5px] text-[#6B7078]">
                   Supabase database sync and Razorpay live payment gateway status.
                 </p>
               </div>
-              <div className="bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="space-y-1">
-                  <p className="font-semibold text-[13.5px] text-[#111827]">
+                  <p className="font-semibold text-[13.5px] text-[#111315]">
                     Supabase Cloud Sync
                   </p>
-                  <p className="text-[12px] text-[#6B7280]">
+                  <p className="text-[12px] text-[#6B7078]">
                     Project:{' '}
-                    <code className="text-[#5B21B6] font-mono">
+                    <code className="text-[#111315] font-semibold font-mono">
                       {sb.projectId || 'yynubnoijafkzcengteb'}
                     </code>{' '}
                     · Schema: {sb.schemaReady !== false ? 'Ready' : 'Pending'}
                   </p>
                   {sb.counts && (
-                    <p className="text-[11.5px] text-[#6B7280]">
+                    <p className="text-[11.5px] text-[#6B7078]">
                       Products: {sb.counts.products ?? 0} · Categories:{' '}
                       {sb.counts.categories ?? 0} · Orders: {sb.counts.orders ?? 0} · Customers:{' '}
                       {sb.counts.customers ?? 0}
@@ -2410,18 +2410,18 @@ export function AdminSettingsSection({
                   type="button"
                   onClick={onSyncSupabase}
                   disabled={syncingSupabase}
-                  className="bg-[#5B21B6] hover:bg-[#4C1D95] text-white text-[12px] font-semibold px-4 py-2 rounded-xl cursor-pointer disabled:opacity-50"
+                  className="bg-[#16181A] hover:bg-[#272A2E] text-white text-[12px] font-semibold px-4 py-2 rounded-xl cursor-pointer disabled:opacity-50"
                 >
                   {syncingSupabase ? 'Syncing...' : 'Sync Now'}
                 </button>
               </div>
 
-              <div className="bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="space-y-0.5">
-                  <p className="font-semibold text-[13.5px] text-[#111827]">
+                  <p className="font-semibold text-[13.5px] text-[#111315]">
                     Razorpay Live Checkout
                   </p>
-                  <p className="text-[12px] text-[#6B7280]">
+                  <p className="text-[12px] text-[#6B7078]">
                     Status: {isConfigured ? 'Keys Connected' : 'Not Configured'} · Mode:{' '}
                     {isLiveMode ? 'Live' : 'Test'}
                   </p>
@@ -2440,22 +2440,22 @@ export function AdminSettingsSection({
           )}
 
           {activeTab === 'advanced' && (
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-6 space-y-4 shadow-2xs">
-              <div className="border-b border-[#EAECF0] pb-3">
-                <h2 className="font-display font-bold text-[16px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-6 space-y-4 shadow-2xs">
+              <div className="border-b border-[#E2E4E8] pb-3">
+                <h2 className="font-display font-bold text-[16px] text-[#111315]">
                   Advanced Settings &amp; Security
                 </h2>
-                <p className="text-[12.5px] text-[#6B7280]">
+                <p className="text-[12.5px] text-[#6B7078]">
                   Inventory threshold alerts, cache maintenance, and JSON store backup.
                 </p>
               </div>
 
-              <div className="bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-[13px] text-[#111827]">
+                  <p className="font-semibold text-[13px] text-[#111315]">
                     Low Stock Alert Threshold
                   </p>
-                  <p className="text-[11.5px] text-[#6B7280]">
+                  <p className="text-[11.5px] text-[#6B7078]">
                     Products at or below this quantity trigger admin low-stock warnings.
                   </p>
                 </div>
@@ -2464,41 +2464,41 @@ export function AdminSettingsSection({
                   min="0"
                   value={lowStockThreshold}
                   onChange={(e) => setLowStockThreshold(e.target.value)}
-                  className="w-24 bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm font-semibold text-center tabular-nums outline-none focus:border-[#5B21B6]"
+                  className="w-24 bg-white border border-[#E2E4E8] rounded-xl px-3 py-2 text-sm font-semibold text-center tabular-nums outline-none focus:border-[#16181A]"
                 />
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl p-4">
                 <div>
-                  <p className="font-semibold text-[13px] text-[#111827]">
+                  <p className="font-semibold text-[13px] text-[#111315]">
                     Refresh Cache From Live DB
                   </p>
-                  <p className="text-[11.5px] text-[#6B7280]">
+                  <p className="text-[11.5px] text-[#6B7078]">
                     Clears local cached storefront settings and reloads fresh database state.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleClearCache}
-                  className="bg-white border border-[#E5E7EB] hover:bg-[#F3F4F6] text-[#111827] text-[12px] font-semibold px-3.5 py-2 rounded-xl cursor-pointer"
+                  className="bg-white border border-[#E2E4E8] hover:bg-[#F1F2F4] text-[#111315] text-[12px] font-semibold px-3.5 py-2 rounded-xl cursor-pointer"
                 >
                   Clear Cache
                 </button>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl p-4">
                 <div>
-                  <p className="font-semibold text-[13px] text-[#111827]">
+                  <p className="font-semibold text-[13px] text-[#111315]">
                     Export Store Backup (JSON)
                   </p>
-                  <p className="text-[11.5px] text-[#6B7280]">
+                  <p className="text-[11.5px] text-[#6B7078]">
                     Download a snapshot of products, categories, orders, customers, and settings.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleExportBackup}
-                  className="inline-flex items-center gap-1.5 bg-[#111827] hover:bg-[#1F2937] text-white text-[12px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
+                  className="inline-flex items-center gap-1.5 bg-[#16181A] hover:bg-[#272A2E] text-white text-[12px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
                 >
                   <Download size={13} /> Export JSON Backup
                 </button>

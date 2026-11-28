@@ -140,8 +140,8 @@ create table if not exists public.marketing_attributions (
 create table if not exists public.store_settings (
   id text primary key,
   store_name text not null default 'HARBAN',
-  support_email text not null default 'care@harban.in',
-  support_phone text not null default '+91 98765 43210',
+  support_email text not null default 'harban.official@gmail.com',
+  support_phone text not null default '+91 95551 37346',
   low_stock_threshold integer not null default 5,
   free_shipping_threshold integer not null default 1500,
   razorpay_test_mode boolean not null default true,
@@ -166,7 +166,7 @@ as $$
     or (
       auth.uid() is not null
       and (
-        lower(coalesce(auth.jwt() ->> 'email', '')) in ('abhishekyadavinfo05@gmail.com', 'care@harban.in')
+        lower(coalesce(auth.jwt() ->> 'email', '')) in ('abhishekyadavinfo05@gmail.com', 'harban.official@gmail.com')
         or exists (
           select 1
           from public.customers c
@@ -212,7 +212,7 @@ grant execute on function public.is_owner_uid_or_email(text, text) to anon, auth
 -- Promote admin emails if already in customers table
 update public.customers
 set role = 'admin', updated_at = now()
-where lower(email) in ('abhishekyadavinfo05@gmail.com', 'care@harban.in')
+where lower(email) in ('abhishekyadavinfo05@gmail.com', 'harban.official@gmail.com')
   and role <> 'admin';
 
 -- ---------------------------------------------------------------------------
@@ -339,7 +339,7 @@ begin
   );
 
   v_role := case
-    when v_email in ('abhishekyadavinfo05@gmail.com', 'care@harban.in') then 'admin'
+    when v_email in ('abhishekyadavinfo05@gmail.com', 'harban.official@gmail.com') then 'admin'
     else 'customer'
   end;
 

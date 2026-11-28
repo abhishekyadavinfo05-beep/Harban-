@@ -245,16 +245,16 @@ export default function AdminCustomersSection({
           />
           <form
             onSubmit={handleCreateSubmit}
-            className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-md w-full p-5 space-y-3.5 shadow-xl"
+            className="relative bg-white rounded-[18px] border border-[#E2E4E8] max-w-md w-full p-5 space-y-3.5 shadow-xl"
           >
             <div className="flex items-center justify-between">
-              <h3 className="font-display font-bold text-[16px] text-[#111827]">
+              <h3 className="font-display font-bold text-[16px] text-[#111315]">
                 Add Customer
               </h3>
               <button
                 type="button"
                 onClick={() => setAddOpen(false)}
-                className="p-1 text-[#6B7280] hover:text-[#111827] cursor-pointer"
+                className="p-1 text-[#6B7078] hover:text-[#111315] cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -275,7 +275,7 @@ export default function AdminCustomersSection({
                 value={addForm.name}
                 onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="e.g. Rahul Sharma"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm outline-none focus:border-[#5B21B6]"
+                className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-sm outline-none focus:border-[#16181A]"
               />
             </div>
 
@@ -289,7 +289,7 @@ export default function AdminCustomersSection({
                 value={addForm.email}
                 onChange={(e) => setAddForm((f) => ({ ...f, email: e.target.value }))}
                 placeholder="rahul@example.com"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm outline-none focus:border-[#5B21B6]"
+                className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-sm outline-none focus:border-[#16181A]"
               />
             </div>
 
@@ -301,7 +301,7 @@ export default function AdminCustomersSection({
                 <input
                   value={addForm.phone}
                   onChange={(e) => setAddForm((f) => ({ ...f, phone: e.target.value }))}
-                  placeholder="+91 9876543210"
+                  placeholder="+91 9555137346"
                   className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm outline-none"
                 />
               </div>
@@ -331,7 +331,7 @@ export default function AdminCustomersSection({
               <button
                 type="submit"
                 disabled={adding}
-                className="px-4 py-2 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white rounded-xl cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white rounded-xl cursor-pointer disabled:opacity-50"
               >
                 {adding ? 'Saving...' : 'Create Customer'}
               </button>
@@ -371,20 +371,20 @@ export default function AdminCustomersSection({
               value={importCsvText}
               onChange={(e) => setImportCsvText(e.target.value)}
               placeholder={`Priya Singh, priya@example.com, +919123456780, customer`}
-              className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-3 text-[12px] font-mono outline-none focus:border-[#5B21B6]"
+              className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl p-3 text-[12px] font-mono outline-none focus:border-[#16181A]"
             />
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setImportOpen(false)}
-                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
+                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7078] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={importing}
-                className="px-4 py-2 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white rounded-xl cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white rounded-xl cursor-pointer disabled:opacity-50"
               >
                 {importing ? 'Importing...' : 'Import Customers'}
               </button>
@@ -420,7 +420,7 @@ export default function AdminCustomersSection({
             <button
               type="button"
               onClick={() => onCloseCustomer?.()}
-              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-[#16181A] hover:bg-[#272A2E] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
             >
               <ArrowLeft size={14} /> Back to Customers
             </button>
@@ -448,23 +448,23 @@ export default function AdminCustomersSection({
               onClick={() => onCloseCustomer?.()}
               title="Back to Customers"
               aria-label="Back to Customers"
-              className="mt-0.5 w-9 h-9 rounded-xl border border-[#E5E7EB] bg-white hover:bg-[#F9FAFB] grid place-items-center text-[#111827] shadow-2xs shrink-0 cursor-pointer"
+              className="mt-0.5 w-9 h-9 rounded-xl border border-[#E2E4E8] bg-white hover:bg-[#F7F8FA] grid place-items-center text-[#111315] shadow-2xs shrink-0 cursor-pointer"
             >
               <ArrowLeft size={16} />
             </button>
             <div className="flex items-center gap-3">
-              <span className="w-11 h-11 rounded-full bg-gradient-to-br from-[#6D28D9] to-[#4F46E5] text-white font-display font-bold text-[14px] grid place-items-center shrink-0">
+              <span className="w-11 h-11 rounded-full bg-[#16181A] text-white font-display font-bold text-[14px] grid place-items-center shrink-0">
                 {getInitials(activeDetail.name)}
               </span>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="font-display font-bold text-[22px] text-[#111827] tracking-tight">
+                  <h1 className="font-display font-bold text-[22px] text-[#111315] tracking-tight">
                     {activeDetail.name}
                   </h1>
                   <span
                     className={`inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-md capitalize ${
                       activeDetail.role === 'admin'
-                        ? 'bg-[#F3E8FF] text-[#6D28D9]'
+                        ? 'bg-[#E5FC6B] text-[#141700]'
                         : 'bg-[#DCFCE7] text-[#15803D]'
                     }`}
                   >
@@ -545,22 +545,22 @@ export default function AdminCustomersSection({
             </div>
 
             {/* Customer Orders Table */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#EAECF0] flex items-center justify-between">
-                <h2 className="font-display font-bold text-[15px] text-[#111827] flex items-center gap-2">
-                  <ShoppingBag size={15} className="text-[#5B21B6]" />
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#E2E4E8] flex items-center justify-between">
+                <h2 className="font-display font-bold text-[15px] text-[#111315] flex items-center gap-2">
+                  <ShoppingBag size={15} className="text-[#16181A]" />
                   Orders ({activeDetail.allOrders.length})
                 </h2>
               </div>
 
               {activeDetail.allOrders.length === 0 ? (
-                <div className="p-8 text-center text-[13px] text-[#6B7280]">
+                <div className="p-8 text-center text-[13px] text-[#6B7078]">
                   This customer has not placed any orders yet.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[12.5px]">
-                    <thead className="bg-[#F9FAFB] text-[#6B7280] font-medium border-b border-[#EAECF0]">
+                    <thead className="bg-[#F7F8FA] text-[#6B7078] font-medium border-b border-[#E2E4E8]">
                       <tr>
                         <th className="py-3 px-4">Order ID</th>
                         <th className="py-3 px-3">Date</th>
@@ -570,14 +570,14 @@ export default function AdminCustomersSection({
                         <th className="py-3 px-4 text-right">Amount</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#EAECF0]">
+                    <tbody className="divide-y divide-[#E2E4E8]">
                       {activeDetail.allOrders.map((ord) => (
                         <tr
                           key={ord.id}
                           onClick={() => onOpenOrder?.(ord.id)}
-                          className="hover:bg-[#F9FAFB] cursor-pointer"
+                          className="hover:bg-[#F7F8FA] cursor-pointer"
                         >
-                          <td className="py-3 px-4 font-mono font-bold text-[#5B21B6] inline-flex items-center gap-1">
+                          <td className="py-3 px-4 font-mono font-bold text-[#111315] inline-flex items-center gap-1">
                             #{ord.id} <ExternalLink size={11} />
                           </td>
                           <td className="py-3 px-3 text-[#6B7280] whitespace-nowrap">
@@ -610,14 +610,14 @@ export default function AdminCustomersSection({
 
           {/* Right Sidebar */}
           <aside className="space-y-4">
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 space-y-3 shadow-2xs">
-              <h3 className="font-display font-bold text-[13.5px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 space-y-3 shadow-2xs">
+              <h3 className="font-display font-bold text-[13.5px] text-[#111315]">
                 Contact information
               </h3>
               <div className="space-y-2 text-[12.5px] text-[#4B5563]">
                 <a
                   href={`mailto:${activeDetail.email}`}
-                  className="flex items-center gap-2 text-[#5B21B6] hover:underline truncate"
+                  className="flex items-center gap-2 text-[#111315] font-medium hover:underline truncate"
                 >
                   <Mail size={13} className="text-[#9CA3AF] shrink-0" />
                   <span className="truncate">{activeDetail.email}</span>
@@ -642,9 +642,9 @@ export default function AdminCustomersSection({
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 space-y-2.5 shadow-2xs">
-              <h3 className="font-display font-bold text-[13.5px] text-[#111827] flex items-center gap-1.5">
-                <MapPin size={14} className="text-[#5B21B6]" /> Default address
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 space-y-2.5 shadow-2xs">
+              <h3 className="font-display font-bold text-[13.5px] text-[#111315] flex items-center gap-1.5">
+                <MapPin size={14} className="text-[#16181A]" /> Default address
               </h3>
               {shippingAddr ? (
                 <div className="text-[12.5px] text-[#4B5563] leading-relaxed">
@@ -707,7 +707,7 @@ export default function AdminCustomersSection({
                 setAddError('')
                 setAddOpen(true)
               }}
-              className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer transition"
             >
               <Plus size={14} /> Add Customer
             </button>
@@ -715,73 +715,73 @@ export default function AdminCustomersSection({
         </div>
       </div>
 
-      {/* 5 Pastel KPI Cards */}
+      {/* 5 Clean Architecture KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#F3E8FF] text-[#6D28D9] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#16181A] text-white grid place-items-center shrink-0">
             <Users size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Total Customers</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#6B7078]">Total Customers</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {counts.all}
             </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">{counts.withOrders} ordered</p>
+            <p className="text-[11px] text-[#6B7078] mt-0.5">{counts.withOrders} ordered</p>
           </div>
         </div>
-        <div className="bg-[#F0FDF4] rounded-2xl border border-[#DCFCE7] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#DCFCE7] text-[#16A34A] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#E5FC6B] text-[#141700] grid place-items-center shrink-0">
             <Repeat size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Repeat Customers</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#6B7078]">Repeat Customers</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {counts.repeatBuyers}
             </p>
-            <p className="text-[11px] text-[#16A34A] mt-0.5">2+ orders</p>
+            <p className="text-[11px] text-[#15803D] font-medium mt-0.5">2+ orders</p>
           </div>
         </div>
-        <div className="bg-[#FFFBEB] rounded-2xl border border-[#FEF3C7] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#D97706] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#F3F4F6] text-[#111315] grid place-items-center shrink-0">
             <UserPlus size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">New This Month</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#6B7078]">New This Month</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {counts.newThisMonth}
             </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">Signups</p>
+            <p className="text-[11px] text-[#6B7078] mt-0.5">Signups</p>
           </div>
         </div>
-        <div className="bg-[#EFF6FF] rounded-2xl border border-[#DBEAFE] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#DBEAFE] text-[#2563EB] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#F3F4F6] text-[#111315] grid place-items-center shrink-0">
             <TrendingUp size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Avg Order Value</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#6B7078]">Avg Order Value</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {formatINR(counts.aov)}
             </p>
-            <p className="text-[11px] text-[#2563EB] mt-0.5">Completed orders</p>
+            <p className="text-[11px] text-[#6B7078] mt-0.5">Completed orders</p>
           </div>
         </div>
-        <div className="bg-[#FFF5F6] rounded-2xl border border-[#FFE4E6] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#FFE4E6] text-[#E11D48] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#F3F4F6] text-[#111315] grid place-items-center shrink-0">
             <CreditCard size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Total Revenue</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#6B7078]">Total Revenue</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {formatINR(counts.totalSpend)}
             </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">Lifetime spend</p>
+            <p className="text-[11px] text-[#6B7078] mt-0.5">Lifetime spend</p>
           </div>
         </div>
       </div>
 
       {/* Full-Width Customers Directory */}
-      <div className="bg-white rounded-2xl border border-[#EAECF0] overflow-hidden shadow-2xs">
-        <div className="px-4 pt-1 border-b border-[#EAECF0] flex items-center gap-5 overflow-x-auto text-[12.5px]">
+      <div className="bg-white rounded-[18px] border border-[#E2E4E8] overflow-hidden shadow-2xs">
+        <div className="px-4 pt-1 border-b border-[#E2E4E8] flex items-center gap-5 overflow-x-auto text-[12.5px]">
           {[
             { id: 'all', label: `All Customers (${counts.all})` },
             { id: 'ordered', label: `With Orders (${counts.withOrders})` },
@@ -794,8 +794,8 @@ export default function AdminCustomersSection({
               onClick={() => setTab(t.id)}
               className={`py-3 border-b-2 transition cursor-pointer whitespace-nowrap ${
                 tab === t.id
-                  ? 'border-[#5B21B6] text-[#5B21B6] font-semibold'
-                  : 'border-transparent text-[#6B7280] hover:text-[#111827] font-medium'
+                  ? 'border-[#16181A] text-[#111315] font-semibold'
+                  : 'border-transparent text-[#6B7078] hover:text-[#111315] font-medium'
               }`}
             >
               {t.label}
@@ -870,15 +870,15 @@ export default function AdminCustomersSection({
                   >
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2.5">
-                        <span className="w-8 h-8 rounded-full bg-[#F3E8FF] text-[#5B21B6] text-[11px] font-bold grid place-items-center shrink-0">
+                        <span className="w-8 h-8 rounded-full bg-[#16181A] text-white text-[11px] font-bold grid place-items-center shrink-0">
                           {getInitials(c.name)}
                         </span>
                         <div className="min-w-0">
-                          <p className="font-semibold text-[#111827] truncate">{c.name}</p>
+                          <p className="font-semibold text-[#111315] truncate">{c.name}</p>
                           <span
                             className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize ${
                               c.role === 'admin'
-                                ? 'bg-[#F3E8FF] text-[#6D28D9]'
+                                ? 'bg-[#E5FC6B] text-[#141700]'
                                 : 'bg-[#DCFCE7] text-[#15803D]'
                             }`}
                           >
@@ -889,23 +889,23 @@ export default function AdminCustomersSection({
                     </td>
                     <td className="py-3 px-3">
                       <p className="text-[#374151]">{c.email}</p>
-                      <p className="text-[11px] text-[#6B7280] font-mono">
+                      <p className="text-[11px] text-[#6B7078] font-mono">
                         {c.phone || '—'}
                       </p>
                     </td>
-                    <td className="py-3 px-3 text-[#6B7280]">
+                    <td className="py-3 px-3 text-[#6B7078]">
                       {c.locationCity || '—'}
                     </td>
-                    <td className="py-3 px-3 text-right font-semibold text-[#111827] tabular-nums">
+                    <td className="py-3 px-3 text-right font-semibold text-[#111315] tabular-nums">
                       {c.ordersCount}
                     </td>
-                    <td className="py-3 px-3 text-right font-bold text-[#111827] tabular-nums">
+                    <td className="py-3 px-3 text-right font-bold text-[#111315] tabular-nums">
                       {formatINR(c.spend)}
                     </td>
-                    <td className="py-3 px-4 text-[#6B7280] whitespace-nowrap">
+                    <td className="py-3 px-4 text-[#6B7078] whitespace-nowrap">
                       {c.latestOrder ? (
                         <>
-                          <span className="font-mono font-semibold text-[#5B21B6] block">
+                          <span className="font-mono font-semibold text-[#111315] block">
                             #{c.latestOrder.id}
                           </span>
                           <span className="text-[11px]">

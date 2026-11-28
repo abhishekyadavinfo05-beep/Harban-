@@ -77,8 +77,8 @@ export const DEFAULT_COURIER_NAMES = [
 export const DEFAULT_STORE_SETTINGS: ExtendedStoreSettings = {
   id: 'default',
   storeName: 'HARBAN',
-  supportEmail: 'care@harban.in',
-  supportPhone: '+91 98765 43210',
+  supportEmail: 'harban.official@gmail.com',
+  supportPhone: '+91 95551 37346',
   lowStockThreshold: 5,
   freeShippingThreshold: 1500,
   razorpayTestMode: false,
@@ -121,7 +121,7 @@ export const DEFAULT_STORE_SETTINGS: ExtendedStoreSettings = {
     orderEmail: true,
     smsAlerts: true,
     whatsappUpdates: true,
-    adminAlertEmail: 'care@harban.in',
+    adminAlertEmail: 'harban.official@gmail.com',
   },
   appearance: {
     primaryColor: '#0C1B2E',
@@ -140,7 +140,7 @@ export const DEFAULT_STORE_SETTINGS: ExtendedStoreSettings = {
     metaAdsConnected: false,
     metaPageId: '',
     whatsappConnected: false,
-    whatsappNumber: '+91 98765 43210',
+    whatsappNumber: '+91 95551 37346',
   },
 }
 
@@ -203,21 +203,41 @@ export function unpackStoreSettings(row: any): ExtendedStoreSettings {
       DEFAULT_STORE_SETTINGS.courierProvider,
   )
 
+  const normalizeLegacyEmail = (val: unknown, fallback: string) => {
+    const str = String(val || '').trim()
+    if (!str || str.toLowerCase() === 'care@harban.in') return fallback
+    return str
+  }
+
+  const normalizeLegacyPhone = (val: unknown, fallback: string) => {
+    const str = String(val || '').trim()
+    if (
+      !str ||
+      str === '+91 98765 43210' ||
+      str === '+91 9876543210' ||
+      str === '9876543210'
+    ) {
+      return fallback
+    }
+    return str
+  }
+
+  const resolvedSupportEmail = normalizeLegacyEmail(
+    src.supportEmail ?? src.support_email,
+    DEFAULT_STORE_SETTINGS.supportEmail,
+  )
+  const resolvedSupportPhone = normalizeLegacyPhone(
+    src.supportPhone ?? src.support_phone,
+    DEFAULT_STORE_SETTINGS.supportPhone,
+  )
+
   return {
     id: String(src.id || 'default'),
     storeName: String(
       src.storeName ?? src.store_name ?? DEFAULT_STORE_SETTINGS.storeName,
     ),
-    supportEmail: String(
-      src.supportEmail ??
-        src.support_email ??
-        DEFAULT_STORE_SETTINGS.supportEmail,
-    ),
-    supportPhone: String(
-      src.supportPhone ??
-        src.support_phone ??
-        DEFAULT_STORE_SETTINGS.supportPhone,
-    ),
+    supportEmail: resolvedSupportEmail,
+    supportPhone: resolvedSupportPhone,
     lowStockThreshold: Math.max(
       0,
       Number(
@@ -325,12 +345,11 @@ export function unpackStoreSettings(row: any): ExtendedStoreSettings {
       whatsappUpdates:
         (src.notifications?.whatsappUpdates ??
           packed?.notifications?.whatsappUpdates) !== false,
-      adminAlertEmail: String(
+      adminAlertEmail: normalizeLegacyEmail(
         src.notifications?.adminAlertEmail ??
           packed?.notifications?.adminAlertEmail ??
-          src.supportEmail ??
-          src.support_email ??
-          DEFAULT_STORE_SETTINGS.notifications.adminAlertEmail,
+          resolvedSupportEmail,
+        DEFAULT_STORE_SETTINGS.notifications.adminAlertEmail,
       ),
     },
     appearance: {
@@ -381,10 +400,9 @@ export function unpackStoreSettings(row: any): ExtendedStoreSettings {
         src.marketing?.whatsappConnected ??
           packed?.marketing?.whatsappConnected,
       ),
-      whatsappNumber: String(
-        src.marketing?.whatsappNumber ??
-          packed?.marketing?.whatsappNumber ??
-          DEFAULT_STORE_SETTINGS.marketing.whatsappNumber,
+      whatsappNumber: normalizeLegacyPhone(
+        src.marketing?.whatsappNumber ?? packed?.marketing?.whatsappNumber,
+        DEFAULT_STORE_SETTINGS.marketing.whatsappNumber,
       ),
     },
   }

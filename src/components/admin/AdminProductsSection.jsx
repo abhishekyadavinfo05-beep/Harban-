@@ -763,7 +763,7 @@ export default function AdminProductsSection({
               <button
                 type="submit"
                 disabled={quickSaving}
-                className="px-4 py-2 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] disabled:opacity-50 text-white rounded-xl cursor-pointer"
+                className="px-4 py-2 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] disabled:opacity-50 text-white rounded-xl cursor-pointer transition"
               >
                 {quickSaving ? 'Updating...' : 'Save Price & Stock'}
               </button>
@@ -778,13 +778,13 @@ export default function AdminProductsSection({
             className="absolute inset-0 bg-black/55 backdrop-blur-xs"
             onClick={() => setPreviewProduct(null)}
           />
-          <div className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#EAECF0] pb-3">
+          <div className="relative bg-white rounded-[18px] border border-[#E2E4E8] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#E2E4E8] pb-3">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-[#5B21B6]">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#111315]">
                   Storefront Pre-Publish Preview
                 </p>
-                <h3 className="font-display font-bold text-[17px] text-[#111827]">
+                <h3 className="font-display font-bold text-[17px] text-[#111315]">
                   {previewProduct.name || 'Untitled Product'}
                 </h3>
               </div>
@@ -822,8 +822,8 @@ export default function AdminProductsSection({
                         onClick={() => setPreviewImgIdx(idx)}
                         className={`w-14 h-14 rounded-xl overflow-hidden border-2 shrink-0 cursor-pointer ${
                           previewImgIdx === idx
-                            ? 'border-[#5B21B6]'
-                            : 'border-[#EAECF0]'
+                            ? 'border-[#16181A]'
+                            : 'border-[#E2E4E8]'
                         }`}
                       >
                         <Img src={src} alt="" className="w-full h-full object-cover" />
@@ -834,7 +834,7 @@ export default function AdminProductsSection({
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-[11.5px] font-bold text-[#5B21B6]">
+                <div className="flex items-center gap-2 text-[11.5px] font-bold text-[#111315]">
                   <span>{previewProduct.brand || 'HARBAN'}</span>
                   <span className="text-[#D1D5DB]">·</span>
                   <span>
@@ -900,8 +900,8 @@ export default function AdminProductsSection({
                           onClick={() => setPreviewVariantIdx(idx)}
                           className={`px-2.5 py-1 rounded-lg border text-[12px] font-semibold cursor-pointer ${
                             previewVariantIdx === idx
-                              ? 'border-[#5B21B6] bg-[#F5F3FF] text-[#5B21B6]'
-                              : 'border-[#E5E7EB] text-[#6B7280]'
+                              ? 'border-[#16181A] bg-[#16181A] text-white'
+                              : 'border-[#E2E4E8] text-[#6B7078]'
                           }`}
                         >
                           {[v.size, v.color].filter(Boolean).join(' / ') || v.sku}
@@ -992,7 +992,7 @@ export default function AdminProductsSection({
             <button
               type="button"
               onClick={() => onCloseProduct?.()}
-              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-[#16181A] hover:bg-[#272A2E] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
             >
               <ArrowLeft size={14} /> Back to All Products
             </button>
@@ -1096,7 +1096,7 @@ export default function AdminProductsSection({
             <button
               type="submit"
               disabled={saving}
-              className="bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 disabled:opacity-60 text-white text-[12.5px] font-semibold px-5 py-2 rounded-xl shadow-xs transition cursor-pointer whitespace-nowrap"
+              className="bg-[#16181A] hover:bg-[#272A2E] disabled:opacity-60 text-white text-[12.5px] font-semibold px-5 py-2 rounded-xl shadow-xs transition cursor-pointer whitespace-nowrap"
             >
               {saving ? 'Saving...' : isCreateMode ? 'Publish Product' : 'Save Changes'}
             </button>
@@ -1110,12 +1110,12 @@ export default function AdminProductsSection({
           </div>
         )}
 
-        {/* Shopify 2-Column Product Workspace */}
+        {/* 2-Column Product Workspace */}
         <div className="grid lg:grid-cols-[1fr_340px] gap-4 items-start">
           {/* Left Primary Column */}
           <div className="space-y-4 min-w-0">
             {/* Core Copy Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-4 shadow-2xs">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-4 shadow-2xs">
               <div>
                 <label className="block text-[12px] font-semibold text-[#374151] mb-1">
                   Title *
@@ -1125,7 +1125,7 @@ export default function AdminProductsSection({
                   value={form.name}
                   onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                   placeholder="e.g. HARBAN HT-200 Pro Beard Trimmer"
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-[14px] font-medium outline-none focus:border-[#5B21B6]"
+                  className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-[14px] font-medium outline-none focus:border-[#16181A]"
                 />
               </div>
 
@@ -1137,7 +1137,7 @@ export default function AdminProductsSection({
                   value={form.tagline}
                   onChange={(e) => setForm((p) => ({ ...p, tagline: e.target.value }))}
                   placeholder="Zero-gap titanium blades · 90 min USB-C runtime"
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] outline-none focus:border-[#5B21B6]"
+                  className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-[13px] outline-none focus:border-[#16181A]"
                 />
               </div>
 
@@ -1152,23 +1152,23 @@ export default function AdminProductsSection({
                     setForm((p) => ({ ...p, description: e.target.value }))
                   }
                   placeholder="Detailed product overview displayed on Product Page & Quick View..."
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-[13px] outline-none focus:border-[#5B21B6] resize-none"
+                  className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2.5 text-[13px] outline-none focus:border-[#16181A] resize-none"
                 />
               </div>
             </div>
 
             {/* Media Gallery Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3.5 shadow-2xs">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-3.5 shadow-2xs">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h2 className="font-display font-bold text-[14px] text-[#111827]">
+                  <h2 className="font-display font-bold text-[14px] text-[#111315]">
                     Media ({form.images?.length || 0})
                   </h2>
-                  <p className="text-[11.5px] text-[#6B7280]">
+                  <p className="text-[11.5px] text-[#6B7078]">
                     First image is the primary storefront thumbnail.
                   </p>
                 </div>
-                <label className="inline-flex items-center gap-1.5 bg-[#F9FAFB] border border-[#E5E7EB] hover:border-[#5B21B6] text-[#111827] text-[12px] font-semibold px-3.5 py-2 rounded-xl cursor-pointer transition">
+                <label className="inline-flex items-center gap-1.5 bg-[#F7F8FA] border border-[#E2E4E8] hover:border-[#16181A] text-[#111315] text-[12px] font-semibold px-3.5 py-2 rounded-xl cursor-pointer transition">
                   <Upload size={13} />
                   {uploadingImages ? 'Uploading...' : 'Upload Images'}
                   <input
@@ -1186,12 +1186,12 @@ export default function AdminProductsSection({
                   value={newImageUrl}
                   onChange={(e) => setNewImageUrl(e.target.value)}
                   placeholder="Or paste image URL (e.g. /images/product-ht100.jpg or https://...)"
-                  className="flex-1 min-w-0 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12.5px] outline-none focus:border-[#5B21B6]"
+                  className="flex-1 min-w-0 bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-[12.5px] outline-none focus:border-[#16181A]"
                 />
                 <button
                   type="button"
                   onClick={addImageByUrl}
-                  className="shrink-0 bg-white border border-[#E5E7EB] hover:border-[#5B21B6] text-[#111827] text-[12px] font-semibold px-3.5 py-2 rounded-xl cursor-pointer"
+                  className="shrink-0 bg-white border border-[#E2E4E8] hover:border-[#16181A] text-[#111315] text-[12px] font-semibold px-3.5 py-2 rounded-xl cursor-pointer"
                 >
                   Add URL
                 </button>
@@ -1202,8 +1202,8 @@ export default function AdminProductsSection({
                   {form.images.map((src, idx) => (
                     <div
                       key={`${src}-${idx}`}
-                      className={`bg-[#F9FAFB] rounded-xl border p-1.5 space-y-1.5 ${
-                        idx === 0 ? 'border-[#5B21B6]' : 'border-[#EAECF0]'
+                      className={`bg-[#F7F8FA] rounded-xl border p-1.5 space-y-1.5 ${
+                        idx === 0 ? 'border-[#16181A]' : 'border-[#E2E4E8]'
                       }`}
                     >
                       <div className="relative aspect-square rounded-lg overflow-hidden bg-white">
@@ -1213,7 +1213,7 @@ export default function AdminProductsSection({
                           className="w-full h-full object-cover"
                         />
                         {idx === 0 && (
-                          <span className="absolute top-1 left-1 bg-[#5B21B6] text-white text-[9.5px] font-bold px-1.5 py-0.5 rounded">
+                          <span className="absolute top-1 left-1 bg-[#16181A] text-[#D9F94F] text-[9.5px] font-bold px-1.5 py-0.5 rounded">
                             Primary
                           </span>
                         )}
@@ -1252,8 +1252,8 @@ export default function AdminProductsSection({
             </div>
 
             {/* Pricing Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3.5 shadow-2xs">
-              <h2 className="font-display font-bold text-[14px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-3.5 shadow-2xs">
+              <h2 className="font-display font-bold text-[14px] text-[#111315]">
                 Pricing
               </h2>
               <div className="grid sm:grid-cols-3 gap-3">
@@ -1269,7 +1269,7 @@ export default function AdminProductsSection({
                     onChange={(e) =>
                       setForm((p) => ({ ...p, price: Number(e.target.value) }))
                     }
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -1284,7 +1284,7 @@ export default function AdminProductsSection({
                     onChange={(e) =>
                       setForm((p) => ({ ...p, mrp: Number(e.target.value) }))
                     }
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -1297,15 +1297,15 @@ export default function AdminProductsSection({
                     max="95"
                     value={marginPct}
                     onChange={(e) => applyDiscountPercent(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#16181A]"
                   />
                 </div>
               </div>
             </div>
 
             {/* Inventory & Identifiers Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3.5 shadow-2xs">
-              <h2 className="font-display font-bold text-[14px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-3.5 shadow-2xs">
+              <h2 className="font-display font-bold text-[14px] text-[#111315]">
                 Inventory &amp; Catalog Identifiers
               </h2>
               <div className="grid sm:grid-cols-3 gap-3">
@@ -1317,7 +1317,7 @@ export default function AdminProductsSection({
                     value={form.sku}
                     onChange={(e) => setForm((p) => ({ ...p, sku: e.target.value }))}
                     placeholder="HRB-HT200-BLK"
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] font-mono outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-[13px] font-mono outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -1332,7 +1332,7 @@ export default function AdminProductsSection({
                     onChange={(e) =>
                       setForm((p) => ({ ...p, stock: Number(e.target.value) }))
                     }
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-[13px] tabular-nums outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
@@ -1344,7 +1344,7 @@ export default function AdminProductsSection({
                     disabled={!isCreateMode}
                     onChange={(e) => setForm((p) => ({ ...p, id: e.target.value }))}
                     placeholder="auto-generated"
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] font-mono outline-none disabled:opacity-60"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-[13px] font-mono outline-none disabled:opacity-60"
                   />
                 </div>
               </div>
@@ -1359,26 +1359,26 @@ export default function AdminProductsSection({
                     setForm((p) => ({ ...p, meeshoUrl: e.target.value }))
                   }
                   placeholder="https://www.meesho.com/..."
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-[13px] outline-none focus:border-[#5B21B6]"
+                  className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-[13px] outline-none focus:border-[#16181A]"
                 />
               </div>
             </div>
 
             {/* Variants Builder Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3 shadow-2xs">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-3 shadow-2xs">
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <h2 className="font-display font-bold text-[14px] text-[#111827]">
+                  <h2 className="font-display font-bold text-[14px] text-[#111315]">
                     Variants ({form.variants?.length || 0})
                   </h2>
-                  <p className="text-[11.5px] text-[#6B7280]">
+                  <p className="text-[11.5px] text-[#6B7078]">
                     Add size, color or edition options with independent SKU, pricing &amp; stock.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={addVariantRow}
-                  className="inline-flex items-center gap-1 bg-[#F9FAFB] border border-[#E5E7EB] hover:border-[#5B21B6] text-[12px] font-semibold px-3 py-1.5 rounded-xl cursor-pointer"
+                  className="inline-flex items-center gap-1 bg-[#F7F8FA] border border-[#E2E4E8] hover:border-[#16181A] text-[12px] font-semibold px-3 py-1.5 rounded-xl cursor-pointer"
                 >
                   <Plus size={13} /> Add Variant
                 </button>
@@ -1437,7 +1437,7 @@ export default function AdminProductsSection({
                             onChange={(e) =>
                               updateVariantField(idx, 'isActive', e.target.checked)
                             }
-                            className="accent-[#5B21B6]"
+                            className="accent-[#16181A]"
                           />
                           Active
                         </label>
@@ -1520,7 +1520,7 @@ export default function AdminProductsSection({
                         specs: [...(p.specs || []), { label: '', value: '' }],
                       }))
                     }
-                    className="text-[11.5px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
+                    className="text-[11.5px] font-semibold text-[#111315] hover:underline cursor-pointer"
                   >
                     + Add Spec Row
                   </button>
@@ -1539,7 +1539,7 @@ export default function AdminProductsSection({
                           }))
                         }
                         placeholder="Label (e.g. Battery)"
-                        className="w-1/2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
+                        className="w-1/2 bg-[#F7F8FA] border border-[#E2E4E8] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
                       />
                       <input
                         value={s.value}
@@ -1552,7 +1552,7 @@ export default function AdminProductsSection({
                           }))
                         }
                         placeholder="Value (e.g. 90 mins)"
-                        className="w-1/2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
+                        className="w-1/2 bg-[#F7F8FA] border border-[#E2E4E8] rounded-lg px-2.5 py-1.5 text-[12px] outline-none"
                       />
                       <button
                         type="button"
@@ -1576,11 +1576,11 @@ export default function AdminProductsSection({
           {/* Right Organization & Publishing Sidebar */}
           <aside className="space-y-4">
             {/* Publishing Status Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 space-y-3 shadow-2xs">
-              <h3 className="font-display font-bold text-[13.5px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 space-y-3 shadow-2xs">
+              <h3 className="font-display font-bold text-[13.5px] text-[#111315]">
                 Status &amp; Visibility
               </h3>
-              <label className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#F9FAFB] border border-[#EAECF0] text-[12.5px] font-semibold text-[#111827] cursor-pointer">
+              <label className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#F7F8FA] border border-[#E2E4E8] text-[12.5px] font-semibold text-[#111315] cursor-pointer">
                 <span>Enabled on Storefront</span>
                 <input
                   type="checkbox"
@@ -1588,10 +1588,10 @@ export default function AdminProductsSection({
                   onChange={(e) =>
                     setForm((p) => ({ ...p, isActive: e.target.checked }))
                   }
-                  className="accent-[#5B21B6]"
+                  className="accent-[#16181A]"
                 />
               </label>
-              <label className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#F9FAFB] border border-[#EAECF0] text-[12.5px] font-semibold text-[#111827] cursor-pointer">
+              <label className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#F7F8FA] border border-[#E2E4E8] text-[12.5px] font-semibold text-[#111315] cursor-pointer">
                 <span>Featured Product</span>
                 <input
                   type="checkbox"
@@ -1599,7 +1599,7 @@ export default function AdminProductsSection({
                   onChange={(e) =>
                     setForm((p) => ({ ...p, isFeatured: e.target.checked }))
                   }
-                  className="accent-[#5B21B6]"
+                  className="accent-[#16181A]"
                 />
               </label>
             </div>
@@ -1651,20 +1651,20 @@ export default function AdminProductsSection({
             </div>
 
             {/* Storefront Snapshot Preview Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 space-y-3 shadow-2xs">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 space-y-3 shadow-2xs">
               <div className="flex items-center justify-between">
-                <h3 className="font-display font-bold text-[13.5px] text-[#111827]">
+                <h3 className="font-display font-bold text-[13.5px] text-[#111315]">
                   Storefront Snapshot
                 </h3>
                 <button
                   type="button"
                   onClick={openPreview}
-                  className="text-[11.5px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
+                  className="text-[11.5px] font-semibold text-[#111315] hover:underline cursor-pointer"
                 >
                   Full Preview
                 </button>
               </div>
-              <div className="aspect-square rounded-xl overflow-hidden bg-[#F9FAFB] border border-[#EAECF0]">
+              <div className="aspect-square rounded-xl overflow-hidden bg-[#F7F8FA] border border-[#E2E4E8]">
                 <Img
                   src={form.images?.[0] || form.image}
                   alt={form.name || 'Product preview'}
@@ -1672,7 +1672,7 @@ export default function AdminProductsSection({
                 />
               </div>
               <div>
-                <p className="text-[11px] font-semibold text-[#5B21B6]">
+                <p className="text-[11px] font-semibold text-[#6B7078]">
                   {form.brand || 'HARBAN'} ·{' '}
                   {categoryMap.get(form.category) || form.category}
                 </p>
@@ -1711,8 +1711,8 @@ export default function AdminProductsSection({
       count: stats.total,
       sub: `${brandOptions.length} active brand${brandOptions.length === 1 ? '' : 's'}`,
       subCls: 'text-[#15803D]',
-      cardCls: 'bg-white border-[#EAECF0]',
-      iconCls: 'bg-[#F3E8FF] text-[#6D28D9]',
+      cardCls: 'bg-white border-[#E2E4E8]',
+      iconCls: 'bg-[#16181A] text-white',
       Icon: Box,
     },
     {
@@ -1721,8 +1721,8 @@ export default function AdminProductsSection({
       count: stats.active,
       sub: 'Live on storefront',
       subCls: 'text-[#15803D]',
-      cardCls: 'bg-[#F0FDF4] border-[#DCFCE7]',
-      iconCls: 'bg-[#DCFCE7] text-[#16A34A]',
+      cardCls: 'bg-white border-[#E2E4E8]',
+      iconCls: 'bg-[#E5FC6B] text-[#141700]',
       Icon: CheckCircle2,
     },
     {
@@ -1730,9 +1730,9 @@ export default function AdminProductsSection({
       label: 'Draft Products',
       count: stats.draft,
       sub: 'Hidden from store',
-      subCls: 'text-[#6B7280]',
-      cardCls: 'bg-[#FFFBEB] border-[#FEF3C7]',
-      iconCls: 'bg-[#FEF3C7] text-[#D97706]',
+      subCls: 'text-[#6B7078]',
+      cardCls: 'bg-white border-[#E2E4E8]',
+      iconCls: 'bg-[#F3F4F6] text-[#111315]',
       Icon: PauseCircle,
     },
     {
@@ -1740,9 +1740,9 @@ export default function AdminProductsSection({
       label: 'Out of Stock',
       count: stats.outOfStock,
       sub: stats.outOfStock > 0 ? 'Restock needed' : 'All stocked',
-      subCls: stats.outOfStock > 0 ? 'text-[#E11D48]' : 'text-[#6B7280]',
-      cardCls: 'bg-[#FFF5F6] border-[#FFE4E6]',
-      iconCls: 'bg-[#FFE4E6] text-[#E11D48]',
+      subCls: stats.outOfStock > 0 ? 'text-[#E11D48]' : 'text-[#6B7078]',
+      cardCls: 'bg-white border-[#E2E4E8]',
+      iconCls: stats.outOfStock > 0 ? 'bg-[#FFF5F6] text-[#E11D48]' : 'bg-[#F3F4F6] text-[#111315]',
       Icon: XCircle,
     },
     {
@@ -1750,9 +1750,9 @@ export default function AdminProductsSection({
       label: 'Low Stock',
       count: stats.lowStock,
       sub: `Threshold ≤ ${lowStockThreshold}`,
-      subCls: 'text-[#0284C7]',
-      cardCls: 'bg-[#EFF6FF] border-[#DBEAFE]',
-      iconCls: 'bg-[#DBEAFE] text-[#0284C7]',
+      subCls: stats.lowStock > 0 ? 'text-[#D97706]' : 'text-[#6B7078]',
+      cardCls: 'bg-white border-[#E2E4E8]',
+      iconCls: 'bg-[#F3F4F6] text-[#111315]',
       Icon: Tag,
     },
   ]
@@ -1762,10 +1762,10 @@ export default function AdminProductsSection({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display font-bold text-[22px] text-[#111827] tracking-tight leading-tight">
+          <h1 className="font-display font-bold text-[22px] text-[#111315] tracking-tight leading-tight">
             {mode === 'variants' ? 'Product Variants' : 'Products'}
           </h1>
-          <p className="text-[13px] text-[#6B7280] mt-0.5">
+          <p className="text-[13px] text-[#6B7078] mt-0.5">
             Click any product to open its full detail editor, gallery and variants.
           </p>
         </div>
@@ -1773,21 +1773,21 @@ export default function AdminProductsSection({
           <button
             type="button"
             onClick={handleExportCsv}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#E5E7EB] hover:bg-[#F9FAFB] text-[#111827] px-3.5 py-2 rounded-xl shadow-2xs cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#E2E4E8] hover:bg-[#F7F8FA] text-[#111315] px-3.5 py-2 rounded-xl shadow-2xs cursor-pointer whitespace-nowrap"
           >
             <Download size={14} className="text-[#4B5563]" /> Export
           </button>
           <button
             type="button"
             onClick={() => onStartNewProduct?.()}
-            className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl shadow-xs transition cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 bg-[#16181A] hover:bg-[#272A2E] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl shadow-xs transition cursor-pointer whitespace-nowrap"
           >
             <Plus size={14} /> Add Product
           </button>
         </div>
       </div>
 
-      {/* Row 1: 5 Pastel KPI Stat Cards */}
+      {/* Row 1: 5 Clean Architecture KPI Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {kpiCards.map((card) => {
           const Icon = card.Icon
@@ -1800,8 +1800,8 @@ export default function AdminProductsSection({
                 setStatusFilter(card.id)
                 setPage(1)
               }}
-              className={`text-left rounded-2xl border p-4 shadow-2xs flex items-start gap-3 transition cursor-pointer ${card.cardCls} ${
-                isSelected ? 'ring-2 ring-[#5B21B6]/50' : 'hover:border-[#C4B5FD]'
+              className={`text-left rounded-[18px] border p-4 shadow-2xs flex items-start gap-3 transition cursor-pointer ${card.cardCls} ${
+                isSelected ? 'ring-2 ring-[#16181A]/25 border-[#16181A]' : 'hover:border-[#C7CCD2]'
               }`}
             >
               <span
@@ -1810,10 +1810,10 @@ export default function AdminProductsSection({
                 <Icon size={18} />
               </span>
               <div className="min-w-0">
-                <p className="text-[12px] font-medium text-[#6B7280] truncate">
+                <p className="text-[12px] font-medium text-[#6B7078] truncate">
                   {card.label}
                 </p>
-                <p className="font-display font-bold text-[20px] text-[#111827] leading-tight mt-0.5 tabular-nums">
+                <p className="font-display font-bold text-[20px] text-[#111315] leading-tight mt-0.5 tabular-nums">
                   {card.count}
                 </p>
                 <p className={`text-[11px] font-medium mt-0.5 truncate ${card.subCls}`}>
@@ -1826,9 +1826,9 @@ export default function AdminProductsSection({
       </div>
 
       {/* Main Products White Card Container */}
-      <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs overflow-hidden">
         {/* Underline Filter Tabs */}
-        <div className="px-4 pt-1 border-b border-[#EAECF0] flex items-center gap-5 overflow-x-auto text-[12.5px]">
+        <div className="px-4 pt-1 border-b border-[#E2E4E8] flex items-center gap-5 overflow-x-auto text-[12.5px]">
           {[
             { id: 'all', label: `All Products (${stats.total})` },
             { id: 'active', label: `Active (${stats.active})` },
@@ -1848,8 +1848,8 @@ export default function AdminProductsSection({
                 }}
                 className={`py-3 border-b-2 transition cursor-pointer whitespace-nowrap ${
                   active
-                    ? 'border-[#5B21B6] text-[#5B21B6] font-semibold'
-                    : 'border-transparent text-[#6B7280] hover:text-[#111827] font-medium'
+                    ? 'border-[#16181A] text-[#111315] font-semibold'
+                    : 'border-transparent text-[#6B7078] hover:text-[#111315] font-medium'
                 }`}
               >
                 {tab.label}
@@ -1946,7 +1946,7 @@ export default function AdminProductsSection({
                     checked={allVisibleSelected}
                     onChange={toggleSelectAllVisible}
                     aria-label="Select all visible products"
-                    className="rounded border-[#D1D5DB] accent-[#5B21B6] cursor-pointer"
+                    className="rounded border-[#D1D5DB] accent-[#16181A] cursor-pointer"
                   />
                 </th>
                 <th className="py-3 px-2.5 font-medium">Product</th>
@@ -1958,10 +1958,10 @@ export default function AdminProductsSection({
                 <th className="py-3 pl-2.5 pr-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#EAECF0]">
+            <tbody className="divide-y divide-[#E2E4E8]">
               {pagedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-[#6B7280]">
+                  <td colSpan={8} className="py-10 text-center text-[#6B7078]">
                     No products match your search or filter.
                   </td>
                 </tr>
@@ -1992,8 +1992,8 @@ export default function AdminProductsSection({
                     <tr
                       key={p.id}
                       onClick={() => onOpenProduct?.(p.id)}
-                      className={`hover:bg-[#F9FAFB] cursor-pointer ${
-                        isChecked ? 'bg-[#F5F3FF]/60' : ''
+                      className={`hover:bg-[#F7F8FA] cursor-pointer ${
+                        isChecked ? 'bg-[#F7F8FA]' : ''
                       }`}
                     >
                       <td
@@ -2005,7 +2005,7 @@ export default function AdminProductsSection({
                           checked={isChecked}
                           onChange={() => toggleSelectRow(p.id)}
                           aria-label={`Select ${p.name}`}
-                          className="rounded border-[#D1D5DB] accent-[#5B21B6] cursor-pointer"
+                          className="rounded border-[#D1D5DB] accent-[#16181A] cursor-pointer"
                         />
                       </td>
 
@@ -2014,11 +2014,11 @@ export default function AdminProductsSection({
                           <Img
                             src={p.image}
                             alt={p.name}
-                            className="w-10 h-10 rounded-xl object-cover border border-[#EAECF0] bg-[#F9FAFB] shrink-0"
+                            className="w-10 h-10 rounded-xl object-cover border border-[#E2E4E8] bg-[#F7F8FA] shrink-0"
                           />
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <span className="font-semibold text-[#111827] hover:text-[#5B21B6] truncate max-w-[230px]">
+                              <span className="font-semibold text-[#111315] hover:underline truncate max-w-[230px]">
                                 {p.name}
                               </span>
                               <button
@@ -2037,12 +2037,12 @@ export default function AdminProductsSection({
                                   className={
                                     p.isFeatured
                                       ? 'fill-[#F59E0B] text-[#D97706]'
-                                      : 'text-[#D1D5DB] hover:text-[#6B7280]'
+                                      : 'text-[#D1D5DB] hover:text-[#6B7078]'
                                   }
                                 />
                               </button>
                             </div>
-                            <p className="text-[11px] text-[#6B7280] truncate">
+                            <p className="text-[11px] text-[#6B7078] truncate">
                               {variantMeta}
                             </p>
                           </div>
@@ -2054,7 +2054,7 @@ export default function AdminProductsSection({
                       </td>
 
                       <td className="py-3 px-2.5 whitespace-nowrap">
-                        <span className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-[#F3E8FF] text-[#6D28D9]">
+                        <span className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-[#F1F2F4] text-[#111315] border border-[#E2E4E8]">
                           {categoryMap.get(p.category) || p.category}
                         </span>
                       </td>
@@ -2155,16 +2155,16 @@ export default function AdminProductsSection({
           </table>
         </div>
 
-        {/* Purple Pagination Footer */}
-        <div className="px-4 py-3 border-t border-[#EAECF0] bg-white flex flex-wrap items-center justify-between gap-3 text-[12px] text-[#6B7280]">
+        {/* Pagination Footer */}
+        <div className="px-4 py-3 border-t border-[#E2E4E8] bg-white flex flex-wrap items-center justify-between gap-3 text-[12px] text-[#6B7078]">
           <span>
             Showing{' '}
-            <strong className="text-[#111827] tabular-nums">
+            <strong className="text-[#111315] tabular-nums">
               {filteredProducts.length === 0 ? 0 : (safePage - 1) * pageSize + 1}–
               {Math.min(safePage * pageSize, filteredProducts.length)}
             </strong>{' '}
             of{' '}
-            <strong className="text-[#111827] tabular-nums">
+            <strong className="text-[#111315] tabular-nums">
               {filteredProducts.length}
             </strong>{' '}
             products
@@ -2175,7 +2175,7 @@ export default function AdminProductsSection({
               type="button"
               disabled={safePage <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40 grid place-items-center text-[#4B5563] hover:bg-[#F9FAFB] cursor-pointer"
+              className="w-8 h-8 rounded-lg border border-[#E2E4E8] bg-white disabled:opacity-40 grid place-items-center text-[#4B5563] hover:bg-[#F7F8FA] cursor-pointer"
               aria-label="Previous page"
             >
               <ChevronLeft size={14} />
@@ -2188,8 +2188,8 @@ export default function AdminProductsSection({
                   onClick={() => setPage(pg)}
                   className={`w-8 h-8 rounded-lg text-[12px] font-semibold tabular-nums transition cursor-pointer ${
                     safePage === pg
-                      ? 'bg-[#6D28D9] text-white shadow-2xs'
-                      : 'border border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]'
+                      ? 'bg-[#16181A] text-white shadow-2xs'
+                      : 'border border-[#E2E4E8] bg-white text-[#374151] hover:bg-[#F7F8FA]'
                   }`}
                 >
                   {pg}

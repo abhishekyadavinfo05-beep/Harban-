@@ -342,8 +342,8 @@ export const marketingAttributions = pgTable('marketing_attributions', {
 export const storeSettings = pgTable('store_settings', {
   id: text('id').primaryKey(),
   storeName: text('store_name').notNull().default('HARBAN'),
-  supportEmail: text('support_email').notNull().default('care@harban.in'),
-  supportPhone: text('support_phone').notNull().default('+91 98765 43210'),
+  supportEmail: text('support_email').notNull().default('harban.official@gmail.com'),
+  supportPhone: text('support_phone').notNull().default('+91 95551 37346'),
   lowStockThreshold: integer('low_stock_threshold').notNull().default(5),
   freeShippingThreshold: integer('free_shipping_threshold').notNull().default(1500),
   razorpayTestMode: boolean('razorpay_test_mode').notNull().default(true),

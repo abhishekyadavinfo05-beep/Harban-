@@ -261,10 +261,10 @@ export default function AdminDiscountsSection({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display font-bold text-[22px] text-[#111827] tracking-tight leading-tight">
+          <h1 className="font-display font-bold text-[22px] text-[#111315] tracking-tight leading-tight">
             Discounts
           </h1>
-          <p className="text-[13px] text-[#6B7280] mt-0.5">
+          <p className="text-[13px] text-[#6B7078] mt-0.5">
             Create promo codes, coupons and automated store discounts.
           </p>
         </div>
@@ -272,90 +272,90 @@ export default function AdminDiscountsSection({
           <button
             type="button"
             onClick={handleExportCsv}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#E5E7EB] hover:bg-[#F9FAFB] text-[#111827] px-3.5 py-2 rounded-xl shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-white border border-[#E2E4E8] hover:bg-[#F7F8FA] text-[#111315] px-3.5 py-2 rounded-xl shadow-2xs cursor-pointer"
           >
             <Download size={14} className="text-[#4B5563]" /> Export
           </button>
           <button
             type="button"
             onClick={resetForm}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer transition"
           >
             <Plus size={14} /> Create Discount
           </button>
         </div>
       </div>
 
-      {/* 5 Pastel KPI Cards */}
+      {/* 5 Clean Architecture KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#F3E8FF] text-[#6D28D9] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#16181A] text-white grid place-items-center shrink-0">
             <Tag size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Total Discounts</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#6B7078]">Total Discounts</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {stats.total}
             </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">
+            <p className="text-[11px] text-[#6B7078] mt-0.5">
               {stats.totalRedemptions} redemptions
             </p>
           </div>
         </div>
-        <div className="bg-[#F0FDF4] rounded-2xl border border-[#DCFCE7] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#DCFCE7] text-[#16A34A] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#E5FC6B] text-[#141700] grid place-items-center shrink-0">
             <CheckCircle2 size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Active Discounts</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#6B7078]">Active Discounts</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {stats.active}
             </p>
-            <p className="text-[11px] text-[#16A34A] mt-0.5">Ready on checkout</p>
+            <p className="text-[11px] text-[#15803D] font-medium mt-0.5">Ready on checkout</p>
           </div>
         </div>
-        <div className="bg-[#FFFBEB] rounded-2xl border border-[#FEF3C7] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#D97706] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#F3F4F6] text-[#111315] grid place-items-center shrink-0">
             <Clock size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Scheduled</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#6B7078]">Scheduled</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {stats.scheduled}
             </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">Upcoming offers</p>
+            <p className="text-[11px] text-[#6B7078] mt-0.5">Upcoming offers</p>
           </div>
         </div>
-        <div className="bg-[#FFF5F6] rounded-2xl border border-[#FFE4E6] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#FFE4E6] text-[#E11D48] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#FFF5F6] text-[#E11D48] grid place-items-center shrink-0">
             <XCircle size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Expired</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#6B7078]">Expired</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {stats.expired}
             </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">{stats.disabled} paused</p>
+            <p className="text-[11px] text-[#6B7078] mt-0.5">{stats.disabled} paused</p>
           </div>
         </div>
-        <div className="bg-[#EFF6FF] rounded-2xl border border-[#DBEAFE] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#DBEAFE] text-[#2563EB] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#F3F4F6] text-[#111315] grid place-items-center shrink-0">
             <CreditCard size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Total Discount Given</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#6B7078]">Total Discount Given</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {formatINR(stats.totalGiven)}
             </p>
-            <p className="text-[11px] text-[#2563EB] mt-0.5">Across orders</p>
+            <p className="text-[11px] text-[#6B7078] mt-0.5">Across orders</p>
           </div>
         </div>
       </div>
 
       {/* Split Workspace: Table Left, Sticky Create/Edit Panel Right */}
       <div className="grid xl:grid-cols-[1fr_360px] gap-4 items-start">
-        <div className="bg-white rounded-2xl border border-[#EAECF0] overflow-hidden shadow-2xs">
-          <div className="px-4 pt-1 border-b border-[#EAECF0] flex items-center gap-5 overflow-x-auto text-[12.5px]">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] overflow-hidden shadow-2xs">
+          <div className="px-4 pt-1 border-b border-[#E2E4E8] flex items-center gap-5 overflow-x-auto text-[12.5px]">
             {[
               { id: 'all', label: `All Discounts (${stats.total})` },
               { id: 'active', label: `Active (${stats.active})` },
@@ -369,8 +369,8 @@ export default function AdminDiscountsSection({
                 onClick={() => setStatusFilter(t.id)}
                 className={`py-3 border-b-2 transition cursor-pointer whitespace-nowrap ${
                   statusFilter === t.id
-                    ? 'border-[#5B21B6] text-[#5B21B6] font-semibold'
-                    : 'border-transparent text-[#6B7280] hover:text-[#111827] font-medium'
+                    ? 'border-[#16181A] text-[#111315] font-semibold'
+                    : 'border-transparent text-[#6B7078] hover:text-[#111315] font-medium'
                 }`}
               >
                 {t.label}
@@ -446,19 +446,19 @@ export default function AdminDiscountsSection({
                     return (
                       <tr
                         key={d.id}
-                        className={`hover:bg-[#F9FAFB] ${
-                          form.id === d.id ? 'bg-[#F5F3FF]/60' : ''
+                        className={`hover:bg-[#F7F8FA] ${
+                          form.id === d.id ? 'bg-[#F7F8FA]' : ''
                         }`}
                       >
                         <td className="py-3 px-4">
-                          <p className="font-bold text-[#5B21B6] font-mono">{d.code}</p>
-                          <p className="text-[11px] text-[#6B7280] mt-0.5 truncate max-w-[200px]">
+                          <p className="font-bold text-[#111315] font-mono">{d.code}</p>
+                          <p className="text-[11px] text-[#6B7078] mt-0.5 truncate max-w-[200px]">
                             {d.minOrderValue > 0 ? `Min ${formatINR(d.minOrderValue)}` : 'No min spend'}
                             {d.description ? ` · ${d.description}` : ''}
                           </p>
                         </td>
                         <td className="py-3 px-3 whitespace-nowrap">
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F3E8FF] text-[#6D28D9]">
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F1F2F4] text-[#111315] border border-[#E2E4E8]">
                             {d.discountType === 'fixed' ? 'Fixed INR' : 'Percentage'}
                           </span>
                         </td>
@@ -529,18 +529,18 @@ export default function AdminDiscountsSection({
         {/* Sticky Create / Edit Discount Form */}
         <form
           onSubmit={handleSave}
-          className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3.5 shadow-2xs xl:sticky xl:top-20"
+          className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-3.5 shadow-2xs xl:sticky xl:top-20"
         >
-          <div className="flex items-center justify-between pb-2.5 border-b border-[#EAECF0]">
-            <h2 className="font-display font-bold text-[15px] text-[#111827] flex items-center gap-2">
-              <Percent size={15} className="text-[#5B21B6]" />
+          <div className="flex items-center justify-between pb-2.5 border-b border-[#E2E4E8]">
+            <h2 className="font-display font-bold text-[15px] text-[#111315] flex items-center gap-2">
+              <Percent size={15} className="text-[#16181A]" />
               {form.id ? `Edit ${form.code}` : 'Create Discount'}
             </h2>
             {form.id && (
               <button
                 type="button"
                 onClick={resetForm}
-                className="text-[12px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
+                className="text-[12px] font-semibold text-[#111315] hover:underline cursor-pointer"
               >
                 Reset
               </button>
@@ -561,7 +561,7 @@ export default function AdminDiscountsSection({
               <button
                 type="button"
                 onClick={generateCode}
-                className="text-[11px] font-semibold text-[#5B21B6] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                className="text-[11px] font-semibold text-[#111315] hover:underline inline-flex items-center gap-1 cursor-pointer"
               >
                 <Sparkles size={11} /> Generate
               </button>
@@ -573,7 +573,7 @@ export default function AdminDiscountsSection({
                 setForm((d) => ({ ...d, code: e.target.value.toUpperCase() }))
               }
               placeholder="e.g. HARBAN15"
-              className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm font-mono uppercase outline-none focus:border-[#5B21B6]"
+              className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-sm font-mono uppercase outline-none focus:border-[#16181A]"
             />
           </div>
 
@@ -673,7 +673,7 @@ export default function AdminDiscountsSection({
                   name="usageLimitMode"
                   checked={form.usageLimitMode === 'unlimited'}
                   onChange={() => setForm((d) => ({ ...d, usageLimitMode: 'unlimited' }))}
-                  className="accent-[#5B21B6]"
+                  className="accent-[#16181A]"
                 />
                 Unlimited
               </label>
@@ -689,7 +689,7 @@ export default function AdminDiscountsSection({
                       usageLimit: d.usageLimit || '100',
                     }))
                   }
-                  className="accent-[#5B21B6]"
+                  className="accent-[#16181A]"
                 />
                 Limit Uses
               </label>
@@ -701,7 +701,7 @@ export default function AdminDiscountsSection({
                 value={form.usageLimit}
                 onChange={(e) => setForm((d) => ({ ...d, usageLimit: e.target.value }))}
                 placeholder="Maximum redemptions"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-1.5 text-sm tabular-nums outline-none"
+                className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-1.5 text-sm tabular-nums outline-none focus:border-[#16181A]"
               />
             )}
           </div>
@@ -714,16 +714,16 @@ export default function AdminDiscountsSection({
               value={form.description}
               onChange={(e) => setForm((d) => ({ ...d, description: e.target.value }))}
               placeholder="e.g. Summer grooming offer"
-              className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm outline-none"
+              className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-sm outline-none focus:border-[#16181A]"
             />
           </div>
 
-          <label className="inline-flex items-center gap-2 text-[12.5px] font-semibold text-[#111827] cursor-pointer">
+          <label className="inline-flex items-center gap-2 text-[12.5px] font-semibold text-[#111315] cursor-pointer">
             <input
               type="checkbox"
               checked={form.isActive}
               onChange={(e) => setForm((d) => ({ ...d, isActive: e.target.checked }))}
-              className="accent-[#5B21B6]"
+              className="accent-[#16181A]"
             />
             Active on Checkout
           </label>
@@ -731,7 +731,7 @@ export default function AdminDiscountsSection({
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white text-[13px] font-semibold py-2.5 rounded-xl cursor-pointer disabled:opacity-50"
+            className="w-full bg-[#16181A] hover:bg-[#272A2E] text-white text-[13px] font-semibold py-2.5 rounded-xl cursor-pointer disabled:opacity-50 transition"
           >
             {saving ? 'Saving...' : form.id ? 'Update Discount' : 'Save Discount'}
           </button>

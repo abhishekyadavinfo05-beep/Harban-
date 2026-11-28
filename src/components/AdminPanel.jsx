@@ -59,11 +59,10 @@ const PRIMARY_NAV = [
       { id: 'products_add', label: 'Add Product' },
       { id: 'collections', label: 'Categories' },
       { id: 'products_variants', label: 'Variants' },
-      { id: 'inventory', label: 'Inventory' },
     ],
   },
-  { id: 'customers', label: 'Customers', icon: Users },
   { id: 'inventory', label: 'Inventory', icon: Boxes },
+  { id: 'customers', label: 'Customers', icon: Users },
   { id: 'discounts', label: 'Discounts', icon: ShoppingBag },
   { id: 'marketing', label: 'Marketing', icon: Megaphone },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -92,6 +91,25 @@ function parseAdminRoute(routeStr) {
 function sectionToAdminRoute(id) {
   if (!id || id === 'home') return 'admin'
   return `admin:${id}`
+}
+
+const SECTION_TITLES = {
+  home: 'Overview',
+  orders: 'Orders',
+  orders_drafts: 'Draft Orders',
+  abandoned_checkouts: 'Abandoned Checkouts',
+  products: 'Products',
+  products_add: 'Add Product',
+  collections: 'Categories',
+  products_brands: 'Brands',
+  products_variants: 'Variants',
+  inventory: 'Inventory',
+  customers: 'Customers',
+  discounts: 'Discounts',
+  marketing: 'Marketing',
+  analytics: 'Analytics',
+  reports: 'Reports',
+  settings: 'Settings',
 }
 
 export default function AdminPanel() {
@@ -421,23 +439,23 @@ export default function AdminPanel() {
   }
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#0F111A] text-[#CBD5E1]">
+    <div className="admin-sidebar-3d flex flex-col h-full text-[#111315] lg:rounded-[20px] overflow-hidden">
       {/* Brand Header */}
-      <div className="px-4 py-4 flex items-center justify-between border-b border-white/5">
+      <div className="px-3.5 pt-3.5 pb-3 flex items-center justify-between">
         <button
           type="button"
           onClick={() => selectSection('home')}
-          className="flex items-center gap-2.5 text-left cursor-pointer"
+          className="flex items-center gap-2.5 text-left cursor-pointer min-w-0"
         >
-          <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#4F46E5] text-white grid place-items-center shrink-0 shadow-sm">
-            <ShoppingBag size={16} />
+          <span className="w-8 h-8 rounded-xl bg-gradient-to-b from-[#34383F] to-[#121417] border border-black/40 text-white grid place-items-center shrink-0 shadow-[0_6px_14px_-3px_rgba(14,16,18,0.4),inset_0_1px_0_rgba(255,255,255,0.25)]">
+            <ShoppingBag size={15} />
           </span>
-          <div className="leading-tight">
-            <span className="font-display font-black text-[15px] text-white tracking-wider block">
+          <div className="leading-tight min-w-0">
+            <span className="font-display font-bold text-[14.5px] text-[#111315] tracking-tight block truncate">
               HARBAN
             </span>
-            <span className="text-[10.5px] text-[#94A3B8] font-medium block">
-              Admin
+            <span className="text-[11px] text-[#7A8089] font-medium block truncate">
+              Ops workspace
             </span>
           </div>
         </button>
@@ -445,15 +463,38 @@ export default function AdminPanel() {
         <button
           type="button"
           onClick={() => setMobileMenuOpen(false)}
-          className="lg:hidden p-1 text-[#94A3B8] hover:text-white cursor-pointer"
+          className="lg:hidden p-1.5 rounded-lg text-[#686E78] hover:bg-black/5 hover:text-[#111315] cursor-pointer"
           aria-label="Close sidebar"
         >
           <X size={16} />
         </button>
       </div>
 
+      {/* Sidebar Quick Search Trigger */}
+      <div className="px-3 pb-2.5">
+        <button
+          type="button"
+          onClick={() => {
+            setCmdQuery('')
+            setCmdOpen(true)
+          }}
+          className="admin-well-3d w-full hover:brightness-[0.98] rounded-xl px-3 py-1.5 flex items-center justify-between gap-2 text-[12px] text-[#686E78] transition cursor-pointer"
+        >
+          <span className="flex items-center gap-2 truncate">
+            <Search size={13} className="shrink-0 text-[#8A9099]" />
+            <span className="truncate">Search</span>
+          </span>
+          <kbd className="text-[10px] font-mono bg-white text-[#686E78] px-1.5 py-0.5 rounded border border-[#D4D8DF] shadow-[0_2px_4px_rgba(17,19,21,0.08),inset_0_1px_0_#fff]">
+            ⌘K
+          </kbd>
+        </button>
+      </div>
+
       {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-2.5 py-1 space-y-0.5 overflow-y-auto">
+        <p className="px-2.5 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A9099]">
+          Workspace
+        </p>
         {PRIMARY_NAV.map(({ id, label, icon: Icon, children }) => {
           const isDirectActive =
             id === 'products'
@@ -463,7 +504,7 @@ export default function AdminPanel() {
             id === 'orders'
               ? ['orders', 'orders_drafts', 'abandoned_checkouts'].includes(section)
               : id === 'products'
-                ? ['products_add', 'collections', 'products_brands', 'products_variants', 'inventory'].includes(section)
+                ? ['products_add', 'collections', 'products_brands', 'products_variants'].includes(section)
                 : false
           const showChildren =
             Boolean(children) && (isDirectActive || hasActiveChild)
@@ -473,33 +514,32 @@ export default function AdminPanel() {
               <button
                 type="button"
                 onClick={() => selectSection(id)}
-                className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition cursor-pointer ${
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-[13px] transition cursor-pointer ${
                   isDirectActive
-                    ? 'bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white shadow-xs'
+                    ? 'admin-nav-active-3d text-[#111315] font-semibold'
                     : hasActiveChild
-                      ? 'bg-white/10 text-white'
-                      : 'text-[#94A3B8] hover:bg-white/5 hover:text-white'
+                      ? 'bg-white/75 border border-[#D9DDE3] text-[#111315] font-semibold shadow-[0_3px_8px_-2px_rgba(17,19,21,0.06)]'
+                      : 'border border-transparent text-[#5C626B] font-medium hover:bg-black/[0.035] hover:text-[#111315]'
                 }`}
               >
                 <span className="flex items-center gap-2.5 min-w-0">
-                  <Icon size={16} className="shrink-0" />
+                  <Icon
+                    size={15}
+                    className={`shrink-0 ${
+                      isDirectActive || hasActiveChild ? 'text-[#16181A]' : 'text-[#7A8089]'
+                    }`}
+                  />
                   <span className="truncate">{label}</span>
                 </span>
                 {id === 'orders' && (
-                  <span
-                    className={`text-[11px] font-mono tabular-nums px-2 py-0.5 rounded-full font-bold ${
-                      isDirectActive
-                        ? 'bg-white/20 text-white'
-                        : 'bg-[#6D28D9] text-white'
-                    }`}
-                  >
+                  <span className="text-[11px] font-mono tabular-nums px-2 py-0.5 rounded-full font-bold bg-[#D9F94F] text-[#111315]">
                     {openOrdersCount || overview.orders?.length || 0}
                   </span>
                 )}
               </button>
 
               {showChildren && (
-                <div className="mt-1 ml-2 pl-4 border-l border-white/10 space-y-0.5 bg-white/[0.03] rounded-r-xl py-1 pr-1.5">
+                <div className="mt-1 ml-3 pl-3 border-l border-[#E2E4E8] space-y-0.5 py-0.5">
                   {children.map((ch) => {
                     const childActive =
                       ch.id === 'products'
@@ -512,15 +552,17 @@ export default function AdminPanel() {
                         key={ch.id}
                         type="button"
                         onClick={() => selectSection(ch.id)}
-                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition cursor-pointer flex items-center gap-2 ${
+                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[12px] transition cursor-pointer flex items-center gap-2 ${
                           childActive
-                            ? 'bg-white/10 text-white font-semibold'
-                            : 'text-[#94A3B8] hover:bg-white/5 hover:text-white'
+                            ? 'admin-nav-active-3d text-[#111315] font-semibold'
+                            : 'text-[#686E78] font-medium hover:bg-black/[0.035] hover:text-[#111315]'
                         }`}
                       >
                         <span
-                          className={`w-1 h-1 rounded-full ${
-                            childActive ? 'bg-white' : 'bg-[#64748B]'
+                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            childActive
+                              ? 'bg-[#A6EB00] shadow-[0_0_6px_rgba(166,235,0,0.9)]'
+                              : 'bg-[#C4C9D0]'
                           }`}
                         />
                         {ch.label}
@@ -535,51 +577,123 @@ export default function AdminPanel() {
       </nav>
 
       {/* Bottom View Store */}
-      <div className="px-3 py-3 border-t border-white/10">
+      <div className="p-2.5 border-t border-[#E2E4E8]">
         <button
           type="button"
           onClick={() => go('home')}
-          className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-[#CBD5E1] hover:bg-white/5 hover:text-white transition cursor-pointer"
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white border border-[#E2E4E8] text-[12.5px] font-semibold text-[#111315] hover:bg-[#F1F2F4] transition cursor-pointer shadow-2xs"
         >
-          <span className="flex items-center gap-2.5">
-            <Eye size={16} />
+          <span className="flex items-center gap-2">
+            <Eye size={14} className="text-[#5C626B]" />
             <span>View Store</span>
           </span>
-          <ExternalLink size={13} className="text-[#94A3B8]" />
+          <ExternalLink size={12} className="text-[#8A9099]" />
         </button>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen flex bg-[#F6F7FB] text-[#111827]">
-      {/* Fixed Left Sidebar (Desktop) */}
-      <aside className="no-print hidden lg:block w-[228px] shrink-0 bg-[#0F111A]">
-        <div className="sticky top-0 h-screen">{sidebarContent}</div>
+    <div className="admin-fieldnote-3d min-h-screen flex bg-[#E4E7EB] text-[#111315] lg:p-3.5 lg:gap-3.5">
+      {/* Slim Obsidian Icon Rail + Light Floating Workspace Sidebar (Desktop) */}
+      <aside className="no-print hidden lg:flex gap-3 shrink-0">
+        <div className="admin-rail-3d w-[52px] shrink-0 text-[#8E939C] rounded-[20px] py-3 flex flex-col items-center justify-between sticky top-3.5 h-[calc(100vh-28px)]">
+          <div className="flex flex-col items-center gap-1.5 w-full px-1.5">
+            <button
+              type="button"
+              onClick={() => selectSection('home')}
+              title="HARBAN Admin"
+              className="w-9 h-9 rounded-xl bg-gradient-to-b from-[#3A3E46] to-[#23262B] border border-white/15 text-white grid place-items-center mb-1.5 cursor-pointer hover:brightness-110 transition shadow-[0_6px_12px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.22)]"
+            >
+              <ShoppingBag size={15} />
+            </button>
+
+            {PRIMARY_NAV.filter((n) => n.id !== 'settings').map(({ id, label, icon: Icon }) => {
+              const isRailActive =
+                id === 'products'
+                  ? section === 'products' ||
+                    ['products_add', 'collections', 'products_brands', 'products_variants'].includes(section)
+                  : id === 'orders'
+                    ? ['orders', 'orders_drafts', 'abandoned_checkouts'].includes(section)
+                    : section === id
+              return (
+                <button
+                  key={`rail-${id}`}
+                  type="button"
+                  onClick={() => selectSection(id)}
+                  title={label}
+                  aria-label={label}
+                  className={`relative w-9 h-9 rounded-xl grid place-items-center transition cursor-pointer ${
+                    isRailActive
+                      ? 'admin-rail-btn-active text-white'
+                      : 'text-[#8E939C] hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Icon size={15} />
+                  {isRailActive && (
+                    <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#D9F94F] shadow-[0_0_8px_rgba(217,249,79,0.9)]" />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="flex flex-col items-center gap-1.5 w-full px-1.5 pt-2 border-t border-white/10">
+            <button
+              type="button"
+              onClick={() => selectSection('settings')}
+              title="Settings"
+              aria-label="Settings"
+              className={`relative w-9 h-9 rounded-xl grid place-items-center transition cursor-pointer ${
+                section === 'settings'
+                  ? 'admin-rail-btn-active text-white'
+                  : 'text-[#8E939C] hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Settings size={15} />
+              {section === 'settings' && (
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#D9F94F] shadow-[0_0_8px_rgba(217,249,79,0.9)]" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => go('home')}
+              title="View Store"
+              aria-label="View Store"
+              className="w-9 h-9 rounded-xl grid place-items-center text-[#8E939C] hover:text-white hover:bg-white/5 transition cursor-pointer"
+            >
+              <Eye size={15} />
+            </button>
+          </div>
+        </div>
+
+        <div className="w-[224px] shrink-0 sticky top-3.5 h-[calc(100vh-28px)]">
+          {sidebarContent}
+        </div>
       </aside>
 
       {/* Mobile Drawer Sidebar */}
       {mobileMenuOpen && (
         <div className="no-print fixed inset-0 z-[75] lg:hidden">
           <div
-            className="absolute inset-0 bg-black/55 backdrop-blur-xs"
+            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside className="relative w-[248px] h-full shadow-2xl">
+          <aside className="relative w-[256px] h-full shadow-2xl">
             {sidebarContent}
           </aside>
         </div>
       )}
 
       {/* Right Workspace Column */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        {/* Clean White Top Header Bar */}
-        <header className="no-print h-[60px] bg-white border-b border-[#EAECF0] px-4 sm:px-6 flex items-center justify-between gap-3 sticky top-0 z-40">
+      <div className="admin-workspace-3d flex-1 min-w-0 flex flex-col lg:rounded-[22px]">
+        {/* Clean Light Top Header Bar */}
+        <header className="no-print h-[60px] bg-white/75 backdrop-blur-md border-b border-[#D9DDE3] lg:rounded-t-[22px] px-4 sm:px-6 flex items-center justify-between gap-3 sticky top-0 z-40">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-1.5 rounded-lg text-[#4B5563] hover:bg-[#F3F4F6] cursor-pointer"
+              className="lg:hidden p-1.5 rounded-lg text-[#4B5563] hover:bg-[#ECEEF0] cursor-pointer"
               aria-label="Open menu"
             >
               <Menu size={18} />
@@ -593,7 +707,7 @@ export default function AdminPanel() {
                 disabled={!canGoBack}
                 title="Back"
                 aria-label="Go back"
-                className="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F4F5F8] disabled:opacity-35 disabled:cursor-not-allowed grid place-items-center text-[#374151] transition cursor-pointer"
+                className="w-8 h-8 rounded-xl border border-[#E2E4E8] bg-white hover:bg-[#ECEEF0] disabled:opacity-35 disabled:cursor-not-allowed grid place-items-center text-[#374151] transition cursor-pointer"
               >
                 <ArrowLeft size={14} />
               </button>
@@ -603,11 +717,15 @@ export default function AdminPanel() {
                 disabled={!canGoForward}
                 title="Forward"
                 aria-label="Go forward"
-                className="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F4F5F8] disabled:opacity-35 disabled:cursor-not-allowed grid place-items-center text-[#374151] transition cursor-pointer"
+                className="w-8 h-8 rounded-xl border border-[#E2E4E8] bg-white hover:bg-[#ECEEF0] disabled:opacity-35 disabled:cursor-not-allowed grid place-items-center text-[#374151] transition cursor-pointer"
               >
                 <ArrowRight size={14} />
               </button>
             </div>
+
+            <span className="hidden xl:inline-block text-[11px] font-semibold uppercase tracking-[0.08em] text-[#7A8089] whitespace-nowrap px-1">
+              HARBAN / {SECTION_TITLES[section] || 'Overview'}
+            </span>
 
             <button
               type="button"
@@ -615,27 +733,27 @@ export default function AdminPanel() {
                 setCmdQuery('')
                 setCmdOpen(true)
               }}
-              className="flex-1 max-w-md bg-[#F4F5F8] hover:bg-[#ECEEF2] border border-[#E5E7EB] rounded-xl px-3.5 py-2 flex items-center justify-between gap-2 text-[12.5px] text-[#6B7280] transition cursor-pointer"
+              className="flex-1 max-w-md bg-white hover:bg-[#ECEEF0]/60 border border-[#D8DCE2] rounded-xl px-3.5 py-2 flex items-center justify-between gap-2 text-[12.5px] text-[#686E78] transition cursor-pointer shadow-[inset_0_1px_2px_rgba(17,19,21,0.05),0_2px_6px_rgba(17,19,21,0.06)]"
             >
               <span className="flex items-center gap-2 truncate">
-                <Search size={14} className="shrink-0 text-[#9CA3AF]" />
+                <Search size={14} className="shrink-0 text-[#8A9099]" />
                 <span className="truncate">
                   Search products, orders, customers...
                 </span>
               </span>
-              <kbd className="hidden sm:inline-block text-[10.5px] font-mono bg-white text-[#6B7280] px-1.5 py-0.5 rounded border border-[#E5E7EB]">
+              <kbd className="hidden sm:inline-block text-[10.5px] font-mono bg-[#F4F5F7] text-[#686E78] px-1.5 py-0.5 rounded border border-[#D8DCE2] shadow-[0_1px_2px_rgba(17,19,21,0.07)]">
                 Ctrl K
               </kbd>
             </button>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <button
               type="button"
               onClick={reload}
               disabled={loading}
               title="Refresh store data"
-              className="w-9 h-9 rounded-xl border border-[#EAECF0] hover:bg-[#F4F5F8] grid place-items-center text-[#4B5563] cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-white border border-[#E2E4E8] hover:bg-[#ECEEF0] grid place-items-center text-[#4B5563] cursor-pointer transition"
               aria-label="Refresh store data"
             >
               <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
@@ -646,12 +764,12 @@ export default function AdminPanel() {
                 type="button"
                 onClick={() => setNotifOpen((v) => !v)}
                 title="Store notifications"
-                className="relative w-9 h-9 rounded-xl border border-[#EAECF0] hover:bg-[#F4F5F8] grid place-items-center text-[#4B5563] cursor-pointer"
+                className="relative w-9 h-9 rounded-xl bg-white border border-[#E2E4E8] hover:bg-[#ECEEF0] grid place-items-center text-[#4B5563] cursor-pointer transition"
                 aria-label="Notifications"
               >
                 <Bell size={15} />
                 {notifications.length > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#6D28D9]" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#B8E600] ring-2 ring-white" />
                 )}
               </button>
 
@@ -661,22 +779,22 @@ export default function AdminPanel() {
                     className="fixed inset-0 z-40"
                     onClick={() => setNotifOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl border border-[#EAECF0] shadow-xl z-50 overflow-hidden">
-                    <div className="px-4 py-3 border-b border-[#EAECF0] flex items-center justify-between">
-                      <span className="font-display font-bold text-[13px] text-[#111827]">
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl border border-[#E2E4E8] shadow-xl z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-[#E2E4E8] flex items-center justify-between">
+                      <span className="font-display font-bold text-[13px] text-[#111315]">
                         Notifications ({notifications.length})
                       </span>
                       <button
                         type="button"
                         onClick={() => setNotifOpen(false)}
-                        className="text-[#6B7280] hover:text-[#111827] cursor-pointer"
+                        className="text-[#686E78] hover:text-[#111315] cursor-pointer"
                       >
                         <X size={14} />
                       </button>
                     </div>
-                    <div className="max-h-72 overflow-y-auto divide-y divide-[#EAECF0]">
+                    <div className="max-h-72 overflow-y-auto divide-y divide-[#ECEEF0]">
                       {notifications.length === 0 ? (
-                        <p className="p-4 text-[12px] text-[#6B7280] text-center">
+                        <p className="p-4 text-[12px] text-[#686E78] text-center">
                           All orders fulfilled and inventory levels healthy.
                         </p>
                       ) : (
@@ -685,12 +803,12 @@ export default function AdminPanel() {
                             key={n.id}
                             type="button"
                             onClick={n.action}
-                            className="w-full text-left px-4 py-2.5 hover:bg-[#F9FAFB] cursor-pointer"
+                            className="w-full text-left px-4 py-2.5 hover:bg-[#F7F8FA] cursor-pointer"
                           >
-                            <p className="text-[12.5px] font-semibold text-[#111827] truncate">
+                            <p className="text-[12.5px] font-semibold text-[#111315] truncate">
                               {n.title}
                             </p>
-                            <p className="text-[11px] text-[#6B7280] mt-0.5 truncate">
+                            <p className="text-[11px] text-[#686E78] mt-0.5 truncate">
                               {n.sub}
                             </p>
                           </button>
@@ -706,7 +824,7 @@ export default function AdminPanel() {
               type="button"
               onClick={() => go('support')}
               title="Store support & help"
-              className="hidden sm:grid w-9 h-9 rounded-xl border border-[#EAECF0] hover:bg-[#F4F5F8] place-items-center text-[#4B5563] cursor-pointer"
+              className="hidden sm:grid w-9 h-9 rounded-xl bg-white border border-[#E2E4E8] hover:bg-[#ECEEF0] place-items-center text-[#4B5563] cursor-pointer transition"
               aria-label="Help"
             >
               <HelpCircle size={15} />
@@ -715,17 +833,17 @@ export default function AdminPanel() {
             <button
               type="button"
               onClick={() => go('account')}
-              className="flex items-center gap-2.5 pl-1 pr-2 py-1 rounded-xl hover:bg-[#F4F5F8] transition text-left cursor-pointer"
+              className="flex items-center gap-2.5 pl-1.5 pr-2.5 py-1 rounded-xl bg-white border border-[#E2E4E8] hover:bg-[#ECEEF0]/60 transition text-left cursor-pointer"
             >
-              <span className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6D28D9] to-[#4F46E5] text-white font-display font-bold text-[12px] grid place-items-center shrink-0">
+              <span className="w-7 h-7 rounded-lg bg-[#16181A] text-white font-display font-bold text-[11px] grid place-items-center shrink-0">
                 {(user?.name || 'H').slice(0, 1).toUpperCase()}
               </span>
               <div className="hidden sm:block leading-tight">
-                <p className="text-[12.5px] font-bold text-[#111827]">
+                <p className="text-[12px] font-bold text-[#111315]">
                   {user?.name || 'Harban Admin'}
                 </p>
-                <p className="text-[11px] text-[#6B7280] truncate max-w-[140px]">
-                  {user?.email || 'admin@harban.in'}
+                <p className="text-[10.5px] text-[#686E78] truncate max-w-[140px]">
+                  {user?.email || 'harban.official@gmail.com'}
                 </p>
               </div>
             </button>
@@ -752,7 +870,7 @@ export default function AdminPanel() {
             )}
 
             {loading && overview.products.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-[#EAECF0] p-10 text-center text-[13px] text-[#6B7280]">
+              <div className="bg-white rounded-[18px] border border-[#DBDFE5] p-10 text-center text-[13px] text-[#686E78]">
                 Loading HARBAN admin workspace...
               </div>
             ) : section === 'home' ? (
@@ -909,7 +1027,7 @@ export default function AdminPanel() {
             className="absolute inset-0 bg-black/55 backdrop-blur-xs"
             onClick={() => setCmdOpen(false)}
           />
-          <div className="relative bg-white rounded-xl border border-[#E3E3E3] max-w-xl w-full shadow-2xl overflow-hidden">
+          <div className="relative bg-white rounded-[18px] border border-[#DBDFE5] max-w-xl w-full shadow-[0_24px_60px_-12px_rgba(14,16,18,0.38)] overflow-hidden">
             <div className="px-4 py-3 border-b border-[#EAEAEA] flex items-center gap-2.5">
               <Search size={15} className="text-[#616161] shrink-0" />
               <input
@@ -961,8 +1079,8 @@ export default function AdminPanel() {
                       className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-[#F7F7F7] flex items-center justify-between gap-2 cursor-pointer"
                     >
                       <span>
-                        <strong className="font-mono text-[#5B21B6]">#{o.id}</strong>{' '}
-                        <span className="text-[#616161]">· {o.customerName}</span>
+                        <strong className="font-mono text-[#111315]">#{o.id}</strong>{' '}
+                        <span className="text-[#686E78]">· {o.customerName}</span>
                       </span>
                       <span className="font-semibold tabular-nums">
                         {formatINR(o.total)}

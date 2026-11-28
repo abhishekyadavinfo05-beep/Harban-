@@ -56,7 +56,7 @@ import {
   sbUploadImage,
   sbVerifyRazorpayPayment,
 } from '../lib/supabaseBrowser'
-import { DEFAULT_STORE_SETTINGS } from '../lib/storeSettings'
+import { DEFAULT_STORE_SETTINGS, unpackStoreSettings } from '../lib/storeSettings'
 import {
   categories as initialCategories,
   faqs as initialFaqs,
@@ -409,7 +409,7 @@ export function ShopProvider({ children }) {
   const [faqs, setFaqs] = useState(initialFaqs)
   const [marqueeStats, setMarqueeStats] = useState(initialMarqueeStats)
   const [storeSettings, setStoreSettings] = useState(() =>
-    readLocal('harban-store-settings', DEFAULT_STORE_SETTINGS),
+    unpackStoreSettings(readLocal('harban-store-settings', DEFAULT_STORE_SETTINGS)),
   )
   const [payments, setPayments] = useState({
     razorpayEnabled: true,
@@ -642,7 +642,7 @@ export function ShopProvider({ children }) {
       }
       if (data.settings && typeof data.settings === 'object') {
         setStoreSettings((prev) => {
-          const next = { ...prev, ...data.settings }
+          const next = unpackStoreSettings({ ...prev, ...data.settings })
           writeLocal('harban-store-settings', next)
           return next
         })

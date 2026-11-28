@@ -100,7 +100,7 @@ export default function InlineStockControl({
         }
       }}
       aria-label="Edit stock quantity"
-      className="w-16 h-6 text-center text-[13px] font-bold tabular-nums bg-white text-[#111827] border border-[#5B21B6] rounded-lg px-1.5 outline-none ring-2 ring-[#5B21B6]/15 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      className="w-16 h-6 text-center text-[13px] font-bold tabular-nums bg-white text-[#111315] border border-[#16181A] rounded-lg px-1.5 outline-none ring-2 ring-[#16181A]/15 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
     />
   ) : (
     <button
@@ -108,7 +108,7 @@ export default function InlineStockControl({
       onClick={startEdit}
       disabled={busy}
       title="Click to type stock quantity"
-      className={`font-bold tabular-nums min-w-[28px] px-1.5 py-0.5 rounded-md hover:bg-[#F3E8FF]/70 hover:text-[#5B21B6] transition cursor-text text-center disabled:opacity-50 ${colorClass}`}
+      className={`font-bold tabular-nums min-w-[28px] px-1.5 py-0.5 rounded-md hover:bg-[#E5FC6B]/70 hover:text-[#111315] transition cursor-text text-center disabled:opacity-50 ${colorClass}`}
     >
       {numericStock}
     </button>

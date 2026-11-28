@@ -18,7 +18,7 @@ export function isAdminEmail(email: string): boolean {
   const clean = email.trim().toLowerCase()
   const raw =
     process.env.ADMIN_EMAILS ||
-    'abhishekyadavinfo05@gmail.com,care@harban.in'
+    'abhishekyadavinfo05@gmail.com,harban.official@gmail.com'
   const list = raw
     .split(',')
     .map((e) => e.trim().toLowerCase())

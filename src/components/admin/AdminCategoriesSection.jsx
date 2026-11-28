@@ -277,10 +277,10 @@ export default function AdminCategoriesSection({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display font-bold text-[22px] text-[#111827] tracking-tight leading-tight">
+          <h1 className="font-display font-bold text-[22px] text-[#111315] tracking-tight leading-tight">
             Categories
           </h1>
-          <p className="text-[13px] text-[#6B7280] mt-0.5">
+          <p className="text-[13px] text-[#6B7078] mt-0.5">
             Organize your product categories and display order cleanly.
           </p>
         </div>
@@ -305,14 +305,14 @@ export default function AdminCategoriesSection({
               setEditingId(null)
               setForm(EMPTY_CATEGORY)
             }}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer transition"
           >
             <Plus size={14} /> Add Category
           </button>
         </div>
       </div>
 
-      {/* 5 Pastel KPI Cards */}
+      {/* 5 Clean Architecture KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {[
           {
@@ -320,8 +320,8 @@ export default function AdminCategoriesSection({
             label: 'Total Categories',
             count: stats.total,
             sub: 'Synced catalog groups',
-            cardCls: 'bg-white border-[#EAECF0]',
-            iconCls: 'bg-[#F3E8FF] text-[#6D28D9]',
+            cardCls: 'bg-white border-[#E2E4E8]',
+            iconCls: 'bg-[#16181A] text-white',
             Icon: Layers,
           },
           {
@@ -329,8 +329,8 @@ export default function AdminCategoriesSection({
             label: 'Active Categories',
             count: stats.active,
             sub: 'Live on storefront',
-            cardCls: 'bg-[#F0FDF4] border-[#DCFCE7]',
-            iconCls: 'bg-[#DCFCE7] text-[#16A34A]',
+            cardCls: 'bg-white border-[#E2E4E8]',
+            iconCls: 'bg-[#E5FC6B] text-[#141700]',
             Icon: CheckCircle2,
           },
           {
@@ -338,8 +338,8 @@ export default function AdminCategoriesSection({
             label: 'Inactive',
             count: stats.inactive,
             sub: 'Hidden from menu',
-            cardCls: 'bg-[#FFFBEB] border-[#FEF3C7]',
-            iconCls: 'bg-[#FEF3C7] text-[#D97706]',
+            cardCls: 'bg-white border-[#E2E4E8]',
+            iconCls: 'bg-[#F3F4F6] text-[#111315]',
             Icon: EyeOff,
           },
           {
@@ -347,8 +347,8 @@ export default function AdminCategoriesSection({
             label: 'With Products',
             count: stats.withProducts,
             sub: `${products.length} items total`,
-            cardCls: 'bg-[#EFF6FF] border-[#DBEAFE]',
-            iconCls: 'bg-[#DBEAFE] text-[#2563EB]',
+            cardCls: 'bg-white border-[#E2E4E8]',
+            iconCls: 'bg-[#F3F4F6] text-[#111315]',
             Icon: Package,
           },
           {
@@ -356,8 +356,8 @@ export default function AdminCategoriesSection({
             label: 'Empty Categories',
             count: stats.empty,
             sub: stats.empty > 0 ? 'Needs products' : 'All populated',
-            cardCls: 'bg-[#FFF5F6] border-[#FFE4E6]',
-            iconCls: 'bg-[#FFE4E6] text-[#E11D48]',
+            cardCls: 'bg-white border-[#E2E4E8]',
+            iconCls: stats.empty > 0 ? 'bg-[#FFF5F6] text-[#E11D48]' : 'bg-[#F3F4F6] text-[#111315]',
             Icon: FolderKanban,
           },
         ].map((card) => {
@@ -368,19 +368,19 @@ export default function AdminCategoriesSection({
               key={card.id}
               type="button"
               onClick={() => setStatusFilter(card.id)}
-              className={`text-left rounded-2xl border p-4 shadow-2xs flex items-start gap-3 transition cursor-pointer ${card.cardCls} ${
-                isSelected ? 'ring-2 ring-[#5B21B6]/50' : 'hover:border-[#C4B5FD]'
+              className={`text-left rounded-[18px] border p-4 shadow-2xs flex items-start gap-3 transition cursor-pointer ${card.cardCls} ${
+                isSelected ? 'ring-2 ring-[#16181A]/25 border-[#16181A]' : 'hover:border-[#C7CCD2]'
               }`}
             >
               <span className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 ${card.iconCls}`}>
                 <Icon size={18} />
               </span>
               <div className="min-w-0">
-                <p className="text-[12px] font-medium text-[#6B7280] truncate">{card.label}</p>
-                <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+                <p className="text-[12px] font-medium text-[#6B7078] truncate">{card.label}</p>
+                <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
                   {card.count}
                 </p>
-                <p className="text-[11px] text-[#6B7280] truncate mt-0.5">{card.sub}</p>
+                <p className="text-[11px] text-[#6B7078] truncate mt-0.5">{card.sub}</p>
               </div>
             </button>
           )
@@ -389,7 +389,7 @@ export default function AdminCategoriesSection({
 
       {/* Main Split Workspace */}
       <div className="grid lg:grid-cols-[1fr_360px] gap-4 items-start">
-        <div className="bg-white rounded-2xl border border-[#EAECF0] overflow-hidden shadow-2xs">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] overflow-hidden shadow-2xs">
           {/* Toolbar */}
           <div className="p-3.5 border-b border-[#EAECF0] flex flex-wrap items-center justify-between gap-2.5">
             <div className="flex items-center gap-2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 flex-1 min-w-[200px]">
@@ -458,19 +458,19 @@ export default function AdminCategoriesSection({
                 return (
                   <div
                     key={c.id}
-                    className="rounded-2xl border border-[#EAECF0] p-3.5 space-y-3 hover:border-[#C4B5FD] bg-white transition"
+                    className="rounded-[18px] border border-[#E2E4E8] p-3.5 space-y-3 hover:border-[#C7CCD2] bg-white transition"
                   >
                     <div className="flex items-start gap-3">
                       <Img
                         src={c.image}
                         alt={c.label}
-                        className="w-12 h-12 rounded-xl object-cover border border-[#EAECF0] shrink-0"
+                        className="w-12 h-12 rounded-xl object-cover border border-[#E2E4E8] shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-[13.5px] text-[#111827] truncate">
+                        <p className="font-semibold text-[13.5px] text-[#111315] truncate">
                           {c.label}
                         </p>
-                        <p className="text-[11px] font-mono text-[#5B21B6]">/{c.id}</p>
+                        <p className="text-[11px] font-mono text-[#111315] bg-[#F1F2F4] inline-block px-1.5 py-0.5 rounded mt-0.5">/{c.id}</p>
                         <p className="text-[11px] text-[#6B7280] mt-0.5">
                           {count} product{count === 1 ? '' : 's'} · Order {c.sortOrder ?? 0}
                         </p>
@@ -542,24 +542,24 @@ export default function AdminCategoriesSection({
                     return (
                       <tr
                         key={c.id}
-                        className={`hover:bg-[#F9FAFB] ${isEditingRow ? 'bg-[#F5F3FF]/60' : ''}`}
+                        className={`hover:bg-[#F7F8FA] ${isEditingRow ? 'bg-[#F7F8FA]' : ''}`}
                       >
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3 min-w-[180px]">
                             <Img
                               src={c.image}
                               alt={c.label}
-                              className="w-10 h-10 rounded-xl object-cover border border-[#EAECF0] bg-[#F9FAFB] shrink-0"
+                              className="w-10 h-10 rounded-xl object-cover border border-[#E2E4E8] bg-[#F7F8FA] shrink-0"
                             />
                             <div className="min-w-0">
-                              <p className="font-semibold text-[#111827] truncate">{c.label}</p>
-                              <p className="text-[11px] text-[#6B7280] truncate max-w-[200px]">
+                              <p className="font-semibold text-[#111315] truncate">{c.label}</p>
+                              <p className="text-[11px] text-[#6B7078] truncate max-w-[200px]">
                                 {c.blurb || 'No description'}
                               </p>
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-3 font-mono text-[12px] text-[#5B21B6]">
+                        <td className="py-3 px-3 font-mono text-[12px] text-[#111315] font-semibold">
                           /{c.id}
                         </td>
                         <td className="py-3 px-3 font-semibold text-[#111827] tabular-nums">
@@ -656,11 +656,11 @@ export default function AdminCategoriesSection({
         {/* Sticky Category Create / Edit Form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-3.5 shadow-2xs lg:sticky lg:top-20"
+          className="bg-white rounded-[18px] border border-[#E2E4E8] p-5 space-y-3.5 shadow-2xs lg:sticky lg:top-20"
         >
-          <div className="flex items-center justify-between pb-2.5 border-b border-[#EAECF0]">
-            <h2 className="font-display font-bold text-[15px] text-[#111827] flex items-center gap-2">
-              <FolderKanban size={16} className="text-[#5B21B6]" />
+          <div className="flex items-center justify-between pb-2.5 border-b border-[#E2E4E8]">
+            <h2 className="font-display font-bold text-[15px] text-[#111315] flex items-center gap-2">
+              <FolderKanban size={16} className="text-[#16181A]" />
               {editingId ? `Edit "${form.label}"` : 'Add Category'}
             </h2>
             {editingId && (
@@ -670,7 +670,7 @@ export default function AdminCategoriesSection({
                   setEditingId(null)
                   setForm(EMPTY_CATEGORY)
                 }}
-                className="text-[12px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
+                className="text-[12px] font-semibold text-[#111315] hover:underline cursor-pointer"
               >
                 New
               </button>
@@ -686,7 +686,7 @@ export default function AdminCategoriesSection({
               value={form.label}
               onChange={(e) => setForm((c) => ({ ...c, label: e.target.value }))}
               placeholder="e.g. Beard Trimmers"
-              className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm outline-none focus:border-[#5B21B6]"
+              className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-sm outline-none focus:border-[#16181A]"
             />
           </div>
 
@@ -726,7 +726,7 @@ export default function AdminCategoriesSection({
               value={form.blurb}
               onChange={(e) => setForm((c) => ({ ...c, blurb: e.target.value }))}
               placeholder="Precision styling for daily routines"
-              className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm outline-none focus:border-[#5B21B6]"
+              className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 text-sm outline-none focus:border-[#16181A]"
             />
           </div>
 
@@ -739,9 +739,9 @@ export default function AdminCategoriesSection({
                 value={form.image}
                 onChange={(e) => setForm((c) => ({ ...c, image: e.target.value }))}
                 placeholder="/images/product-ht100.jpg"
-                className="flex-1 min-w-0 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm outline-none"
+                className="flex-1 min-w-0 bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-sm outline-none focus:border-[#16181A]"
               />
-              <label className="shrink-0 inline-flex items-center gap-1.5 bg-[#F3E8FF] hover:bg-[#EDE9FE] text-[#5B21B6] text-[12px] font-semibold px-3 py-2 rounded-xl cursor-pointer transition">
+              <label className="shrink-0 inline-flex items-center gap-1.5 bg-[#F1F2F4] hover:bg-[#E5E7EB] text-[#111315] border border-[#E2E4E8] text-[12px] font-semibold px-3 py-2 rounded-xl cursor-pointer transition">
                 <Upload size={13} />
                 {uploading ? '...' : 'Upload'}
                 <input
@@ -761,7 +761,7 @@ export default function AdminCategoriesSection({
               onChange={(e) =>
                 setForm((c) => ({ ...c, isActive: e.target.checked }))
               }
-              className="accent-[#5B21B6]"
+              className="accent-[#16181A]"
             />
             Visible on Storefront
           </label>
@@ -769,7 +769,7 @@ export default function AdminCategoriesSection({
           <button
             type="submit"
             disabled={saving}
-            className="w-full inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white text-[13px] font-semibold py-2.5 rounded-xl shadow-xs transition cursor-pointer disabled:opacity-60"
+            className="w-full inline-flex items-center justify-center gap-1.5 bg-[#16181A] hover:bg-[#272A2E] text-white text-[13px] font-semibold py-2.5 rounded-xl shadow-xs transition cursor-pointer disabled:opacity-60"
           >
             <Plus size={14} />
             {saving ? 'Saving...' : editingId ? 'Update Category' : 'Create Category'}
@@ -809,20 +809,20 @@ export default function AdminCategoriesSection({
               value={importCsvText}
               onChange={(e) => setImportCsvText(e.target.value)}
               placeholder={`beard, Beard Trimmers, Clean sharp trims, 1, active\nnose, Ear & Nose, Precision detailing, 2, active`}
-              className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-3 text-[12px] font-mono outline-none focus:border-[#5B21B6]"
+              className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl p-3 text-[12px] font-mono outline-none focus:border-[#16181A]"
             />
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setImportOpen(false)}
-                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
+                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7078] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={importing}
-                className="px-4 py-2 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white rounded-xl cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white rounded-xl cursor-pointer disabled:opacity-50"
               >
                 {importing ? 'Importing...' : 'Import Categories'}
               </button>

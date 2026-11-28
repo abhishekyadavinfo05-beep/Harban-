@@ -558,8 +558,8 @@ create table if not exists public.marketing_attributions (
 create table if not exists public.store_settings (
   id text primary key,
   store_name text not null default 'HARBAN',
-  support_email text not null default 'care@harban.in',
-  support_phone text not null default '+91 98765 43210',
+  support_email text not null default 'harban.official@gmail.com',
+  support_phone text not null default '+91 95551 37346',
   low_stock_threshold integer not null default 5,
   free_shipping_threshold integer not null default 1500,
   razorpay_test_mode boolean not null default true,

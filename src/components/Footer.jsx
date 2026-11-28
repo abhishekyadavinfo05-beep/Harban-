@@ -16,7 +16,7 @@ import { useShop } from '../store/shop'
 
 export function Faq() {
   const [open, setOpen] = useState(0)
-  const { pushToast, faqs } = useShop()
+  const { pushToast, faqs, storeSettings } = useShop()
 
   return (
     <section className="max-w-7xl mx-auto px-4 mt-10">
@@ -64,10 +64,12 @@ export function Faq() {
             </h3>
             <div className="flex flex-wrap gap-x-8 gap-y-2.5 mt-4 text-[13.5px]">
               <p className="flex items-center gap-2.5 text-white/80">
-                <Phone size={15} className="text-[#E8C547]" /> +91 98765 43210
+                <Phone size={15} className="text-[#E8C547]" />{' '}
+                {storeSettings?.supportPhone || '+91 95551 37346'}
               </p>
               <p className="flex items-center gap-2.5 text-white/80">
-                <Mail size={15} className="text-[#E8C547]" /> care@harban.in
+                <Mail size={15} className="text-[#E8C547]" />{' '}
+                {storeSettings?.supportEmail || 'harban.official@gmail.com'}
               </p>
               <p className="flex items-center gap-2.5 text-white/80">
                 <MapPin size={15} className="text-[#E8C547]" /> Mumbai, India

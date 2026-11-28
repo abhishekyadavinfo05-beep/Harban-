@@ -122,7 +122,7 @@ function StoryPage() {
 }
 
 function ContactPage() {
-  const { pushToast, go, sendContactMessage } = useShop()
+  const { pushToast, go, sendContactMessage, storeSettings } = useShop()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
@@ -166,10 +166,12 @@ function ContactPage() {
 
           <div className="space-y-3 text-[13.5px]">
             <p className="flex items-center gap-3 text-white/85">
-              <Phone size={16} className="text-[#E8C547] shrink-0" /> +91 98765 43210
+              <Phone size={16} className="text-[#E8C547] shrink-0" />{' '}
+              {storeSettings?.supportPhone || '+91 95551 37346'}
             </p>
             <p className="flex items-center gap-3 text-white/85">
-              <Mail size={16} className="text-[#E8C547] shrink-0" /> care@harban.in
+              <Mail size={16} className="text-[#E8C547] shrink-0" />{' '}
+              {storeSettings?.supportEmail || 'harban.official@gmail.com'}
             </p>
             <p className="flex items-center gap-3 text-white/85">
               <MapPin size={16} className="text-[#E8C547] shrink-0" /> Mumbai, Maharashtra, India
@@ -258,7 +260,7 @@ const POLICIES = {
     points: [
       'We collect only the details needed to deliver your order, process warranty claims, and send order notifications.',
       'Payment details are processed over encrypted gateways — HARBAN never stores your card or UPI PIN data.',
-      'You can unsubscribe from promotional emails or request deletion of your contact history at any time via care@harban.in.',
+      'You can unsubscribe from promotional emails or request deletion of your contact history at any time via harban.official@gmail.com.',
     ],
   },
   terms: {

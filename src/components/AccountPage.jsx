@@ -216,7 +216,7 @@ function AuthView() {
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 95551 37346"
                     className="w-full min-w-0 bg-transparent text-sm outline-none"
                   />
                 </div>
@@ -1058,7 +1058,7 @@ export default function AccountPage({ initialTab = 'orders' }) {
                 <input
                   value={pPhone}
                   onChange={(e) => setPPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
+                  placeholder="+91 95551 37346"
                   className="w-full bg-neutral-100 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 ring-[#1D5CAD]/40"
                 />
               </div>

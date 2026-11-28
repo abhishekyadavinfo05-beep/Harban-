@@ -26,7 +26,7 @@ function EmptyState({ title, body, actionLabel, onAction }) {
         <button
           type="button"
           onClick={onAction}
-          className="mt-4 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl transition cursor-pointer"
+          className="mt-4 bg-[#16181A] hover:bg-[#272A2E] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl transition cursor-pointer"
         >
           {actionLabel}
         </button>
@@ -83,7 +83,7 @@ export function AdminOrdersPreview({ overview, onUpdateOrder, onReload, pushToas
               <tbody className="divide-y divide-[#EAECF0]">
                 {orders.map((order) => (
                   <tr key={order.id} className="hover:bg-[#F9FAFB]">
-                    <td className="py-3 px-4 font-mono font-bold text-[#5B21B6]">
+                    <td className="py-3 px-4 font-mono font-bold text-[#111315]">
                       #{order.id}
                       <span className="block text-[11px] font-normal text-[#6B7280]">
                         {new Date(order.placedAt).toLocaleDateString('en-IN')}
@@ -190,7 +190,7 @@ export function AdminCustomersPreview({ overview }) {
                     <p className="text-[11.5px] text-[#6B7280]">{c.email}</p>
                   </td>
                   <td className="py-3 px-3 font-mono text-[#4B5563]">{c.phone || '—'}</td>
-                  <td className="py-3 px-3 uppercase text-[11px] font-bold text-[#5B21B6]">
+                  <td className="py-3 px-3 uppercase text-[11px] font-bold text-[#111315]">
                     {c.role}
                   </td>
                   <td className="py-3 px-3 text-right font-bold tabular-nums">
@@ -385,7 +385,7 @@ export function AdminInventorySection({ overview, onUpdateStock, onReload, pushT
                 setAdjustTarget(products[0])
                 setAdjustQty(products[0].stock ?? 0)
               }}
-              className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer"
             >
               <Plus size={14} /> Update Stock
             </button>
@@ -393,75 +393,75 @@ export function AdminInventorySection({ overview, onUpdateStock, onReload, pushT
         </div>
       </div>
 
-      {/* 5 Pastel KPI Cards */}
+      {/* 5 KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#F3E8FF] text-[#6D28D9] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#F3F4F6] text-[#16181A] grid place-items-center shrink-0">
             <Boxes size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Total Stock Units</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#686E78]">Total Stock Units</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {stats.totalUnits}
             </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">Live units</p>
+            <p className="text-[11px] text-[#686E78] mt-0.5">Live units</p>
           </div>
         </div>
-        <div className="bg-[#F0FDF4] rounded-2xl border border-[#DCFCE7] p-4 shadow-2xs flex items-start gap-3">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
           <span className="w-10 h-10 rounded-xl bg-[#DCFCE7] text-[#16A34A] grid place-items-center shrink-0">
             <CheckCircle2 size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">In Stock</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#686E78]">In Stock</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {stats.healthy}
             </p>
             <p className="text-[11px] text-[#16A34A] mt-0.5">Healthy SKUs</p>
           </div>
         </div>
-        <div className="bg-[#FFFBEB] rounded-2xl border border-[#FEF3C7] p-4 shadow-2xs flex items-start gap-3">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
           <span className="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#D97706] grid place-items-center shrink-0">
             <AlertTriangle size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">
+            <p className="text-[12px] font-medium text-[#686E78]">
               Low Stock (≤{threshold})
             </p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {stats.low}
             </p>
             <p className="text-[11px] text-[#D97706] mt-0.5">Restock soon</p>
           </div>
         </div>
-        <div className="bg-[#FFF5F6] rounded-2xl border border-[#FFE4E6] p-4 shadow-2xs flex items-start gap-3">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
           <span className="w-10 h-10 rounded-xl bg-[#FFE4E6] text-[#E11D48] grid place-items-center shrink-0">
             <XCircle size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Out of Stock</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#686E78]">Out of Stock</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {stats.out}
             </p>
             <p className="text-[11px] text-[#E11D48] mt-0.5">Needs attention</p>
           </div>
         </div>
-        <div className="bg-[#EFF6FF] rounded-2xl border border-[#DBEAFE] p-4 shadow-2xs flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[#DBEAFE] text-[#2563EB] grid place-items-center shrink-0">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-4 shadow-2xs flex items-start gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[#F3F4F6] text-[#16181A] grid place-items-center shrink-0">
             <Package size={18} />
           </span>
           <div>
-            <p className="text-[12px] font-medium text-[#6B7280]">Total Products</p>
-            <p className="font-display font-bold text-[20px] text-[#111827] mt-0.5 tabular-nums">
+            <p className="text-[12px] font-medium text-[#686E78]">Total Products</p>
+            <p className="font-display font-bold text-[20px] text-[#111315] mt-0.5 tabular-nums">
               {stats.totalSkus}
             </p>
-            <p className="text-[11px] text-[#2563EB] mt-0.5">Active &amp; Drafts</p>
+            <p className="text-[11px] text-[#686E78] mt-0.5">Active &amp; Drafts</p>
           </div>
         </div>
       </div>
 
       {/* Live Stock Table Card */}
-      <div className="bg-white rounded-2xl border border-[#EAECF0] overflow-hidden shadow-2xs">
-        <div className="px-4 pt-1 border-b border-[#EAECF0] flex items-center gap-5 overflow-x-auto text-[12.5px]">
+      <div className="bg-white rounded-[18px] border border-[#E2E4E8] overflow-hidden shadow-2xs">
+        <div className="px-4 pt-1 border-b border-[#E2E4E8] flex items-center gap-5 overflow-x-auto text-[12.5px]">
           {[
             { id: 'all', label: `All Inventory (${stats.totalSkus})` },
             { id: 'healthy', label: `In Stock (${stats.healthy})` },
@@ -474,8 +474,8 @@ export function AdminInventorySection({ overview, onUpdateStock, onReload, pushT
               onClick={() => setTab(t.id)}
               className={`py-3 border-b-2 transition cursor-pointer whitespace-nowrap ${
                 tab === t.id
-                  ? 'border-[#5B21B6] text-[#5B21B6] font-semibold'
-                  : 'border-transparent text-[#6B7280] hover:text-[#111827] font-medium'
+                  ? 'border-[#16181A] text-[#111315] font-semibold'
+                  : 'border-transparent text-[#686E78] hover:text-[#111315] font-medium'
               }`}
             >
               {t.label}
@@ -569,7 +569,7 @@ export function AdminInventorySection({ overview, onUpdateStock, onReload, pushT
                     {p.sku || p.id}
                   </td>
                   <td className="py-3 px-3">
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F3E8FF] text-[#6D28D9]">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F1F2F4] text-[#111315] border border-[#E2E4E8]">
                       {categoryMap.get(p.category) || p.category}
                     </span>
                   </td>
@@ -734,7 +734,7 @@ export function AdminInventorySection({ overview, onUpdateStock, onReload, pushT
                 min="0"
                 value={adjustQty}
                 onChange={(e) => setAdjustQty(Number(e.target.value))}
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm tabular-nums outline-none focus:border-[#5B21B6]"
+                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-sm tabular-nums outline-none focus:border-[#16181A]"
               />
             </div>
 
@@ -742,14 +742,14 @@ export function AdminInventorySection({ overview, onUpdateStock, onReload, pushT
               <button
                 type="button"
                 onClick={() => setAdjustTarget(null)}
-                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
+                className="px-4 py-2 text-[12.5px] font-semibold text-[#686E78] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={adjustSaving}
-                className="px-4 py-2 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white rounded-xl cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white rounded-xl cursor-pointer disabled:opacity-50"
               >
                 {adjustSaving ? 'Saving...' : 'Update Stock'}
               </button>
@@ -790,20 +790,20 @@ export function AdminInventorySection({ overview, onUpdateStock, onReload, pushT
               value={importCsvText}
               onChange={(e) => setImportCsvText(e.target.value)}
               placeholder={`ht100, 45\npro-trim, 30`}
-              className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-3 text-[12px] font-mono outline-none focus:border-[#5B21B6]"
+              className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-3 text-[12px] font-mono outline-none focus:border-[#16181A]"
             />
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setImportOpen(false)}
-                className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
+                className="px-4 py-2 text-[12.5px] font-semibold text-[#686E78] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={importing}
-                className="px-4 py-2 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white rounded-xl cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white rounded-xl cursor-pointer disabled:opacity-50"
               >
                 {importing ? 'Updating...' : 'Apply Stock Updates'}
               </button>

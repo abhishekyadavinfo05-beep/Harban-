@@ -42,7 +42,7 @@ const ORDER_STATUS_META = {
     fulfillmentLabel: 'Pending',
     nextCta: 'Confirm Order',
     nextPrimary: 'confirmed',
-    cls: 'bg-[#EDE9FE] text-[#6D28D9]',
+    cls: 'bg-[#E5FC6B] text-[#141700]',
     next: ['confirmed', 'processing', 'shipped', 'delivered'],
   },
   confirmed: {
@@ -50,7 +50,7 @@ const ORDER_STATUS_META = {
     fulfillmentLabel: 'Confirmed',
     nextCta: 'Start Processing',
     nextPrimary: 'processing',
-    cls: 'bg-[#F3E8FF] text-[#7C3AED]',
+    cls: 'bg-[#F1F2F4] text-[#111315]',
     next: ['processing', 'shipped', 'delivered'],
   },
   processing: {
@@ -171,10 +171,10 @@ function buildInvoiceHtml(order) {
   <title>HARBAN Invoice — ${escapeHtml(order.id)}</title>
 </head>
 <body style="font-family:Inter,Arial,sans-serif;color:#111827;max-width:780px;margin:32px auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #5B21B6;padding-bottom:16px;margin-bottom:20px;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #16181A;padding-bottom:16px;margin-bottom:20px;">
     <div>
       <div style="font-size:24px;font-weight:900;letter-spacing:0.06em;">HARBAN</div>
-      <div style="font-size:12px;color:#4b5563;">Groom Better. Everyday. · care@harban.in</div>
+      <div style="font-size:12px;color:#4b5563;">Groom Better. Everyday. · harban.official@gmail.com · +91 95551 37346</div>
     </div>
     <div style="text-align:right;">
       <div style="font-size:18px;font-weight:800;">TAX INVOICE</div>
@@ -735,8 +735,8 @@ export default function AdminOrdersSection({
       count: counts.all,
       sub: 'All recorded orders',
       subCls: 'text-[#15803D]',
-      cardCls: 'bg-white border-[#EAECF0]',
-      iconCls: 'bg-[#F3E8FF] text-[#6D28D9]',
+      cardCls: 'bg-white border-[#E2E4E8]',
+      iconCls: 'bg-[#16181A] text-white',
       Icon: ShoppingCart,
     },
     {
@@ -744,8 +744,8 @@ export default function AdminOrdersSection({
       label: 'Delivered',
       count: counts.delivered,
       sub: `(${((counts.delivered / totalCount) * 100).toFixed(1)}%)`,
-      subCls: 'text-[#6B7280]',
-      cardCls: 'bg-[#F0FDF4] border-[#DCFCE7]',
+      subCls: 'text-[#6B7078]',
+      cardCls: 'bg-white border-[#E2E4E8]',
       iconCls: 'bg-[#DCFCE7] text-[#16A34A]',
       Icon: CheckCircle2,
     },
@@ -754,9 +754,9 @@ export default function AdminOrdersSection({
       label: 'Shipped',
       count: counts.shipped,
       sub: `(${((counts.shipped / totalCount) * 100).toFixed(1)}%)`,
-      subCls: 'text-[#6B7280]',
-      cardCls: 'bg-[#EFF6FF] border-[#DBEAFE]',
-      iconCls: 'bg-[#DBEAFE] text-[#2563EB]',
+      subCls: 'text-[#6B7078]',
+      cardCls: 'bg-white border-[#E2E4E8]',
+      iconCls: 'bg-[#F1F2F4] text-[#111315]',
       Icon: Truck,
     },
     {
@@ -764,8 +764,8 @@ export default function AdminOrdersSection({
       label: 'Processing',
       count: counts.processing + counts.confirmed,
       sub: `(${(((counts.processing + counts.confirmed) / totalCount) * 100).toFixed(1)}%)`,
-      subCls: 'text-[#6B7280]',
-      cardCls: 'bg-[#FFFBEB] border-[#FEF3C7]',
+      subCls: 'text-[#6B7078]',
+      cardCls: 'bg-white border-[#E2E4E8]',
       iconCls: 'bg-[#FEF3C7] text-[#D97706]',
       Icon: Box,
     },
@@ -774,9 +774,9 @@ export default function AdminOrdersSection({
       label: 'Pending',
       count: counts.pending,
       sub: `(${((counts.pending / totalCount) * 100).toFixed(1)}%)`,
-      subCls: 'text-[#6B7280]',
-      cardCls: 'bg-[#F5F3FF] border-[#EDE9FE]',
-      iconCls: 'bg-[#EDE9FE] text-[#7C3AED]',
+      subCls: 'text-[#6B7078]',
+      cardCls: 'bg-white border-[#E2E4E8]',
+      iconCls: 'bg-[#E5FC6B] text-[#141700]',
       Icon: Clock,
     },
     {
@@ -784,8 +784,8 @@ export default function AdminOrdersSection({
       label: 'Cancelled',
       count: counts.cancelled,
       sub: `(${((counts.cancelled / totalCount) * 100).toFixed(1)}%)`,
-      subCls: 'text-[#6B7280]',
-      cardCls: 'bg-[#FFF5F6] border-[#FFE4E6]',
+      subCls: 'text-[#6B7078]',
+      cardCls: 'bg-white border-[#E2E4E8]',
       iconCls: 'bg-[#FFE4E6] text-[#E11D48]',
       Icon: XCircle,
     },
@@ -802,12 +802,12 @@ export default function AdminOrdersSection({
           />
           <form
             onSubmit={handleConfirmCancel}
-            className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-md w-full p-5 space-y-4 shadow-xl"
+            className="relative bg-white rounded-[18px] border border-[#E2E4E8] max-w-md w-full p-5 space-y-4 shadow-xl"
           >
-            <h3 className="font-display font-bold text-[16px] text-[#111827]">
+            <h3 className="font-display font-bold text-[16px] text-[#111315]">
               Cancel Order #{cancelModalOrder.id}?
             </h3>
-            <p className="text-[12.5px] text-[#6B7280]">
+            <p className="text-[12.5px] text-[#6B7078]">
               Cancelling restores ordered product stock cleanly once and locks future status updates.
             </p>
             <div>
@@ -819,7 +819,7 @@ export default function AdminOrdersSection({
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder="e.g. Customer requested cancellation"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:border-[#5B21B6]"
+                className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-[13px] outline-none focus:border-[#16181A]"
               />
             </div>
             <div className="flex justify-end gap-2">
@@ -848,44 +848,44 @@ export default function AdminOrdersSection({
             className="no-print absolute inset-0 bg-black/55 backdrop-blur-xs"
             onClick={() => setInvoiceOrder(null)}
           />
-          <div className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
-            <div className="no-print flex items-center justify-between border-b border-[#EAECF0] pb-3">
-              <h3 className="font-display font-bold text-[15px] text-[#111827]">
+          <div className="relative bg-white rounded-[18px] border border-[#E2E4E8] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
+            <div className="no-print flex items-center justify-between border-b border-[#E2E4E8] pb-3">
+              <h3 className="font-display font-bold text-[15px] text-[#111315]">
                 Invoice Preview · #{invoiceOrder.id}
               </h3>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white text-[12px] font-semibold px-3.5 py-1.5 rounded-xl cursor-pointer"
+                  className="inline-flex items-center gap-1.5 bg-[#16181A] hover:bg-[#272A2E] text-white text-[12px] font-semibold px-3.5 py-1.5 rounded-xl cursor-pointer"
                 >
                   <Printer size={13} /> Print
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDownloadInvoice(invoiceOrder)}
-                  className="inline-flex items-center gap-1.5 border border-[#E5E7EB] text-[#111827] text-[12px] font-semibold px-3.5 py-1.5 rounded-xl cursor-pointer"
+                  className="inline-flex items-center gap-1.5 border border-[#E2E4E8] text-[#111315] text-[12px] font-semibold px-3.5 py-1.5 rounded-xl cursor-pointer"
                 >
                   <Download size={13} /> Download HTML
                 </button>
                 <button
                   type="button"
                   onClick={() => setInvoiceOrder(null)}
-                  className="p-1.5 rounded-lg hover:bg-[#F3F4F6] text-[#6B7280] cursor-pointer"
+                  className="p-1.5 rounded-lg hover:bg-[#F3F4F6] text-[#6B7078] cursor-pointer"
                 >
                   <X size={16} />
                 </button>
               </div>
             </div>
 
-            <div className="print-invoice space-y-5 text-[13px] text-[#111827]">
-              <div className="flex justify-between items-start border-b-2 border-[#5B21B6] pb-4">
+            <div className="print-invoice space-y-5 text-[13px] text-[#111315]">
+              <div className="flex justify-between items-start border-b-2 border-[#16181A] pb-4">
                 <div>
                   <p className="font-display font-black text-[22px] tracking-wider">
                     HARBAN
                   </p>
                   <p className="text-[11.5px] text-[#6B7280]">
-                    Groom Better. Everyday. · care@harban.in
+                    Groom Better. Everyday. · harban.official@gmail.com · +91 95551 37346
                   </p>
                 </div>
                 <div className="text-right">
@@ -1020,21 +1020,21 @@ export default function AdminOrdersSection({
           />
           <form
             onSubmit={handleSubmitCreateOrder}
-            className="relative bg-white rounded-2xl border border-[#EAECF0] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl"
+            className="relative bg-white rounded-[18px] border border-[#E2E4E8] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl"
           >
-            <div className="flex items-center justify-between border-b border-[#EAECF0] pb-3">
+            <div className="flex items-center justify-between border-b border-[#E2E4E8] pb-3">
               <div>
-                <h2 className="font-display font-bold text-[16px] text-[#111827]">
+                <h2 className="font-display font-bold text-[16px] text-[#111315]">
                   Create Order
                 </h2>
-                <p className="text-[12px] text-[#6B7280]">
+                <p className="text-[12px] text-[#6B7078]">
                   Creates a real order (#HB100+ sequence) and reserves product stock.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setCreateModalOpen(false)}
-                className="p-1 text-[#6B7280] hover:text-[#111827] cursor-pointer"
+                className="p-1 text-[#6B7078] hover:text-[#111315] cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -1063,7 +1063,7 @@ export default function AdminOrdersSection({
                       items: [...prev.items, { productId: first.id, qty: 1 }],
                     }))
                   }}
-                  className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[#111315] hover:underline cursor-pointer"
                 >
                   <Plus size={12} /> Add item
                 </button>
@@ -1077,7 +1077,7 @@ export default function AdminOrdersSection({
                   return (
                     <div
                       key={idx}
-                      className="flex items-center gap-2 bg-[#F9FAFB] border border-[#EAECF0] rounded-xl p-2"
+                      className="flex items-center gap-2 bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl p-2"
                     >
                       <select
                         value={line.productId}
@@ -1150,7 +1150,7 @@ export default function AdminOrdersSection({
                     setCreateForm((p) => ({ ...p, customerName: e.target.value }))
                   }
                   placeholder="Rohan Sharma"
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12.5px] outline-none focus:border-[#5B21B6]"
+                  className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-[12.5px] outline-none focus:border-[#16181A]"
                 />
               </div>
               <div>
@@ -1162,8 +1162,8 @@ export default function AdminOrdersSection({
                   onChange={(e) =>
                     setCreateForm((p) => ({ ...p, phone: e.target.value }))
                   }
-                  placeholder="9876543210"
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12.5px] font-mono outline-none focus:border-[#5B21B6]"
+                  placeholder="9555137346"
+                  className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-[12.5px] font-mono outline-none focus:border-[#16181A]"
                 />
               </div>
               <div>
@@ -1177,7 +1177,7 @@ export default function AdminOrdersSection({
                     setCreateForm((p) => ({ ...p, customerEmail: e.target.value }))
                   }
                   placeholder="customer@email.com"
-                  className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12.5px] outline-none focus:border-[#5B21B6]"
+                  className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-[12.5px] outline-none focus:border-[#16181A]"
                 />
               </div>
             </div>
@@ -1288,10 +1288,10 @@ export default function AdminOrdersSection({
               />
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-[#EAECF0]">
+            <div className="flex items-center justify-between pt-3 border-t border-[#E2E4E8]">
               <div className="text-[13px]">
-                <span className="text-[#6B7280]">Order Total: </span>
-                <strong className="font-display text-[16px] text-[#111827] tabular-nums">
+                <span className="text-[#6B7078]">Order Total: </span>
+                <strong className="font-display text-[16px] text-[#111315] tabular-nums">
                   {formatINR(createSubtotal)}
                 </strong>
               </div>
@@ -1299,14 +1299,14 @@ export default function AdminOrdersSection({
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-[12.5px] font-semibold text-[#6B7078] hover:bg-[#F3F4F6] rounded-xl cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createSaving}
-                  className="px-4 py-2 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] disabled:opacity-50 text-white rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] disabled:opacity-50 text-white rounded-xl cursor-pointer"
                 >
                   {createSaving ? 'Creating...' : 'Create Order'}
                 </button>
@@ -1334,27 +1334,27 @@ export default function AdminOrdersSection({
           <button
             type="button"
             onClick={openCreateModal}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer whitespace-nowrap"
           >
             <Plus size={14} /> Create Order
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#EAECF0] overflow-hidden shadow-2xs">
-          <div className="p-3.5 border-b border-[#EAECF0] flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 w-full max-w-md">
+        <div className="bg-white rounded-[18px] border border-[#E2E4E8] overflow-hidden shadow-2xs">
+          <div className="p-3.5 border-b border-[#E2E4E8] flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 w-full max-w-md">
               <Search size={14} className="text-[#9CA3AF] shrink-0" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search abandoned checkouts by customer, email or product..."
-                className="bg-transparent outline-none text-[12.5px] text-[#111827] w-full"
+                className="bg-transparent outline-none text-[12.5px] text-[#111315] w-full"
               />
               {search && (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
-                  className="text-[#6B7280] hover:text-[#111827] cursor-pointer"
+                  className="text-[#6B7078] hover:text-[#111315] cursor-pointer"
                 >
                   <X size={13} />
                 </button>
@@ -1364,17 +1364,17 @@ export default function AdminOrdersSection({
 
           {abandonedCheckouts.length === 0 ? (
             <div className="p-10 text-center space-y-1">
-              <p className="font-display font-bold text-[15px] text-[#111827]">
+              <p className="font-display font-bold text-[15px] text-[#111315]">
                 No abandoned checkouts recorded
               </p>
-              <p className="text-[12.5px] text-[#6B7280]">
+              <p className="text-[12.5px] text-[#6B7078]">
                 Unfinished storefront checkout sessions automatically appear here from live telemetry.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-[12.5px]">
-                <thead className="bg-[#F9FAFB] text-[#6B7280] font-medium border-b border-[#EAECF0]">
+                <thead className="bg-[#F7F8FA] text-[#6B7078] font-medium border-b border-[#E2E4E8]">
                   <tr>
                     <th className="py-2.5 px-4">Checkout</th>
                     <th className="py-2.5 px-3">Date</th>
@@ -1384,10 +1384,10 @@ export default function AdminOrdersSection({
                     <th className="py-2.5 px-4">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EAECF0]">
+                <tbody className="divide-y divide-[#E2E4E8]">
                   {abandonedCheckouts.map((ev) => (
-                    <tr key={ev.id} className="hover:bg-[#F9FAFB]">
-                      <td className="py-3 px-4 font-mono font-bold text-[#5B21B6]">
+                    <tr key={ev.id} className="hover:bg-[#F7F8FA]">
+                      <td className="py-3 px-4 font-mono font-bold text-[#111315]">
                         #{String(ev.sessionId || ev.id).slice(0, 8)}
                       </td>
                       <td className="py-3 px-3 text-[#6B7280] whitespace-nowrap">
@@ -1438,17 +1438,17 @@ export default function AdminOrdersSection({
             </h1>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#EAECF0] p-10 text-center space-y-3 shadow-2xs">
-            <p className="font-display font-bold text-[16px] text-[#111827]">
+          <div className="bg-white rounded-[18px] border border-[#E2E4E8] p-10 text-center space-y-3 shadow-2xs">
+            <p className="font-display font-bold text-[16px] text-[#111315]">
               Order #{selectedOrderCode} not found
             </p>
-            <p className="text-[13px] text-[#6B7280]">
+            <p className="text-[13px] text-[#6B7078]">
               This order may not exist yet or was removed from the database.
             </p>
             <button
               type="button"
               onClick={() => onCloseOrder?.()}
-              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-[#16181A] hover:bg-[#272A2E] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
             >
               <ArrowLeft size={14} /> Back to All Orders
             </button>
@@ -1595,8 +1595,8 @@ export default function AdminOrdersSection({
           {/* Left Main Column */}
           <div className="space-y-4 min-w-0">
             {/* Card 1: Fulfillment, Items & Dispatch Tracking */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#EAECF0] flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#E2E4E8] flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <span
                     className={`w-8 h-8 rounded-xl grid place-items-center shrink-0 ${stMeta.cls}`}
@@ -1605,14 +1605,14 @@ export default function AdminOrdersSection({
                   </span>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-display font-bold text-[15px] text-[#111827]">
+                      <span className="font-display font-bold text-[15px] text-[#111315]">
                         {stMeta.label}
                       </span>
-                      <span className="text-[12px] text-[#6B7280] tabular-nums">
+                      <span className="text-[12px] text-[#6B7078] tabular-nums">
                         ({itemCount} item{itemCount === 1 ? '' : 's'})
                       </span>
                     </div>
-                    <p className="text-[11.5px] text-[#6B7280]">
+                    <p className="text-[11.5px] text-[#6B7078]">
                       {activeOrder.trackingNumber
                         ? `${activeOrder.courierPartner || 'Courier'} · AWB ${activeOrder.trackingNumber}`
                         : activeOrder.shippingAddress?.city
@@ -1631,7 +1631,7 @@ export default function AdminOrdersSection({
                     <select
                       value={statusDraft}
                       onChange={(e) => setStatusDraft(e.target.value)}
-                      className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12px] font-semibold text-[#111827] outline-none cursor-pointer"
+                      className="bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-[12px] font-semibold text-[#111315] outline-none cursor-pointer"
                     >
                       <option value={stKey}>Stage: {stMeta.label}</option>
                       {stMeta.next.map((nx) => (
@@ -1651,7 +1651,7 @@ export default function AdminOrdersSection({
                             `Order updated to ${ORDER_STATUS_META[statusDraft]?.label || statusDraft}`,
                           )
                         }
-                        className="bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 disabled:opacity-50 text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer whitespace-nowrap"
+                        className="bg-[#16181A] hover:bg-[#272A2E] disabled:opacity-50 text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer whitespace-nowrap"
                       >
                         Update Status
                       </button>
@@ -1666,7 +1666,7 @@ export default function AdminOrdersSection({
                             `Order updated to ${ORDER_STATUS_META[stMeta.nextPrimary]?.label}`,
                           )
                         }
-                        className="bg-[#111827] hover:bg-[#1F2937] disabled:opacity-50 text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer whitespace-nowrap"
+                        className="bg-[#16181A] hover:bg-[#272A2E] disabled:opacity-50 text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer whitespace-nowrap"
                       >
                         {stMeta.nextCta}
                       </button>
@@ -1688,15 +1688,15 @@ export default function AdminOrdersSection({
               </div>
 
               {/* Delivery Strip */}
-              <div className="px-5 py-2.5 bg-[#F9FAFB] border-b border-[#EAECF0] flex flex-wrap items-center justify-between gap-2 text-[12px] text-[#4B5563]">
+              <div className="px-5 py-2.5 bg-[#F7F8FA] border-b border-[#E2E4E8] flex flex-wrap items-center justify-between gap-2 text-[12px] text-[#4B5563]">
                 <span className="inline-flex items-center gap-1.5 font-medium">
-                  <Truck size={13} className="text-[#5B21B6]" />
+                  <Truck size={13} className="text-[#111315]" />
                   {activeOrder.courierPartner || 'Standard Express Courier'}
                   {activeOrder.shipping === 0 ? ' · Free Shipping' : ''}
                 </span>
                 {activeOrder.shippingAddress?.city && (
                   <span className="inline-flex items-center gap-1 text-[#374151] font-medium">
-                    <MapPin size={12} className="text-[#6B7280]" />
+                    <MapPin size={12} className="text-[#6B7078]" />
                     {activeOrder.shippingAddress.city}
                     {activeOrder.shippingAddress.pincode
                       ? ` · ${activeOrder.shippingAddress.pincode}`
@@ -1706,27 +1706,27 @@ export default function AdminOrdersSection({
               </div>
 
               {/* Order Line Items */}
-              <div className="divide-y divide-[#EAECF0]">
+              <div className="divide-y divide-[#E2E4E8]">
                 {(activeOrder.items || []).map((item, idx) => {
                   const catalogProd = products.find((p) => p.id === item.id)
                   const canOpenProd = Boolean(catalogProd || item.id)
                   return (
                     <div
                       key={`${item.id}-${idx}`}
-                      className="px-5 py-4 flex items-center justify-between gap-4 hover:bg-[#FAFAFC]"
+                      className="px-5 py-4 flex items-center justify-between gap-4 hover:bg-[#F7F8FA]"
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
                         <Img
                           src={item.image || catalogProd?.image}
                           alt={item.name}
-                          className="w-12 h-12 rounded-xl object-cover border border-[#EAECF0] bg-[#F9FAFB] shrink-0"
+                          className="w-12 h-12 rounded-xl object-cover border border-[#E2E4E8] bg-[#F7F8FA] shrink-0"
                         />
                         <div className="min-w-0">
                           {canOpenProd && onOpenProduct ? (
                             <button
                               type="button"
                               onClick={() => onOpenProduct(item.id)}
-                              className="font-semibold text-[13.5px] text-[#111827] hover:text-[#5B21B6] hover:underline text-left truncate block max-w-full cursor-pointer"
+                              className="font-semibold text-[13.5px] text-[#111315] hover:underline text-left truncate block max-w-full cursor-pointer"
                             >
                               {item.name}
                             </button>
@@ -1764,10 +1764,10 @@ export default function AdminOrdersSection({
             </div>
 
             {/* Card 2: Payment Summary Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#EAECF0] flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#E2E4E8] flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="w-8 h-8 rounded-xl bg-[#F3E8FF] text-[#6D28D9] grid place-items-center shrink-0">
+                  <span className="w-8 h-8 rounded-xl bg-[#F1F2F4] text-[#111315] grid place-items-center shrink-0">
                     <CreditCard size={15} />
                   </span>
                   <div className="flex items-center gap-2">
@@ -1858,30 +1858,33 @@ export default function AdminOrdersSection({
             </div>
 
             {/* Card 3: Order Timeline */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs p-5 space-y-3">
-              <h2 className="font-display font-bold text-[14px] text-[#111827] flex items-center gap-1.5">
-                <FileText size={14} className="text-[#5B21B6]" /> Order Timeline
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs p-5 space-y-3">
+              <h2 className="font-display font-bold text-[14px] text-[#111315] flex items-center gap-1.5">
+                <FileText size={14} className="text-[#111315]" /> Order Timeline
               </h2>
-              <div className="space-y-3 pl-2 border-l border-[#E5E7EB]">
+              <div className="space-y-3 pl-2 border-l border-[#E2E4E8]">
                 {timelineEvents.map((ev, idx) => (
                   <div key={`${ev.id}-${idx}`} className="relative pl-4">
-                    <span className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#5B21B6]" />
-                    <p className="text-[12.5px] font-semibold text-[#111827]">
+                    <span className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#16181A]" />
+                    <p className="text-[12.5px] font-semibold text-[#111315]">
                       {ev.title}
                     </p>
-                    <p className="text-[11px] text-[#6B7280] tabular-nums">
+                    <p className="text-[11px] text-[#6B7078] tabular-nums">
                       {formatDateTime(ev.ts)}
                     </p>
                   </div>
                 ))}
-                {activeOrder.cancelledReason && (
-                  <div className="relative pl-4">
-                    <span className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#E11D48]" />
-                    <p className="text-[12.5px] font-semibold text-[#B91C1C]">
-                      Cancelled: {activeOrder.cancelledReason}
-                    </p>
-                  </div>
-                )}
+                {(activeOrder.cancelReason || activeOrder.cancelledReason) &&
+                  !timelineEvents.some((ev) =>
+                    String(ev.title || '').toLowerCase().startsWith('cancelled'),
+                  ) && (
+                    <div className="relative pl-4">
+                      <span className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#E11D48]" />
+                      <p className="text-[12.5px] font-semibold text-[#B91C1C]">
+                        Cancelled: {activeOrder.cancelReason || activeOrder.cancelledReason}
+                      </p>
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -1889,9 +1892,9 @@ export default function AdminOrdersSection({
           {/* Right Inspector Sidebar Column */}
           <aside className="space-y-4">
             {/* Notes Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs p-4 space-y-2.5">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs p-4 space-y-2.5">
               <div className="flex items-center justify-between">
-                <h3 className="font-display font-bold text-[13.5px] text-[#111827]">
+                <h3 className="font-display font-bold text-[13.5px] text-[#111315]">
                   Notes
                 </h3>
                 <button
@@ -1904,7 +1907,7 @@ export default function AdminOrdersSection({
                       'Order note saved',
                     )
                   }
-                  className="text-[11.5px] font-semibold text-[#5B21B6] hover:underline cursor-pointer disabled:opacity-50"
+                  className="text-[11.5px] font-semibold text-[#111315] hover:underline cursor-pointer disabled:opacity-50"
                 >
                   Save note
                 </button>
@@ -1914,17 +1917,17 @@ export default function AdminOrdersSection({
                 value={internalNotes}
                 onChange={(e) => setInternalNotes(e.target.value)}
                 placeholder="Add internal dispatch or customer notes..."
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[12.5px] outline-none focus:border-[#5B21B6] resize-none"
+                className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 text-[12.5px] outline-none focus:border-[#16181A] resize-none"
               />
             </div>
 
             {/* Customer Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs p-4 space-y-3">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="font-display font-bold text-[13.5px] text-[#111827] flex items-center gap-1.5">
-                  <User size={14} className="text-[#5B21B6]" /> Customer
+                <h3 className="font-display font-bold text-[13.5px] text-[#111315] flex items-center gap-1.5">
+                  <User size={14} className="text-[#111315]" /> Customer
                 </h3>
-                <span className="text-[11.5px] text-[#6B7280] tabular-nums">
+                <span className="text-[11.5px] text-[#6B7078] tabular-nums">
                   {customerOrderCount} order{customerOrderCount === 1 ? '' : 's'}
                 </span>
               </div>
@@ -1933,20 +1936,20 @@ export default function AdminOrdersSection({
                   <button
                     type="button"
                     onClick={() => onOpenCustomer(matchedCustomer.id)}
-                    className="font-semibold text-[#5B21B6] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    className="font-semibold text-[#111315] hover:underline inline-flex items-center gap-1 cursor-pointer"
                   >
                     {activeOrder.customerName}
                     <ExternalLink size={11} />
                   </button>
                 ) : (
-                  <p className="font-semibold text-[#111827]">
+                  <p className="font-semibold text-[#111315]">
                     {activeOrder.customerName}
                   </p>
                 )}
                 {activeOrder.customerEmail && (
                   <a
                     href={`mailto:${activeOrder.customerEmail}`}
-                    className="flex items-center gap-1.5 text-[#4B5563] hover:text-[#111827] truncate"
+                    className="flex items-center gap-1.5 text-[#4B5563] hover:text-[#111315] truncate"
                   >
                     <Mail size={12} className="text-[#9CA3AF] shrink-0" />
                     <span className="truncate">{activeOrder.customerEmail}</span>
@@ -1962,10 +1965,10 @@ export default function AdminOrdersSection({
             </div>
 
             {/* Shipping Address Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs p-4 space-y-2.5">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs p-4 space-y-2.5">
               <div className="flex items-center justify-between">
-                <h3 className="font-display font-bold text-[13.5px] text-[#111827] flex items-center gap-1.5">
-                  <MapPin size={14} className="text-[#5B21B6]" /> Shipping address
+                <h3 className="font-display font-bold text-[13.5px] text-[#111315] flex items-center gap-1.5">
+                  <MapPin size={14} className="text-[#111315]" /> Shipping address
                 </h3>
                 {activeOrder.shippingAddress && (
                   <button
@@ -2002,26 +2005,26 @@ export default function AdminOrdersSection({
             </div>
 
             {/* Additional & Channel Details Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs p-4 space-y-2.5 text-[12.5px]">
-              <h3 className="font-display font-bold text-[13.5px] text-[#111827]">
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs p-4 space-y-2.5 text-[12.5px]">
+              <h3 className="font-display font-bold text-[13.5px] text-[#111315]">
                 Additional details
               </h3>
               <div className="space-y-2 pt-1">
                 <div>
-                  <p className="text-[11px] text-[#6B7280]">Order ID</p>
-                  <p className="font-mono font-semibold text-[#111827]">
+                  <p className="text-[11px] text-[#6B7078]">Order ID</p>
+                  <p className="font-mono font-semibold text-[#111315]">
                     #{activeOrder.id}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280]">Channel / Payment Method</p>
-                  <p className="font-medium text-[#111827]">
+                  <p className="text-[11px] text-[#6B7078]">Channel / Payment Method</p>
+                  <p className="font-medium text-[#111315]">
                     {activeOrder.paymentMethod || 'HARBAN Storefront'}
                   </p>
                 </div>
                 {activeOrder.razorpayOrderId && (
                   <div>
-                    <p className="text-[11px] text-[#6B7280]">Razorpay Order ID</p>
+                    <p className="text-[11px] text-[#6B7078]">Razorpay Order ID</p>
                     <p className="font-mono text-[11.5px] text-[#374151] break-all">
                       {activeOrder.razorpayOrderId}
                     </p>
@@ -2029,7 +2032,7 @@ export default function AdminOrdersSection({
                 )}
                 {(activeOrder.utmSource || activeOrder.utmMedium || activeOrder.utmCampaign) && (
                   <div>
-                    <p className="text-[11px] text-[#6B7280]">Campaign Attribution</p>
+                    <p className="text-[11px] text-[#6B7078]">Campaign Attribution</p>
                     <p className="text-[#374151]">
                       {[activeOrder.utmSource, activeOrder.utmMedium, activeOrder.utmCampaign]
                         .filter(Boolean)
@@ -2041,13 +2044,13 @@ export default function AdminOrdersSection({
             </div>
 
             {/* Courier & AWB Tracking Card */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs p-4 space-y-3">
-              <h3 className="font-display font-bold text-[13.5px] text-[#111827] flex items-center gap-1.5">
-                <Truck size={14} className="text-[#5B21B6]" /> Courier &amp; AWB Tracking
+            <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs p-4 space-y-3">
+              <h3 className="font-display font-bold text-[13.5px] text-[#111315] flex items-center gap-1.5">
+                <Truck size={14} className="text-[#111315]" /> Courier &amp; AWB Tracking
               </h3>
               <div className="space-y-2.5 text-[12.5px]">
                 <div>
-                  <label className="block text-[11px] font-medium text-[#6B7280] mb-1">
+                  <label className="block text-[11px] font-medium text-[#6B7078] mb-1">
                     Courier Partner
                   </label>
                   <input
@@ -2055,7 +2058,7 @@ export default function AdminOrdersSection({
                     value={courierPartner}
                     onChange={(e) => setCourierPartner(e.target.value)}
                     placeholder="e.g. Delhivery"
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 outline-none focus:border-[#16181A]"
                   />
                   <datalist id="harban-couriers">
                     <option value="Delhivery" />
@@ -2066,25 +2069,25 @@ export default function AdminOrdersSection({
                   </datalist>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-[#6B7280] mb-1">
+                  <label className="block text-[11px] font-medium text-[#6B7078] mb-1">
                     AWB / Tracking Number
                   </label>
                   <input
                     value={trackingNumber}
                     onChange={(e) => setTrackingNumber(e.target.value)}
                     placeholder="AWB123456789"
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 font-mono outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 font-mono outline-none focus:border-[#16181A]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-[#6B7280] mb-1">
+                  <label className="block text-[11px] font-medium text-[#6B7078] mb-1">
                     Tracking URL (Optional)
                   </label>
                   <input
                     value={trackingUrl}
                     onChange={(e) => setTrackingUrl(e.target.value)}
                     placeholder="https://track..."
-                    className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 outline-none focus:border-[#5B21B6]"
+                    className="w-full bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3 py-2 outline-none focus:border-[#16181A]"
                   />
                 </div>
               </div>
@@ -2102,7 +2105,7 @@ export default function AdminOrdersSection({
                     'Courier tracking updated',
                   )
                 }
-                className="w-full bg-[#111827] hover:bg-[#1F2937] disabled:opacity-50 text-white text-[12px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
+                className="w-full bg-[#16181A] hover:bg-[#272A2E] disabled:opacity-50 text-white text-[12px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
               >
                 Save Tracking
               </button>
@@ -2152,14 +2155,14 @@ export default function AdminOrdersSection({
           <button
             type="button"
             onClick={openCreateModal}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] hover:opacity-95 text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-[#16181A] hover:bg-[#272A2E] text-white px-4 py-2 rounded-xl shadow-xs cursor-pointer whitespace-nowrap"
           >
             <Plus size={14} /> Create Order
           </button>
         </div>
       </div>
 
-      {/* Row 1: 6 Pastel KPI Stat Cards */}
+      {/* Row 1: 6 Fieldnote KPI Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         {kpiCards.map((card) => {
           const Icon = card.Icon
@@ -2172,8 +2175,8 @@ export default function AdminOrdersSection({
                 setStatusFilter(card.id)
                 setPage(1)
               }}
-              className={`text-left rounded-2xl border p-3.5 shadow-2xs flex items-start gap-3 transition cursor-pointer ${card.cardCls} ${
-                isSelected ? 'ring-2 ring-[#5B21B6]/50' : 'hover:border-[#C4B5FD]'
+              className={`text-left rounded-[18px] border p-3.5 shadow-2xs flex items-start gap-3 transition cursor-pointer ${card.cardCls} ${
+                isSelected ? 'ring-2 ring-[#16181A]/25 border-[#16181A]' : 'hover:border-[#C7CCD2]'
               }`}
             >
               <span
@@ -2182,10 +2185,10 @@ export default function AdminOrdersSection({
                 <Icon size={18} />
               </span>
               <div className="min-w-0">
-                <p className="text-[12px] font-medium text-[#6B7280] truncate">
+                <p className="text-[12px] font-medium text-[#6B7078] truncate">
                   {card.label}
                 </p>
-                <p className="font-display font-bold text-[20px] text-[#111827] leading-tight mt-0.5 tabular-nums">
+                <p className="font-display font-bold text-[20px] text-[#111315] leading-tight mt-0.5 tabular-nums">
                   {card.count}
                 </p>
                 <p className={`text-[11px] font-medium mt-0.5 tabular-nums ${card.subCls}`}>
@@ -2198,9 +2201,9 @@ export default function AdminOrdersSection({
       </div>
 
       {/* Full-Width Orders Table Card */}
-      <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-[18px] border border-[#E2E4E8] shadow-2xs overflow-hidden">
         {/* Underline Tab Bar */}
-        <div className="px-4 pt-1 border-b border-[#EAECF0] flex items-center gap-5 overflow-x-auto text-[12.5px]">
+        <div className="px-4 pt-1 border-b border-[#E2E4E8] flex items-center gap-5 overflow-x-auto text-[12.5px]">
           {[
             { id: 'all', label: `All Orders (${counts.all})` },
             { id: 'pending', label: `Pending (${counts.pending})` },
@@ -2223,8 +2226,8 @@ export default function AdminOrdersSection({
                 }}
                 className={`py-3 border-b-2 transition cursor-pointer whitespace-nowrap ${
                   active
-                    ? 'border-[#5B21B6] text-[#5B21B6] font-semibold'
-                    : 'border-transparent text-[#6B7280] hover:text-[#111827] font-medium'
+                    ? 'border-[#16181A] text-[#111315] font-semibold'
+                    : 'border-transparent text-[#6B7078] hover:text-[#111315] font-medium'
                 }`}
               >
                 {tab.label}
@@ -2234,8 +2237,8 @@ export default function AdminOrdersSection({
         </div>
 
         {/* Search & Dropdown Filters Row */}
-        <div className="p-3.5 border-b border-[#EAECF0] flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2 flex-1 min-w-[210px]">
+        <div className="p-3.5 border-b border-[#E2E4E8] flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-2 bg-[#F7F8FA] border border-[#E2E4E8] rounded-xl px-3.5 py-2 flex-1 min-w-[210px]">
             <Search size={14} className="text-[#9CA3AF] shrink-0" />
             <input
               value={search}
@@ -2314,8 +2317,8 @@ export default function AdminOrdersSection({
             onClick={() => setShowMoreFilters((v) => !v)}
             className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-[12px] font-medium cursor-pointer transition ${
               showMoreFilters
-                ? 'border-[#5B21B6] bg-[#F5F3FF] text-[#5B21B6]'
-                : 'border-[#E5E7EB] bg-white hover:bg-[#F9FAFB] text-[#374151]'
+                ? 'border-[#16181A] bg-[#F1F2F4] text-[#111315]'
+                : 'border-[#E2E4E8] bg-white hover:bg-[#F7F8FA] text-[#374151]'
             }`}
           >
             <SlidersHorizontal size={13} /> More Filters
@@ -2323,7 +2326,7 @@ export default function AdminOrdersSection({
         </div>
 
         {showMoreFilters && (
-          <div className="px-4 py-2.5 bg-[#F9FAFB] border-b border-[#EAECF0] flex flex-wrap items-center gap-2.5 text-[12px]">
+          <div className="px-4 py-2.5 bg-[#F7F8FA] border-b border-[#E2E4E8] flex flex-wrap items-center gap-2.5 text-[12px]">
             {dateFilter === 'custom' && (
               <>
                 <input
@@ -2333,9 +2336,9 @@ export default function AdminOrdersSection({
                     setCustomFrom(e.target.value)
                     setPage(1)
                   }}
-                  className="bg-white border border-[#E5E7EB] rounded-lg px-2.5 py-1 outline-none"
+                  className="bg-white border border-[#E2E4E8] rounded-lg px-2.5 py-1 outline-none"
                 />
-                <span className="text-[#6B7280]">to</span>
+                <span className="text-[#6B7078]">to</span>
                 <input
                   type="date"
                   value={customTo}
@@ -2343,7 +2346,7 @@ export default function AdminOrdersSection({
                     setCustomTo(e.target.value)
                     setPage(1)
                   }}
-                  className="bg-white border border-[#E5E7EB] rounded-lg px-2.5 py-1 outline-none"
+                  className="bg-white border border-[#E2E4E8] rounded-lg px-2.5 py-1 outline-none"
                 />
               </>
             )}
@@ -2359,7 +2362,7 @@ export default function AdminOrdersSection({
                 setCustomTo('')
                 setPage(1)
               }}
-              className="text-[12px] font-semibold text-[#5B21B6] hover:underline cursor-pointer"
+              className="text-[12px] font-semibold text-[#111315] hover:underline cursor-pointer"
             >
               Reset all filters
             </button>
@@ -2368,8 +2371,8 @@ export default function AdminOrdersSection({
 
         {/* Bulk Action Bar */}
         {selectedIds.length > 0 && (
-          <div className="px-4 py-2 bg-[#F5F3FF] border-b border-[#EDE9FE] flex flex-wrap items-center justify-between gap-2 text-[12px]">
-            <span className="font-semibold text-[#5B21B6] tabular-nums">
+          <div className="px-4 py-2 bg-[#F7F8FA] border-b border-[#E2E4E8] flex flex-wrap items-center justify-between gap-2 text-[12px]">
+            <span className="font-semibold text-[#111315] tabular-nums">
               {selectedIds.length} order{selectedIds.length === 1 ? '' : 's'} selected
             </span>
             <div className="flex flex-wrap items-center gap-2">
@@ -2419,7 +2422,7 @@ export default function AdminOrdersSection({
             <button
               type="button"
               onClick={openCreateModal}
-              className="mt-2 inline-flex items-center gap-1.5 bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
+              className="mt-2 inline-flex items-center gap-1.5 bg-[#16181A] hover:bg-[#272A2E] text-white text-[12.5px] font-semibold px-4 py-2 rounded-xl cursor-pointer"
             >
               <Plus size={13} /> Create Order
             </button>
@@ -2427,7 +2430,7 @@ export default function AdminOrdersSection({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[12.5px] border-collapse">
-              <thead className="bg-[#F9FAFB] text-[#6B7280] font-medium border-b border-[#EAECF0]">
+              <thead className="bg-[#F7F8FA] text-[#6B7078] font-medium border-b border-[#E2E4E8]">
                 <tr>
                   <th className="w-10 py-3 pl-4 pr-2">
                     <input
@@ -2435,7 +2438,7 @@ export default function AdminOrdersSection({
                       checked={allVisibleSelected}
                       onChange={toggleSelectAllVisible}
                       aria-label="Select all visible orders"
-                      className="rounded border-[#D1D5DB] accent-[#5B21B6] cursor-pointer"
+                      className="rounded border-[#D1D5DB] accent-[#16181A] cursor-pointer"
                     />
                   </th>
                   <th className="py-3 px-2.5 font-medium">Order ID</th>
@@ -2445,7 +2448,7 @@ export default function AdminOrdersSection({
                       onClick={() =>
                         setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))
                       }
-                      className="inline-flex items-center gap-1 font-medium text-[#6B7280] hover:text-[#111827] cursor-pointer"
+                      className="inline-flex items-center gap-1 font-medium text-[#6B7078] hover:text-[#111315] cursor-pointer"
                     >
                       Date
                       {sortDir === 'desc' ? (
@@ -2465,7 +2468,7 @@ export default function AdminOrdersSection({
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-[#EAECF0]">
+              <tbody className="divide-y divide-[#E2E4E8]">
                 {pagedOrders.map((order) => {
                   const stKey = getOrderStatus(order)
                   const dt = formatDateLine(order.placedAt)
@@ -2477,7 +2480,7 @@ export default function AdminOrdersSection({
                     <tr
                       key={order.id}
                       onClick={() => onOpenOrder?.(order.id)}
-                      className="cursor-pointer transition-colors hover:bg-[#F9FAFB]"
+                      className="cursor-pointer transition-colors hover:bg-[#F7F8FA]"
                     >
                       <td
                         className="py-3 pl-4 pr-2"
@@ -2488,11 +2491,11 @@ export default function AdminOrdersSection({
                           checked={isChecked}
                           onChange={() => toggleSelectRow(order.id)}
                           aria-label={`Select order ${order.id}`}
-                          className="rounded border-[#D1D5DB] accent-[#5B21B6] cursor-pointer"
+                          className="rounded border-[#D1D5DB] accent-[#16181A] cursor-pointer"
                         />
                       </td>
 
-                      <td className="py-3 px-2.5 font-mono font-bold text-[#5B21B6] whitespace-nowrap">
+                      <td className="py-3 px-2.5 font-mono font-bold text-[#111315] whitespace-nowrap">
                         #{order.id}
                       </td>
 
@@ -2521,18 +2524,18 @@ export default function AdminOrdersSection({
                               key={`${it.id}-${idx}`}
                               src={it.image}
                               alt={it.name}
-                              className="w-8 h-8 rounded-lg object-cover border border-[#EAECF0] bg-[#F9FAFB] shrink-0"
+                              className="w-8 h-8 rounded-lg object-cover border border-[#E2E4E8] bg-[#F7F8FA] shrink-0"
                             />
                           ))}
                           {extraItemsCount > 0 && (
-                            <span className="w-7 h-7 rounded-lg bg-[#F3F4F6] text-[#374151] text-[10.5px] font-bold grid place-items-center shrink-0">
+                            <span className="w-7 h-7 rounded-lg bg-[#F1F2F4] text-[#374151] text-[10.5px] font-bold grid place-items-center shrink-0">
                               +{extraItemsCount}
                             </span>
                           )}
                         </div>
                       </td>
 
-                      <td className="py-3 px-2.5 font-bold text-[#111827] tabular-nums whitespace-nowrap">
+                      <td className="py-3 px-2.5 font-bold text-[#111315] tabular-nums whitespace-nowrap">
                         {formatINR(order.total)}
                       </td>
 
@@ -2547,8 +2550,8 @@ export default function AdminOrdersSection({
                       <td className="py-3 px-2.5 whitespace-nowrap text-[11.5px] leading-tight">
                         {order.courierPartner || order.trackingNumber ? (
                           <div>
-                            <span className="font-semibold text-[#111827] inline-flex items-center gap-1">
-                              <Truck size={11} className="text-[#5B21B6]" />
+                            <span className="font-semibold text-[#111315] inline-flex items-center gap-1">
+                              <Truck size={11} className="text-[#111315]" />
                               {order.courierPartner || 'Courier'}
                             </span>
                             {order.trackingNumber && (
@@ -2601,15 +2604,15 @@ export default function AdminOrdersSection({
           </div>
         )}
 
-        {/* Purple Pagination Footer */}
-        <div className="px-4 py-3 border-t border-[#EAECF0] bg-white flex flex-wrap items-center justify-between gap-3 text-[12px] text-[#6B7280]">
+        {/* Fieldnote Pagination Footer */}
+        <div className="px-4 py-3 border-t border-[#E2E4E8] bg-white flex flex-wrap items-center justify-between gap-3 text-[12px] text-[#6B7078]">
           <span>
             Showing{' '}
-            <strong className="text-[#111827] tabular-nums">
+            <strong className="text-[#111315] tabular-nums">
               {filtered.length === 0 ? 0 : (safePage - 1) * pageSize + 1}–
               {Math.min(safePage * pageSize, filtered.length)}
             </strong>{' '}
-            of <strong className="text-[#111827] tabular-nums">{filtered.length}</strong> orders
+            of <strong className="text-[#111315] tabular-nums">{filtered.length}</strong> orders
           </span>
 
           <div className="flex items-center gap-1">
@@ -2617,7 +2620,7 @@ export default function AdminOrdersSection({
               type="button"
               disabled={safePage <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40 grid place-items-center text-[#4B5563] hover:bg-[#F9FAFB] cursor-pointer"
+              className="w-8 h-8 rounded-lg border border-[#E2E4E8] bg-white disabled:opacity-40 grid place-items-center text-[#4B5563] hover:bg-[#F7F8FA] cursor-pointer"
               aria-label="Previous page"
             >
               <ChevronLeft size={14} />
@@ -2630,8 +2633,8 @@ export default function AdminOrdersSection({
                   onClick={() => setPage(pg)}
                   className={`w-8 h-8 rounded-lg text-[12px] font-semibold tabular-nums transition cursor-pointer ${
                     safePage === pg
-                      ? 'bg-[#6D28D9] text-white shadow-2xs'
-                      : 'border border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]'
+                      ? 'bg-[#16181A] text-white shadow-2xs'
+                      : 'border border-[#E2E4E8] bg-white text-[#374151] hover:bg-[#F7F8FA]'
                   }`}
                 >
                   {pg}

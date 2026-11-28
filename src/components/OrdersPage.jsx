@@ -55,6 +55,15 @@ function OrderTrackingCard({
     '3–5 business days',
   )
 
+  const latestTrackingEvent = Array.isArray(order.timeline)
+    ? [...order.timeline]
+        .reverse()
+        .find((ev) => ev?.courierPartner || ev?.trackingNumber || ev?.trackingUrl)
+    : null
+  const courierPartner = order.courierPartner || latestTrackingEvent?.courierPartner || ''
+  const trackingNumber = order.trackingNumber || latestTrackingEvent?.trackingNumber || ''
+  const trackingUrl = order.trackingUrl || latestTrackingEvent?.trackingUrl || ''
+
   return (
     <div
       className={`bg-white rounded-2xl border overflow-hidden ${
@@ -156,30 +165,30 @@ function OrderTrackingCard({
               })}
             </div>
 
-            {(order.courierPartner || order.trackingNumber) && (
+            {(courierPartner || trackingNumber) && (
               <div className="mt-3.5 pt-3 border-t border-black/5 flex flex-wrap items-center justify-between gap-2 text-[12px]">
                 <div className="text-neutral-600">
-                  {order.courierPartner && (
+                  {courierPartner && (
                     <span>
                       Courier:{' '}
                       <strong className="text-neutral-800">
-                        {order.courierPartner}
+                        {courierPartner}
                       </strong>
                     </span>
                   )}
-                  {order.courierPartner && order.trackingNumber && ' · '}
-                  {order.trackingNumber && (
+                  {courierPartner && trackingNumber && ' · '}
+                  {trackingNumber && (
                     <span>
                       AWB:{' '}
                       <strong className="text-neutral-800 tabular-nums">
-                        {order.trackingNumber}
+                        {trackingNumber}
                       </strong>
                     </span>
                   )}
                 </div>
-                {order.trackingUrl && (
+                {trackingUrl && (
                   <a
-                    href={order.trackingUrl}
+                    href={trackingUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 font-bold text-[#1D5CAD] hover:underline"
@@ -305,8 +314,17 @@ function OrderTrackingCard({
                   {formatINR(order.subtotal ?? order.total ?? 0)}
                 </strong>
               </p>
+              {Number(order.discountAmount) > 0 && (
+                <p className="text-emerald-700">
+                  Discount{order.discountCode ? ` (${order.discountCode})` : ''}:{' '}
+                  <strong>- {formatINR(order.discountAmount)}</strong>
+                </p>
+              )}
               <p>
-                Shipping: <strong className="text-emerald-700">FREE</strong>
+                Shipping:{' '}
+                <strong className={Number(order.shipping) > 0 ? 'text-neutral-800' : 'text-emerald-700'}>
+                  {Number(order.shipping) > 0 ? formatINR(order.shipping) : 'FREE'}
+                </strong>
               </p>
               <p className="text-[13.5px] font-extrabold text-[#0C1B2E]">
                 Grand Total (incl. GST): {formatINR(order.total || 0)}
@@ -496,7 +514,7 @@ export default function OrdersPage() {
 
           {searchResult === 'not-found' && (
             <div className="mt-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-[13px] text-red-700 font-medium">
-              No order found for &ldquo;{query.trim().toUpperCase()}&rdquo;. Please double-check your Order ID or contact care@harban.in.
+              No order found for &ldquo;{query.trim().toUpperCase()}&rdquo;. Please double-check your Order ID or contact harban.official@gmail.com.
             </div>
           )}
 

@@ -676,13 +676,26 @@ export async function syncOrderToSupabase(order: {
   razorpayOrderId?: string | null
   razorpayPaymentId?: string | null
   subtotal: number
+  discountCode?: string | null
+  discountAmount?: number
   shipping: number
   total: number
   status: number
+  orderStatus?: string
+  fulfillmentStatus?: string
+  internalNotes?: string
   cancelled: boolean
   placedAt: number
   eta: number
-  items: { id: string; name: string; image: string; price: number; qty: number }[]
+  timeline?: {
+    status: string
+    courierPartner?: string
+    trackingNumber?: string
+    trackingUrl?: string
+    notes?: string
+    createdAt?: number
+  }[]
+  items: { id: string; name: string; image: string; sku?: string | null; variantLabel?: string | null; price: number; qty: number }[]
 }) {
   return runSupabaseSync('order', async (sb) => {
     const statusLabel = order.cancelled
@@ -721,6 +734,20 @@ export async function syncOrderToSupabase(order: {
       'orders',
     )
 
+    // Best-effort extended order columns & child records
+    await sb
+      .from('orders')
+      .update({
+        fulfillment_status:
+          order.fulfillmentStatus ||
+          order.orderStatus ||
+          (order.cancelled ? 'cancelled' : 'pending'),
+        discount_code: order.discountCode ?? null,
+        discount_amount: Number(order.discountAmount ?? 0),
+        internal_notes: order.internalNotes || '',
+      })
+      .eq('order_code', order.id)
+
     assertSbOk(
       await sb.from('order_items').delete().eq('order_code', order.id),
       'order_items_delete',
@@ -735,9 +762,28 @@ export async function syncOrderToSupabase(order: {
             product_image: i.image,
             unit_price: i.price,
             qty: i.qty,
+            sku: i.sku ?? null,
+            variant_label: i.variantLabel ?? null,
           })),
         ),
         'order_items_insert',
+      )
+    }
+
+    if (Array.isArray(order.timeline) && order.timeline.length > 0) {
+      await sb.from('fulfillments').delete().eq('order_code', order.id)
+      await sb.from('fulfillments').insert(
+        order.timeline.map((ev) => ({
+          order_code: order.id,
+          status: ev.status || 'pending',
+          courier_partner: ev.courierPartner || '',
+          tracking_number: ev.trackingNumber || '',
+          tracking_url: ev.trackingUrl || '',
+          notes: ev.notes || '',
+          created_at: ev.createdAt
+            ? new Date(ev.createdAt).toISOString()
+            : new Date().toISOString(),
+        })),
       )
     }
   })

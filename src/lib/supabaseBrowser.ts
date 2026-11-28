@@ -14,7 +14,7 @@ const DEFAULT_SUPABASE_PUBLISHABLE_KEY =
 
 const ADMIN_EMAILS = (
   import.meta.env.VITE_ADMIN_EMAILS ||
-  'abhishekyadavinfo05@gmail.com,care@harban.in'
+  'abhishekyadavinfo05@gmail.com,harban.official@gmail.com'
 )
   .split(',')
   .map((e: string) => e.trim().toLowerCase())
@@ -257,6 +257,42 @@ function mapOrderRow(
     placedAt: placedMs,
     eta: etaMs,
     items: itemsFromRows,
+  }
+}
+
+function normalizeRpcOrder(raw: any) {
+  if (!raw || typeof raw !== 'object') return raw
+  const timeline = Array.isArray(raw.timeline) ? raw.timeline : []
+  const latestWithTracking = [...timeline]
+    .reverse()
+    .find((t: any) => t?.courierPartner || t?.trackingNumber || t?.trackingUrl)
+  const cancelEntry = [...timeline]
+    .reverse()
+    .find((t: any) => t?.status === 'cancelled' && t?.notes)
+  const workflowStatus = deriveStatus({
+    cancelled: Boolean(raw.cancelled),
+    fulfillment_status: raw.fulfillmentStatus || raw.orderStatus,
+    status: raw.status,
+  })
+  return {
+    ...raw,
+    subtotal: Number(raw.subtotal ?? 0),
+    discountCode: raw.discountCode ?? null,
+    discountAmount: Number(raw.discountAmount ?? 0),
+    shipping: Number(raw.shipping ?? 0),
+    total: Number(raw.total ?? 0),
+    status: Number(raw.status ?? 0),
+    orderStatus: raw.orderStatus || workflowStatus,
+    fulfillmentStatus: raw.fulfillmentStatus || raw.orderStatus || workflowStatus,
+    cancelled: Boolean(raw.cancelled),
+    cancelReason:
+      raw.cancelReason ??
+      (cancelEntry ? String(cancelEntry.notes).replace(/^Cancelled:\s*/i, '') : null),
+    courierPartner: raw.courierPartner || latestWithTracking?.courierPartner || '',
+    trackingNumber: raw.trackingNumber || latestWithTracking?.trackingNumber || '',
+    trackingUrl: raw.trackingUrl || latestWithTracking?.trackingUrl || '',
+    timeline,
+    items: Array.isArray(raw.items) ? raw.items : [],
   }
 }
 
@@ -890,7 +926,7 @@ export async function sbPlaceOrder(payload: any) {
   )
 
   if (!rpcErr && rpcData) {
-    return { order: rpcData }
+    return { order: normalizeRpcOrder(rpcData) }
   }
 
   // Fallback for admin direct insert if 004_netlify_client_checkout.sql isn't run yet
@@ -924,13 +960,13 @@ export async function sbPlaceOrder(payload: any) {
 
 export async function sbTrackOrderByCode(code: string) {
   const sb = getBrowserSupabase()
-  const clean = code.trim().toUpperCase()
+  const clean = code.trim().replace(/^#+/, '').toUpperCase()
   const { data: rpcData, error: rpcErr } = await sb.rpc(
     'track_storefront_order',
     { p_order_code: clean },
   )
   if (!rpcErr && rpcData) {
-    return { order: rpcData }
+    return { order: normalizeRpcOrder(rpcData) }
   }
 
   const { data: row } = await sb
@@ -940,7 +976,19 @@ export async function sbTrackOrderByCode(code: string) {
     .maybeSingle()
 
   if (!row) return { order: null }
-  return { order: mapOrderRow(row) }
+  const [oiRes, fulRes, payRes] = await Promise.all([
+    sb.from('order_items').select('*').eq('order_code', row.order_code),
+    sb.from('fulfillments').select('*').eq('order_code', row.order_code),
+    sb.from('payments').select('*').eq('order_code', row.order_code),
+  ])
+  return {
+    order: mapOrderRow(
+      row,
+      oiRes.data || [],
+      fulRes.error ? [] : fulRes.data || [],
+      payRes.error ? [] : payRes.data || [],
+    ),
+  }
 }
 
 export async function sbCancelOrder(orderCode: string) {
@@ -949,7 +997,7 @@ export async function sbCancelOrder(orderCode: string) {
     p_order_code: orderCode,
   })
   if (!rpcErr && rpcData) {
-    return { order: rpcData }
+    return { order: normalizeRpcOrder(rpcData) }
   }
   if (
     rpcErr &&
@@ -1363,6 +1411,15 @@ export async function sbCreateAdminOrder(payload: any) {
   }
   const orderCode = `HB${maxNum + 1}`
 
+  const rawStatus = String(payload.orderStatus || '').toLowerCase()
+  const initialStatus =
+    rawStatus === 'confirmed' || rawStatus === 'processing'
+      ? rawStatus
+      : 'pending'
+  const initialStageNum = ORDER_STATUS_TO_STAGE[initialStatus] ?? 0
+  const initialPaymentMethod = String(payload.paymentMethod || 'Admin Manual')
+  const initialPaymentStatus = String(payload.paymentStatus || 'pending').toLowerCase()
+
   const { data: inserted, error: ordErr } = await sb
     .from('orders')
     .insert({
@@ -1373,13 +1430,16 @@ export async function sbCreateAdminOrder(payload: any) {
         : null,
       phone: String(payload.phone || '').trim(),
       shipping_address: payload.shippingAddress || null,
-      payment_method: String(payload.paymentMethod || 'Admin Manual'),
-      payment_status: String(payload.paymentStatus || 'pending').toLowerCase(),
+      payment_method: initialPaymentMethod,
+      payment_status: initialPaymentStatus,
       subtotal,
       shipping: 0,
       total: subtotal,
-      status: 0,
-      status_label: 'Order placed',
+      status: initialStageNum,
+      status_label:
+        initialStatus === 'pending'
+          ? 'Order placed'
+          : initialStatus.charAt(0).toUpperCase() + initialStatus.slice(1),
       cancelled: false,
       items: itemsOut,
       items_summary: itemsOut.map((i) => `${i.name} x${i.qty}`).join(', '),
@@ -1391,32 +1451,75 @@ export async function sbCreateAdminOrder(payload: any) {
 
   if (ordErr) throw new Error(ordErr.message)
 
+  let latestOrderRow = inserted
   // Best-effort extended order columns
-  await sb
+  const { data: extOrderRow } = await sb
     .from('orders')
     .update({
-      fulfillment_status:
-        payload.orderStatus === 'confirmed' ? 'confirmed' : 'pending',
+      fulfillment_status: initialStatus,
       internal_notes: String(payload.internalNotes || ''),
     })
     .eq('order_code', orderCode)
+    .select()
+    .maybeSingle()
+  if (extOrderRow) latestOrderRow = extOrderRow
 
-  await sb.from('order_items').insert(
-    itemsOut.map((i) => ({
-      order_code: orderCode,
-      product_id: i.id,
-      product_name: i.name,
-      product_image: i.image,
-      unit_price: i.price,
-      qty: i.qty,
-    })),
-  )
+  const [oiRes, fulRes, payRes] = await Promise.all([
+    sb
+      .from('order_items')
+      .insert(
+        itemsOut.map((i) => ({
+          order_code: orderCode,
+          product_id: i.id,
+          product_name: i.name,
+          product_image: i.image,
+          unit_price: i.price,
+          qty: i.qty,
+        })),
+      )
+      .select(),
+    sb
+      .from('fulfillments')
+      .insert({
+        order_code: orderCode,
+        status: initialStatus,
+        notes: `Order placed via ${initialPaymentMethod}${initialPaymentStatus === 'paid' ? ' (Paid)' : ''}`,
+      })
+      .select(),
+    sb
+      .from('payments')
+      .insert({
+        order_code: orderCode,
+        provider: initialPaymentMethod.toLowerCase().includes('razorpay') ? 'razorpay' : 'cod',
+        method: initialPaymentMethod,
+        amount: subtotal,
+        currency: 'INR',
+        status: initialPaymentStatus,
+        signature_verified: initialPaymentStatus === 'paid',
+      })
+      .select(),
+  ])
 
-  return { order: mapOrderRow(inserted) }
+  return {
+    order: mapOrderRow(
+      latestOrderRow,
+      oiRes.data || [],
+      fulRes.error ? [] : fulRes.data || [],
+      payRes.error ? [] : payRes.data || [],
+    ),
+  }
 }
 
 export async function sbUpdateAdminOrder(orderCode: string, patch: any) {
   const sb = getBrowserSupabase()
+  const { data: existingRow, error: fetchErr } = await sb
+    .from('orders')
+    .select('*')
+    .eq('order_code', orderCode)
+    .single()
+  if (fetchErr) throw new Error(fetchErr.message)
+
+  const prevStatus = deriveStatus(existingRow)
   const coreUpdate: Record<string, unknown> = {}
   let targetWorkflowStatus: string | null = null
 
@@ -1439,24 +1542,16 @@ export async function sbUpdateAdminOrder(orderCode: string, patch: any) {
     }
   }
   if (typeof patch.paymentStatus === 'string') {
-    coreUpdate.payment_status = patch.paymentStatus
+    coreUpdate.payment_status = patch.paymentStatus.trim().toLowerCase()
   }
 
-  let updated: any = null
+  let updated: any = existingRow
   if (Object.keys(coreUpdate).length > 0) {
     const { data, error } = await sb
       .from('orders')
       .update(coreUpdate)
       .eq('order_code', orderCode)
       .select()
-      .single()
-    if (error) throw new Error(error.message)
-    updated = data
-  } else {
-    const { data, error } = await sb
-      .from('orders')
-      .select()
-      .eq('order_code', orderCode)
       .single()
     if (error) throw new Error(error.message)
     updated = data
@@ -1478,32 +1573,101 @@ export async function sbUpdateAdminOrder(orderCode: string, patch: any) {
     if (extRow) updated = extRow
   }
 
+  if (typeof patch.paymentStatus === 'string' && patch.paymentStatus.trim()) {
+    await sb
+      .from('payments')
+      .update({ status: patch.paymentStatus.trim().toLowerCase() })
+      .eq('order_code', orderCode)
+  }
+
+  const { data: prevFulRows } = await sb
+    .from('fulfillments')
+    .select('*')
+    .eq('order_code', orderCode)
+    .order('created_at', { ascending: true })
+
+  const prevTracking = [...(prevFulRows || [])]
+    .reverse()
+    .find((f: any) => f.courier_partner || f.tracking_number || f.tracking_url)
+
+  const courierClean =
+    typeof patch.courierPartner === 'string' ? patch.courierPartner.trim() : ''
+  const trackingClean =
+    typeof patch.trackingNumber === 'string' ? patch.trackingNumber.trim() : ''
+  const trackingUrlClean =
+    typeof patch.trackingUrl === 'string' ? patch.trackingUrl.trim() : ''
+
+  const courierChanged =
+    (typeof patch.courierPartner === 'string' &&
+      courierClean !== (prevTracking?.courier_partner || '')) ||
+    (typeof patch.trackingNumber === 'string' &&
+      trackingClean !== (prevTracking?.tracking_number || '')) ||
+    (typeof patch.trackingUrl === 'string' &&
+      trackingUrlClean !== (prevTracking?.tracking_url || ''))
+
+  const finalStatus = targetWorkflowStatus || deriveStatus(updated)
+  const noteMessages: string[] = []
+  if (targetWorkflowStatus && targetWorkflowStatus !== prevStatus) {
+    if (targetWorkflowStatus === 'cancelled') {
+      noteMessages.push(`Cancelled: ${String(patch.cancelReason || '').trim()}`)
+    } else {
+      noteMessages.push(`Status updated to ${targetWorkflowStatus.toUpperCase()}`)
+    }
+  } else if (patch.cancelReason) {
+    noteMessages.push(`Cancelled: ${String(patch.cancelReason).trim()}`)
+  }
+  if (courierChanged && (courierClean || trackingClean)) {
+    noteMessages.push(
+      `Tracking saved: ${courierClean || 'Courier'}${trackingClean ? ` · AWB ${trackingClean}` : ''}`,
+    )
+  }
   if (
-    patch.courierPartner ||
-    patch.trackingNumber ||
-    patch.trackingUrl ||
-    patch.orderStatus ||
-    patch.cancelReason
+    typeof patch.paymentStatus === 'string' &&
+    patch.paymentStatus.trim().toLowerCase() !== String(existingRow.payment_status || '').toLowerCase()
   ) {
+    noteMessages.push(`Payment status set to ${patch.paymentStatus.trim().toUpperCase()}`)
+  }
+  if (
+    typeof patch.internalNotes === 'string' &&
+    patch.internalNotes.trim() !== String(existingRow.internal_notes || '').trim() &&
+    noteMessages.length === 0
+  ) {
+    noteMessages.push('Internal order notes updated')
+  }
+
+  if (noteMessages.length > 0 || courierChanged) {
     await sb.from('fulfillments').insert({
       order_code: orderCode,
-      status: String(targetWorkflowStatus || deriveStatus(updated)),
-      courier_partner: String(patch.courierPartner || ''),
-      tracking_number: String(patch.trackingNumber || ''),
-      tracking_url: String(patch.trackingUrl || ''),
-      notes: patch.cancelReason ? `Cancelled: ${patch.cancelReason}` : '',
+      status: String(finalStatus),
+      courier_partner:
+        typeof patch.courierPartner === 'string'
+          ? courierClean
+          : prevTracking?.courier_partner || '',
+      tracking_number:
+        typeof patch.trackingNumber === 'string'
+          ? trackingClean
+          : prevTracking?.tracking_number || '',
+      tracking_url:
+        typeof patch.trackingUrl === 'string'
+          ? trackingUrlClean
+          : prevTracking?.tracking_url || '',
+      shipped_at: finalStatus === 'shipped' ? new Date().toISOString() : null,
+      delivered_at: finalStatus === 'delivered' ? new Date().toISOString() : null,
+      notes: noteMessages.join(' · '),
     })
   }
 
-  const [oiRes, fulRes] = await Promise.all([
+  const [oiRes, fulRes, payRes] = await Promise.all([
     sb.from('order_items').select('*').eq('order_code', orderCode),
     sb.from('fulfillments').select('*').eq('order_code', orderCode),
+    sb.from('payments').select('*').eq('order_code', orderCode),
   ])
   return {
     order: mapOrderRow(
       updated,
       oiRes.data || [],
       fulRes.error ? [] : fulRes.data || [],
+      payRes.error ? [] : payRes.data || [],
     ),
   }
 }
